@@ -1,0 +1,249 @@
+import { Link } from 'react-router-dom';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@/components/ui/separator';
+import { useRestaurantOrders, useUpdateOrderStatus, RestaurantOrder } from '@/hooks/useRestaurantOrders';
+import { useMyRestaurant } from '@/hooks/useMenuManagement';
+import { OrderStatus } from '@/hooks/useOrders';
+import { 
+  ArrowLeft, 
+  Check, 
+  X, 
+  ChefHat, 
+  Package,
+  Clock,
+  User
+} from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+
+const STATUS_CONFIG: Record<string, { label: string; color: string; nextStatus?: OrderStatus; nextLabel?: string }> = {
+  placed: { label: 'New', color: 'bg-blue-500', nextStatus: 'accepted', nextLabel: 'Accept' },
+  accepted: { label: 'Accepted', color: 'bg-indigo-500', nextStatus: 'preparing', nextLabel: 'Start Preparing' },
+  preparing: { label: 'Preparing', color: 'bg-yellow-500', nextStatus: 'ready', nextLabel: 'Mark Ready' },
+  ready: { label: 'Ready', color: 'bg-green-500' },
+  picked_up: { label: 'Picked Up', color: 'bg-purple-500' },
+  delivered: { label: 'Delivered', color: 'bg-gray-500' },
+  cancelled: { label: 'Cancelled', color: 'bg-red-500' },
+};
+
+export default function RestaurantOrders() {
+  const { data: restaurant } = useMyRestaurant();
+  const { data: orders, isLoading } = useRestaurantOrders();
+  const updateStatus = useUpdateOrderStatus();
+
+  const pendingOrders = orders?.filter(o => o.status === 'placed') || [];
+  const activeOrders = orders?.filter(o => ['accepted', 'preparing', 'ready'].includes(o.status)) || [];
+  const completedOrders = orders?.filter(o => ['picked_up', 'delivered', 'cancelled'].includes(o.status)) || [];
+
+  if (!restaurant) {
+    return (
+      <DashboardLayout>
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">Please set up your restaurant first.</p>
+          <Link to="/restaurant/settings" className="text-primary hover:underline">
+            Go to Settings
+          </Link>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  return (
+    <DashboardLayout>
+      <div className="space-y-6 pb-20 md:pb-0">
+        {/* Header */}
+        <div>
+          <Link
+            to="/restaurant"
+            className="inline-flex items-center text-muted-foreground hover:text-foreground mb-2"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </Link>
+          <h1 className="text-2xl font-bold">Orders</h1>
+          <p className="text-muted-foreground">Manage incoming and active orders</p>
+        </div>
+
+        {isLoading ? (
+          <div className="space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-48 w-full" />
+            ))}
+          </div>
+        ) : (
+          <>
+            {/* Pending Orders */}
+            {pendingOrders.length > 0 && (
+              <section>
+                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <span className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
+                  </span>
+                  New Orders ({pendingOrders.length})
+                </h2>
+                <div className="space-y-4">
+                  {pendingOrders.map((order) => (
+                    <OrderCard 
+                      key={order.id} 
+                      order={order} 
+                      onUpdateStatus={(status) => updateStatus.mutate({ orderId: order.id, status })}
+                      isUpdating={updateStatus.isPending}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Active Orders */}
+            {activeOrders.length > 0 && (
+              <section>
+                <h2 className="text-lg font-semibold mb-4">Active Orders ({activeOrders.length})</h2>
+                <div className="space-y-4">
+                  {activeOrders.map((order) => (
+                    <OrderCard 
+                      key={order.id} 
+                      order={order} 
+                      onUpdateStatus={(status) => updateStatus.mutate({ orderId: order.id, status })}
+                      isUpdating={updateStatus.isPending}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* No Orders */}
+            {orders?.length === 0 && (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <Package className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="font-semibold mb-2">No orders yet</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Orders will appear here when customers place them
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Completed Orders */}
+            {completedOrders.length > 0 && (
+              <section>
+                <h2 className="text-lg font-semibold mb-4">Recent Completed ({completedOrders.length})</h2>
+                <div className="space-y-4">
+                  {completedOrders.slice(0, 5).map((order) => (
+                    <OrderCard 
+                      key={order.id} 
+                      order={order} 
+                      compact
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+          </>
+        )}
+      </div>
+    </DashboardLayout>
+  );
+}
+
+function OrderCard({ 
+  order, 
+  onUpdateStatus, 
+  isUpdating,
+  compact = false 
+}: { 
+  order: RestaurantOrder; 
+  onUpdateStatus?: (status: OrderStatus) => void;
+  isUpdating?: boolean;
+  compact?: boolean;
+}) {
+  const config = STATUS_CONFIG[order.status];
+  const isNew = order.status === 'placed';
+
+  const orderItems = order.order_items?.map(item => 
+    `${item.quantity}x ${item.menu_item?.name || 'Item'}`
+  ).join(', ') || 'No items';
+
+  return (
+    <Card className={isNew ? 'border-amber-500 shadow-lg' : ''}>
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between gap-4 mb-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold">#{order.id.slice(-6).toUpperCase()}</span>
+              <Badge className={`${config.color} text-white`}>
+                {config.label}
+              </Badge>
+            </div>
+            <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+              <Clock className="w-3 h-3" />
+              {formatDistanceToNow(new Date(order.created_at), { addSuffix: true })}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="font-semibold text-lg text-primary">₹{Number(order.total_amount).toFixed(2)}</p>
+          </div>
+        </div>
+
+        {!compact && (
+          <>
+            {/* Customer */}
+            {order.customer && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+                <User className="w-4 h-4" />
+                <span>{order.customer.name}</span>
+                {order.customer.phone && <span>• {order.customer.phone}</span>}
+              </div>
+            )}
+
+            {/* Items */}
+            <div className="bg-secondary/50 rounded-lg p-3 mb-4">
+              <p className="text-sm">{orderItems}</p>
+            </div>
+
+            {/* Actions */}
+            {onUpdateStatus && (
+              <div className="flex gap-2">
+                {isNew ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      className="flex-1 border-red-500 text-red-500 hover:bg-red-50"
+                      onClick={() => onUpdateStatus('cancelled')}
+                      disabled={isUpdating}
+                    >
+                      <X className="w-4 h-4 mr-2" />
+                      Reject
+                    </Button>
+                    <Button
+                      className="flex-1 bg-green-600 hover:bg-green-700"
+                      onClick={() => onUpdateStatus('accepted')}
+                      disabled={isUpdating}
+                    >
+                      <Check className="w-4 h-4 mr-2" />
+                      Accept
+                    </Button>
+                  </>
+                ) : config.nextStatus ? (
+                  <Button
+                    className="w-full bg-restaurant hover:bg-restaurant/90"
+                    onClick={() => onUpdateStatus(config.nextStatus!)}
+                    disabled={isUpdating}
+                  >
+                    {order.status === 'accepted' && <ChefHat className="w-4 h-4 mr-2" />}
+                    {order.status === 'preparing' && <Package className="w-4 h-4 mr-2" />}
+                    {config.nextLabel}
+                  </Button>
+                ) : null}
+              </div>
+            )}
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
