@@ -1,39 +1,69 @@
+import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRestaurantOrders } from '@/hooks/useRestaurantOrders';
+import { useMyRestaurant } from '@/hooks/useMenuManagement';
 import { 
   TrendingUp, 
   DollarSign, 
   ShoppingBag, 
   Clock,
   ArrowUp,
-  ArrowDown,
-  MoreVertical
+  ChevronRight,
+  Store,
+  AlertCircle
 } from 'lucide-react';
-
-const STATS = [
-  { label: "Today's Orders", value: '24', change: '+12%', up: true, icon: ShoppingBag },
-  { label: "Today's Revenue", value: '₹18,450', change: '+8%', up: true, icon: DollarSign },
-  { label: 'Pending Orders', value: '5', change: '-2', up: false, icon: Clock },
-  { label: 'Avg. Prep Time', value: '18 min', change: '-3 min', up: true, icon: TrendingUp },
-];
-
-const RECENT_ORDERS = [
-  { id: '#1234', items: '2x Butter Chicken, 1x Naan', status: 'preparing', time: '5 min ago', total: '₹650' },
-  { id: '#1233', items: '1x Biryani, 2x Raita', status: 'ready', time: '12 min ago', total: '₹450' },
-  { id: '#1232', items: '3x Paneer Tikka', status: 'delivered', time: '25 min ago', total: '₹380' },
-  { id: '#1231', items: '1x Thali Set', status: 'delivered', time: '40 min ago', total: '₹550' },
-];
-
-const STATUS_COLORS = {
-  preparing: 'bg-amber-100 text-amber-700',
-  ready: 'bg-green-100 text-green-700',
-  delivered: 'bg-blue-100 text-blue-700',
-};
 
 export default function RestaurantDashboard() {
   const { user } = useAuth();
+  const { data: restaurant, isLoading: loadingRestaurant } = useMyRestaurant();
+  const { data: orders, isLoading: loadingOrders } = useRestaurantOrders();
+
+  const pendingOrders = orders?.filter(o => o.status === 'placed') || [];
+  const activeOrders = orders?.filter(o => ['accepted', 'preparing', 'ready'].includes(o.status)) || [];
+  const todayOrders = orders?.filter(o => {
+    const orderDate = new Date(o.created_at).toDateString();
+    return orderDate === new Date().toDateString();
+  }) || [];
+
+  const todayRevenue = todayOrders.reduce((sum, o) => sum + Number(o.total_amount), 0);
+
+  if (loadingRestaurant) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <Skeleton className="h-8 w-64" />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-32" />
+            ))}
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!restaurant) {
+    return (
+      <DashboardLayout>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+          <Store className="w-16 h-16 text-muted-foreground mb-4" />
+          <h2 className="text-2xl font-bold mb-2">Set Up Your Restaurant</h2>
+          <p className="text-muted-foreground mb-6 max-w-md">
+            You haven't created your restaurant profile yet. Set it up to start receiving orders.
+          </p>
+          <Link to="/restaurant/settings">
+            <Button size="lg" className="bg-restaurant hover:bg-restaurant/90">
+              Create Restaurant Profile
+            </Button>
+          </Link>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -41,68 +71,136 @@ export default function RestaurantDashboard() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Restaurant Dashboard</h1>
+            <h1 className="text-2xl font-bold">{restaurant.name}</h1>
             <p className="text-muted-foreground">Welcome back, {user?.name}</p>
           </div>
-          <Button className="bg-restaurant hover:bg-restaurant/90">
-            Open Menu Editor
-          </Button>
+          <Link to="/restaurant/menu">
+            <Button className="bg-restaurant hover:bg-restaurant/90">
+              Manage Menu
+            </Button>
+          </Link>
         </div>
+
+        {/* Pending Orders Alert */}
+        {pendingOrders.length > 0 && (
+          <Card className="border-amber-500 bg-amber-50 dark:bg-amber-950/20">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center animate-pulse">
+                    <AlertCircle className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-amber-700 dark:text-amber-400">
+                      {pendingOrders.length} New Order{pendingOrders.length > 1 ? 's' : ''} Waiting!
+                    </p>
+                    <p className="text-sm text-amber-600 dark:text-amber-500">
+                      Accept or reject incoming orders
+                    </p>
+                  </div>
+                </div>
+                <Link to="/restaurant/orders">
+                  <Button variant="outline" className="border-amber-500 text-amber-700 hover:bg-amber-100">
+                    View Orders
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Stats Grid */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {STATS.map((stat) => (
-            <Card key={stat.label}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="w-10 h-10 rounded-lg bg-restaurant/10 flex items-center justify-center">
-                    <stat.icon className="w-5 h-5 text-restaurant" />
-                  </div>
-                  <span className={`text-xs font-medium flex items-center gap-1 ${stat.up ? 'text-green-600' : 'text-red-600'}`}>
-                    {stat.up ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
-                    {stat.change}
-                  </span>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="w-10 h-10 rounded-lg bg-restaurant/10 flex items-center justify-center">
+                  <ShoppingBag className="w-5 h-5 text-restaurant" />
                 </div>
-                <div className="mt-3">
-                  <div className="text-2xl font-bold">{stat.value}</div>
-                  <div className="text-sm text-muted-foreground">{stat.label}</div>
+              </div>
+              <div className="mt-3">
+                <div className="text-2xl font-bold">{todayOrders.length}</div>
+                <div className="text-sm text-muted-foreground">Today's Orders</div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="w-10 h-10 rounded-lg bg-restaurant/10 flex items-center justify-center">
+                  <DollarSign className="w-5 h-5 text-restaurant" />
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+              </div>
+              <div className="mt-3">
+                <div className="text-2xl font-bold">₹{todayRevenue.toFixed(0)}</div>
+                <div className="text-sm text-muted-foreground">Today's Revenue</div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-amber-500" />
+                </div>
+              </div>
+              <div className="mt-3">
+                <div className="text-2xl font-bold">{pendingOrders.length}</div>
+                <div className="text-sm text-muted-foreground">Pending Orders</div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-blue-500" />
+                </div>
+              </div>
+              <div className="mt-3">
+                <div className="text-2xl font-bold">{activeOrders.length}</div>
+                <div className="text-sm text-muted-foreground">Active Orders</div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Recent Orders */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Recent Orders</CardTitle>
-            <Button variant="outline" size="sm">View All</Button>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {RECENT_ORDERS.map((order) => (
-                <div key={order.id} className="flex items-center justify-between p-4 rounded-lg bg-secondary/50">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3">
-                      <span className="font-semibold">{order.id}</span>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[order.status as keyof typeof STATUS_COLORS]}`}>
-                        {order.status}
-                      </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">{order.items}</p>
-                    <p className="text-xs text-muted-foreground">{order.time}</p>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-semibold">{order.total}</div>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreVertical className="w-4 h-4" />
-                    </Button>
-                  </div>
+        {/* Quick Actions */}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Link to="/restaurant/orders">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+              <CardContent className="p-6 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-restaurant/10 flex items-center justify-center">
+                  <ShoppingBag className="w-6 h-6 text-restaurant" />
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                <div className="flex-1">
+                  <h3 className="font-semibold">Manage Orders</h3>
+                  <p className="text-sm text-muted-foreground">View and process incoming orders</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to="/restaurant/menu">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+              <CardContent className="p-6 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-restaurant/10 flex items-center justify-center">
+                  <Store className="w-6 h-6 text-restaurant" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold">Menu Management</h3>
+                  <p className="text-sm text-muted-foreground">Add, edit, or disable menu items</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
       </div>
     </DashboardLayout>
   );

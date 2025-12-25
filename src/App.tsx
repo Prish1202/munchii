@@ -22,6 +22,9 @@ import OrderTracking from "./pages/customer/OrderTracking";
 
 // Restaurant Pages
 import RestaurantDashboard from "./pages/restaurant/Dashboard";
+import RestaurantOrders from "./pages/restaurant/Orders";
+import MenuManagement from "./pages/restaurant/MenuManagement";
+import RestaurantSettings from "./pages/restaurant/Settings";
 
 // Delivery Pages
 import DeliveryDashboard from "./pages/delivery/Dashboard";
@@ -104,10 +107,26 @@ const App = () => (
                 }
               />
               <Route
-                path="/restaurant/*"
+                path="/restaurant/orders"
                 element={
                   <ProtectedRoute allowedRoles={['restaurant']}>
-                    <RestaurantDashboard />
+                    <RestaurantOrders />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/restaurant/menu"
+                element={
+                  <ProtectedRoute allowedRoles={['restaurant']}>
+                    <MenuManagement />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/restaurant/settings"
+                element={
+                  <ProtectedRoute allowedRoles={['restaurant']}>
+                    <RestaurantSettings />
                   </ProtectedRoute>
                 }
               />
