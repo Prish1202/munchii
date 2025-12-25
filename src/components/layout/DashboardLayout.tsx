@@ -1,11 +1,14 @@
 import { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCart } from '@/contexts/CartContext';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { 
   Home, 
   ShoppingBag, 
+  ShoppingCart,
   ClipboardList, 
   User, 
   LogOut,
@@ -68,12 +71,14 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, logout } = useAuth();
+  const { totalItems } = useCart();
   const location = useLocation();
 
   if (!user) return null;
 
   const navItems = NAV_ITEMS[user.role];
   const roleColor = ROLE_COLORS[user.role];
+  const isCustomer = user.role === 'customer';
 
   return (
     <div className="min-h-screen bg-background">
@@ -87,7 +92,19 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <span className="font-semibold text-lg">FoodMarket</span>
           </Link>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            {isCustomer && (
+              <Link to="/customer/cart" className="relative">
+                <Button variant="ghost" size="icon">
+                  <ShoppingCart className="w-5 h-5" />
+                  {totalItems > 0 && (
+                    <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                      {totalItems}
+                    </Badge>
+                  )}
+                </Button>
+              </Link>
+            )}
             <span className="text-sm text-muted-foreground hidden sm:block">
               {user.name}
             </span>
