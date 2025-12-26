@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,17 +8,19 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { useOrderItems, OrderStatus } from '@/hooks/useOrders';
-import { useQueryClient } from '@tanstack/react-query';
+import { useRealtimeSync } from '@/hooks/useRealtimeSync';
+import { toast } from 'sonner';
 import { 
   ArrowLeft, 
   CheckCircle2, 
-  Circle, 
   Store, 
   ChefHat, 
   Package, 
   Truck, 
   MapPin,
-  Clock
+  Clock,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -33,6 +35,16 @@ const ORDER_STEPS: { status: OrderStatus; label: string; icon: React.ReactNode }
 ];
 
 const STATUS_ORDER: OrderStatus[] = ['placed', 'accepted', 'preparing', 'ready', 'picked_up', 'delivered'];
+
+const STATUS_MESSAGES: Record<OrderStatus, string> = {
+  placed: 'Order placed!',
+  accepted: 'Restaurant accepted your order!',
+  preparing: 'Your food is being prepared!',
+  ready: 'Your order is ready for pickup!',
+  picked_up: 'Delivery partner is on the way!',
+  delivered: 'Your order has been delivered!',
+  cancelled: 'Order was cancelled',
+};
 
 export default function OrderTracking() {
   const { id } = useParams<{ id: string }>();
@@ -58,30 +70,35 @@ export default function OrderTracking() {
 
   const { data: orderItems } = useOrderItems(id!);
 
-  // Real-time subscription for this specific order
-  useEffect(() => {
-    if (!id) return;
-
-    const channel = supabase
-      .channel(`order-tracking-${id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'orders',
-          filter: `id=eq.${id}`,
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ['order', id] });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+  const handleOrderUpdate = useCallback((payload: any) => {
+    queryClient.invalidateQueries({ queryKey: ['order', id] });
+    queryClient.invalidateQueries({ queryKey: ['customer-orders'] });
+    
+    const newStatus = payload.new?.status as OrderStatus;
+    if (newStatus && STATUS_MESSAGES[newStatus]) {
+      toast.info(STATUS_MESSAGES[newStatus]);
+    }
   }, [id, queryClient]);
+
+  // Real-time subscription with reconnection handling
+  const { isConnected } = useRealtimeSync({
+    channelName: `order-tracking-${id}`,
+    table: 'orders',
+    filter: `id=eq.${id}`,
+    onUpdate: handleOrderUpdate,
+    enabled: !!id,
+  });
+
+  // Also subscribe to delivery updates for this order
+  useRealtimeSync({
+    channelName: `order-delivery-${id}`,
+    table: 'deliveries',
+    filter: `order_id=eq.${id}`,
+    onUpdate: () => {
+      queryClient.invalidateQueries({ queryKey: ['order', id] });
+    },
+    enabled: !!id,
+  });
 
   if (isLoading) {
     return (
@@ -125,9 +142,18 @@ export default function OrderTracking() {
           </Link>
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold">Order #{id?.slice(-6).toUpperCase()}</h1>
-            {isCancelled && (
-              <Badge variant="destructive">Cancelled</Badge>
-            )}
+            <div className="flex items-center gap-2">
+              {isCancelled && (
+                <Badge variant="destructive">Cancelled</Badge>
+              )}
+              <Badge variant={isConnected ? "default" : "secondary"} className="gap-1">
+                {isConnected ? (
+                  <><Wifi className="w-3 h-3" /> Live</>
+                ) : (
+                  <><WifiOff className="w-3 h-3" /> Connecting...</>
+                )}
+              </Badge>
+            </div>
           </div>
           <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
             <Clock className="w-4 h-4" />
