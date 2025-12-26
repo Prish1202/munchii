@@ -3,38 +3,114 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 import { 
   Package, 
   DollarSign, 
   MapPin,
   Clock,
   Navigation,
-  Phone
+  Phone,
+  CheckCircle,
+  Loader2
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useDeliveryOrders, useUpdateDeliveryStatus, useUpdateLocation, type DeliveryOrder } from '@/hooks/useDeliveryOrders';
+import { formatDistanceToNow } from 'date-fns';
 
-const ACTIVE_ORDER = {
-  id: '#1234',
-  restaurant: 'Spice Garden',
-  restaurantAddress: '456 Food Court, Downtown',
-  customer: 'John Doe',
-  customerAddress: '123 Main Street, Apt 4B',
-  items: '2x Butter Chicken, 1x Naan, 1x Raita',
-  total: '₹650',
-  distance: '3.2 km',
-  estimatedTime: '15 min',
+const STATUS_FLOW: Record<string, { next: string; orderStatus?: string; label: string }> = {
+  assigned: { next: 'en_route_pickup', label: 'Accept & Head to Pickup' },
+  en_route_pickup: { next: 'at_restaurant', label: 'Arrived at Restaurant' },
+  at_restaurant: { next: 'en_route_delivery', orderStatus: 'picked_up', label: 'Picked Up - Start Delivery' },
+  en_route_delivery: { next: 'delivered', orderStatus: 'delivered', label: 'Mark as Delivered' },
 };
 
-const TODAY_STATS = [
-  { label: 'Deliveries', value: '8', icon: Package },
-  { label: 'Earnings', value: '₹640', icon: DollarSign },
-  { label: 'Distance', value: '24 km', icon: MapPin },
-  { label: 'Avg. Time', value: '22 min', icon: Clock },
-];
+const STATUS_LABELS: Record<string, string> = {
+  assigned: 'Assigned',
+  en_route_pickup: 'Heading to Pickup',
+  at_restaurant: 'At Restaurant',
+  en_route_delivery: 'Out for Delivery',
+  delivered: 'Delivered',
+};
 
 export default function DeliveryDashboard() {
   const { user } = useAuth();
   const [isOnline, setIsOnline] = useState(true);
+  const [watchId, setWatchId] = useState<number | null>(null);
+  const { deliveries, isLoading } = useDeliveryOrders();
+  const updateStatus = useUpdateDeliveryStatus();
+  const updateLocation = useUpdateLocation();
+
+  // Filter active deliveries (not delivered)
+  const activeDeliveries = deliveries.filter(d => d.status !== 'delivered');
+  const completedToday = deliveries.filter(d => {
+    if (d.status !== 'delivered') return false;
+    const today = new Date();
+    const deliveryDate = new Date(d.updated_at);
+    return deliveryDate.toDateString() === today.toDateString();
+  });
+
+  // GPS tracking
+  const startLocationTracking = useCallback((deliveryId: string) => {
+    if (!navigator.geolocation) return;
+
+    const id = navigator.geolocation.watchPosition(
+      (position) => {
+        updateLocation.mutate({
+          deliveryId,
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+      },
+      (error) => console.error('GPS Error:', error),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 }
+    );
+    setWatchId(id);
+  }, [updateLocation]);
+
+  const stopLocationTracking = useCallback(() => {
+    if (watchId !== null) {
+      navigator.geolocation.clearWatch(watchId);
+      setWatchId(null);
+    }
+  }, [watchId]);
+
+  // Start tracking when there's an active delivery en route
+  useEffect(() => {
+    const enRouteDelivery = activeDeliveries.find(
+      d => d.status === 'en_route_pickup' || d.status === 'en_route_delivery'
+    );
+    
+    if (enRouteDelivery && isOnline) {
+      startLocationTracking(enRouteDelivery.id);
+    } else {
+      stopLocationTracking();
+    }
+
+    return () => stopLocationTracking();
+  }, [activeDeliveries, isOnline, startLocationTracking, stopLocationTracking]);
+
+  const handleStatusUpdate = (delivery: DeliveryOrder) => {
+    const flow = STATUS_FLOW[delivery.status];
+    if (!flow) return;
+
+    updateStatus.mutate({
+      deliveryId: delivery.id,
+      status: flow.next as any,
+      orderStatus: flow.orderStatus as any,
+    });
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'assigned': return 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20';
+      case 'en_route_pickup': return 'bg-blue-500/10 text-blue-600 border-blue-500/20';
+      case 'at_restaurant': return 'bg-purple-500/10 text-purple-600 border-purple-500/20';
+      case 'en_route_delivery': return 'bg-primary/10 text-primary border-primary/20';
+      case 'delivered': return 'bg-green-500/10 text-green-600 border-green-500/20';
+      default: return 'bg-muted text-muted-foreground';
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -55,79 +131,149 @@ export default function DeliveryDashboard() {
 
         {/* Today's Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {TODAY_STATS.map((stat) => (
-            <Card key={stat.label}>
-              <CardContent className="p-4 text-center">
-                <div className="w-10 h-10 mx-auto rounded-full bg-delivery/10 flex items-center justify-center mb-2">
-                  <stat.icon className="w-5 h-5 text-delivery" />
-                </div>
-                <div className="text-xl font-bold">{stat.value}</div>
-                <div className="text-xs text-muted-foreground">{stat.label}</div>
-              </CardContent>
-            </Card>
-          ))}
+          <Card>
+            <CardContent className="p-4 text-center">
+              <div className="w-10 h-10 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-2">
+                <Package className="w-5 h-5 text-primary" />
+              </div>
+              <div className="text-xl font-bold">{completedToday.length}</div>
+              <div className="text-xs text-muted-foreground">Completed Today</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4 text-center">
+              <div className="w-10 h-10 mx-auto rounded-full bg-yellow-500/10 flex items-center justify-center mb-2">
+                <Clock className="w-5 h-5 text-yellow-600" />
+              </div>
+              <div className="text-xl font-bold">{activeDeliveries.length}</div>
+              <div className="text-xs text-muted-foreground">Active</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4 text-center">
+              <div className="w-10 h-10 mx-auto rounded-full bg-green-500/10 flex items-center justify-center mb-2">
+                <DollarSign className="w-5 h-5 text-green-600" />
+              </div>
+              <div className="text-xl font-bold">
+                ₹{completedToday.reduce((sum, d) => sum + (d.order?.total_amount || 0) * 0.1, 0).toFixed(0)}
+              </div>
+              <div className="text-xs text-muted-foreground">Earnings</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4 text-center">
+              <div className="w-10 h-10 mx-auto rounded-full bg-blue-500/10 flex items-center justify-center mb-2">
+                <MapPin className="w-5 h-5 text-blue-600" />
+              </div>
+              <div className="text-xl font-bold">{watchId !== null ? 'Active' : 'Off'}</div>
+              <div className="text-xs text-muted-foreground">GPS Tracking</div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Active Order */}
-        {isOnline && (
-          <Card className="border-delivery/50 bg-delivery/5">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-delivery">Active Delivery</CardTitle>
-                <span className="px-3 py-1 rounded-full bg-delivery text-white text-xs font-medium">
-                  In Progress
-                </span>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="font-semibold">{ACTIVE_ORDER.id}</span>
-                <span className="font-semibold">{ACTIVE_ORDER.total}</span>
-              </div>
-
-              <div className="space-y-3">
-                {/* Pickup */}
-                <div className="flex gap-3 p-3 rounded-lg bg-card">
-                  <div className="w-8 h-8 rounded-full bg-restaurant/10 flex items-center justify-center shrink-0">
-                    <Package className="w-4 h-4 text-restaurant" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-medium">{ACTIVE_ORDER.restaurant}</div>
-                    <div className="text-sm text-muted-foreground">{ACTIVE_ORDER.restaurantAddress}</div>
-                  </div>
-                  <Button size="icon" variant="outline" className="shrink-0">
-                    <Navigation className="w-4 h-4" />
-                  </Button>
-                </div>
-
-                {/* Delivery */}
-                <div className="flex gap-3 p-3 rounded-lg bg-card">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <MapPin className="w-4 h-4 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-medium">{ACTIVE_ORDER.customer}</div>
-                    <div className="text-sm text-muted-foreground">{ACTIVE_ORDER.customerAddress}</div>
-                  </div>
-                  <Button size="icon" variant="outline" className="shrink-0">
-                    <Phone className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <span>{ACTIVE_ORDER.distance} away</span>
-                <span>ETA: {ACTIVE_ORDER.estimatedTime}</span>
-              </div>
-
-              <div className="flex gap-3">
-                <Button variant="outline" className="flex-1">Mark Picked Up</Button>
-                <Button className="flex-1 bg-delivery hover:bg-delivery/90">Complete Delivery</Button>
-              </div>
+        {/* Loading State */}
+        {isLoading && (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <Loader2 className="w-8 h-8 mx-auto animate-spin text-muted-foreground" />
             </CardContent>
           </Card>
         )}
 
+        {/* Active Deliveries */}
+        {isOnline && activeDeliveries.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="font-semibold text-lg">Active Deliveries</h2>
+            {activeDeliveries.map((delivery) => (
+              <Card key={delivery.id} className="border-primary/30 bg-primary/5">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base">
+                      Order #{delivery.order_id.slice(0, 8)}
+                    </CardTitle>
+                    <Badge className={getStatusColor(delivery.status)}>
+                      {STATUS_LABELS[delivery.status]}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      {formatDistanceToNow(new Date(delivery.created_at), { addSuffix: true })}
+                    </span>
+                    <span className="font-semibold">₹{delivery.order?.total_amount}</span>
+                  </div>
+
+                  {/* Restaurant Info */}
+                  <div className="flex gap-3 p-3 rounded-lg bg-card border">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                      <Package className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium truncate">{delivery.order?.restaurant?.name}</div>
+                      <div className="text-sm text-muted-foreground truncate">
+                        {delivery.order?.restaurant?.address}
+                      </div>
+                    </div>
+                    <Button 
+                      size="icon" 
+                      variant="outline" 
+                      className="shrink-0"
+                      onClick={() => {
+                        if (delivery.order?.restaurant?.address) {
+                          window.open(`https://maps.google.com/?q=${encodeURIComponent(delivery.order.restaurant.address)}`);
+                        }
+                      }}
+                    >
+                      <Navigation className="w-4 h-4" />
+                    </Button>
+                  </div>
+
+                  {/* Location Status */}
+                  {delivery.current_lat && delivery.current_lng && (
+                    <div className="text-xs text-muted-foreground flex items-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      Location: {delivery.current_lat.toFixed(4)}, {delivery.current_lng.toFixed(4)}
+                    </div>
+                  )}
+
+                  {/* Action Button */}
+                  {STATUS_FLOW[delivery.status] && (
+                    <Button 
+                      className="w-full"
+                      onClick={() => handleStatusUpdate(delivery)}
+                      disabled={updateStatus.isPending}
+                    >
+                      {updateStatus.isPending ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : delivery.status === 'en_route_delivery' ? (
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                      ) : null}
+                      {STATUS_FLOW[delivery.status].label}
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* No Active Deliveries */}
+        {isOnline && !isLoading && activeDeliveries.length === 0 && (
+          <Card className="border-dashed">
+            <CardContent className="p-8 text-center">
+              <div className="w-16 h-16 mx-auto rounded-full bg-muted flex items-center justify-center mb-4">
+                <Package className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <h3 className="font-semibold text-lg">No active deliveries</h3>
+              <p className="text-muted-foreground text-sm mt-1">
+                New deliveries will appear here when assigned
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Offline State */}
         {!isOnline && (
           <Card className="border-dashed">
             <CardContent className="p-8 text-center">
@@ -136,10 +282,37 @@ export default function DeliveryDashboard() {
               </div>
               <h3 className="font-semibold text-lg">You're offline</h3>
               <p className="text-muted-foreground text-sm mt-1">
-                Go online to start receiving delivery requests
+                Go online to receive delivery assignments
               </p>
             </CardContent>
           </Card>
+        )}
+
+        {/* Completed Today */}
+        {completedToday.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="font-semibold text-lg">Completed Today</h2>
+            <div className="space-y-2">
+              {completedToday.map((delivery) => (
+                <Card key={delivery.id}>
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
+                        <CheckCircle className="w-5 h-5 text-green-600" />
+                      </div>
+                      <div>
+                        <div className="font-medium">{delivery.order?.restaurant?.name}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {formatDistanceToNow(new Date(delivery.updated_at), { addSuffix: true })}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="font-semibold">₹{((delivery.order?.total_amount || 0) * 0.1).toFixed(0)}</div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
         )}
       </div>
     </DashboardLayout>
