@@ -1,9 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { OrderStatus } from '@/hooks/useOrders';
+import { useRealtimeSync } from './useRealtimeSync';
 
 export interface RestaurantOrder {
   id: string;
@@ -98,39 +99,28 @@ export function useRestaurantOrders() {
     enabled: !!restaurant?.id,
   });
 
-  // Real-time subscription for new orders
-  useEffect(() => {
-    if (!restaurant?.id) return;
+  const handleNewOrder = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['restaurant-orders', restaurant?.id] });
+    toast.info('🔔 New order received!', {
+      description: 'Check your incoming orders',
+    });
+  }, [queryClient, restaurant?.id]);
 
-    const channel = supabase
-      .channel('restaurant-orders-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'orders',
-          filter: `restaurant_id=eq.${restaurant.id}`,
-        },
-        (payload) => {
-          console.log('Restaurant order update:', payload);
-          queryClient.invalidateQueries({ queryKey: ['restaurant-orders', restaurant.id] });
-          
-          if (payload.eventType === 'INSERT') {
-            toast.info('New order received!', {
-              description: 'Check your incoming orders',
-            });
-          }
-        }
-      )
-      .subscribe();
+  const handleOrderUpdate = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['restaurant-orders', restaurant?.id] });
+  }, [queryClient, restaurant?.id]);
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [restaurant?.id, queryClient]);
+  // Real-time subscription with reconnection handling
+  const { isConnected } = useRealtimeSync({
+    channelName: `restaurant-orders-${restaurant?.id}`,
+    table: 'orders',
+    filter: `restaurant_id=eq.${restaurant?.id}`,
+    onInsert: handleNewOrder,
+    onUpdate: handleOrderUpdate,
+    enabled: !!restaurant?.id,
+  });
 
-  return { ...ordersQuery, restaurant };
+  return { ...ordersQuery, restaurant, isConnected };
 }
 
 export function useUpdateOrderStatus() {
@@ -140,7 +130,7 @@ export function useUpdateOrderStatus() {
     mutationFn: async ({ orderId, status }: { orderId: string; status: OrderStatus }) => {
       const { data, error } = await supabase
         .from('orders')
-        .update({ status })
+        .update({ status, updated_at: new Date().toISOString() })
         .eq('id', orderId)
         .select()
         .single();

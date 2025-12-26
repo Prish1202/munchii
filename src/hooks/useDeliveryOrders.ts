@@ -1,8 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { useEffect } from 'react';
+import { useRealtimeSync } from './useRealtimeSync';
 import type { Database } from '@/integrations/supabase/types';
 
 type DeliveryStatus = Database['public']['Enums']['delivery_status'];
@@ -57,48 +58,42 @@ export function useDeliveryOrders() {
     enabled: !!user?.id,
   });
 
-  // Real-time subscription for delivery updates
-  useEffect(() => {
-    if (!user?.id) return;
+  const handleDeliveryUpdate = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['delivery-orders', user?.id] });
+  }, [queryClient, user?.id]);
 
-    const channel = supabase
-      .channel('delivery-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'deliveries',
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ['delivery-orders', user.id] });
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'orders',
-        },
-        (payload) => {
-          queryClient.invalidateQueries({ queryKey: ['delivery-orders', user.id] });
-          if (payload.new.status === 'ready') {
-            toast({
-              title: 'Order Ready!',
-              description: 'An order is ready for pickup.',
-            });
-          }
-        }
-      )
-      .subscribe();
+  const handleOrderUpdate = useCallback((payload: any) => {
+    queryClient.invalidateQueries({ queryKey: ['delivery-orders', user?.id] });
+    if (payload.new?.status === 'ready') {
+      toast({
+        title: 'Order Ready!',
+        description: 'An order is ready for pickup.',
+      });
+    }
+  }, [queryClient, user?.id, toast]);
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id, queryClient, toast]);
+  // Real-time subscription for deliveries
+  const { isConnected: deliveriesConnected } = useRealtimeSync({
+    channelName: `delivery-updates-${user?.id}`,
+    table: 'deliveries',
+    onAny: handleDeliveryUpdate,
+    enabled: !!user?.id,
+  });
 
-  return { deliveries: deliveries || [], isLoading, error };
+  // Real-time subscription for order status changes
+  const { isConnected: ordersConnected } = useRealtimeSync({
+    channelName: `delivery-order-updates-${user?.id}`,
+    table: 'orders',
+    onUpdate: handleOrderUpdate,
+    enabled: !!user?.id,
+  });
+
+  return { 
+    deliveries: deliveries || [], 
+    isLoading, 
+    error, 
+    isConnected: deliveriesConnected && ordersConnected 
+  };
 }
 
 export function useUpdateDeliveryStatus() {

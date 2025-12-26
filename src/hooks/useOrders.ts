@@ -1,8 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { useRealtimeSync } from './useRealtimeSync';
 
 export type OrderStatus = 'placed' | 'accepted' | 'preparing' | 'ready' | 'picked_up' | 'delivered' | 'cancelled';
 
@@ -32,6 +33,16 @@ export interface OrderItem {
   };
 }
 
+const STATUS_MESSAGES: Record<OrderStatus, string> = {
+  placed: 'Order placed!',
+  accepted: 'Restaurant accepted your order!',
+  preparing: 'Your food is being prepared!',
+  ready: 'Your order is ready for pickup!',
+  picked_up: 'Delivery partner picked up your order!',
+  delivered: 'Your order has been delivered!',
+  cancelled: 'Order cancelled',
+};
+
 export function useCustomerOrders() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -54,47 +65,31 @@ export function useCustomerOrders() {
     enabled: !!user?.id,
   });
 
-  // Real-time subscription for order updates
-  useEffect(() => {
-    if (!user?.id) return;
+  const handleUpdate = useCallback((payload: any) => {
+    console.log('Customer order update:', payload);
+    queryClient.invalidateQueries({ queryKey: ['customer-orders', user?.id] });
+    
+    const newStatus = payload.new?.status as OrderStatus;
+    if (newStatus && STATUS_MESSAGES[newStatus]) {
+      toast.info(STATUS_MESSAGES[newStatus]);
+    }
+  }, [queryClient, user?.id]);
 
-    const channel = supabase
-      .channel('customer-orders-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'orders',
-          filter: `customer_id=eq.${user.id}`,
-        },
-        (payload) => {
-          console.log('Order update:', payload);
-          queryClient.invalidateQueries({ queryKey: ['customer-orders', user.id] });
-          
-          if (payload.eventType === 'UPDATE') {
-            const newStatus = (payload.new as Order).status;
-            const statusMessages: Record<OrderStatus, string> = {
-              placed: 'Order placed!',
-              accepted: 'Restaurant accepted your order!',
-              preparing: 'Your food is being prepared!',
-              ready: 'Your order is ready for pickup!',
-              picked_up: 'Delivery partner picked up your order!',
-              delivered: 'Your order has been delivered!',
-              cancelled: 'Order cancelled',
-            };
-            toast.info(statusMessages[newStatus]);
-          }
-        }
-      )
-      .subscribe();
+  const handleInsert = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['customer-orders', user?.id] });
+  }, [queryClient, user?.id]);
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id, queryClient]);
+  // Real-time subscription with reconnection handling
+  const { isConnected } = useRealtimeSync({
+    channelName: `customer-orders-${user?.id}`,
+    table: 'orders',
+    filter: `customer_id=eq.${user?.id}`,
+    onUpdate: handleUpdate,
+    onInsert: handleInsert,
+    enabled: !!user?.id,
+  });
 
-  return query;
+  return { ...query, isConnected };
 }
 
 export function useOrderItems(orderId: string) {
