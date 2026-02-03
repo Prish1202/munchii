@@ -25,7 +25,7 @@ const ROLE_COLORS: Record<UserRole, string> = {
   admin: 'border-admin bg-admin/10 text-admin',
 };
 
-type LoginMethod = 'email' | 'phone';
+type AuthMethod = 'email' | 'phone';
 
 export default function AuthPage() {
   const [email, setEmail] = useState('');
@@ -34,10 +34,12 @@ export default function AuthPage() {
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole>('customer');
-  const [loginMethod, setLoginMethod] = useState<LoginMethod>('email');
+  const [loginMethod, setLoginMethod] = useState<AuthMethod>('phone'); // Default to phone for customers
+  const [signupMethod, setSignupMethod] = useState<AuthMethod>('phone'); // Default to phone for customers
   const [isLoading, setIsLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
-  const { login, loginWithPhone, verifyOtp, signup, isAuthenticated, user } = useAuth();
+  const [signupOtpSent, setSignupOtpSent] = useState(false);
+  const { login, loginWithPhone, signupWithPhone, verifyOtp, signup, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
   // Redirect if already authenticated
@@ -46,6 +48,15 @@ export default function AuthPage() {
       navigate(ROLE_ROUTES[user.role]);
     }
   }, [isAuthenticated, user, navigate]);
+
+  // Update default method when role changes (for signup)
+  useEffect(() => {
+    if (selectedRole === 'customer') {
+      setSignupMethod('phone');
+    } else {
+      setSignupMethod('email');
+    }
+  }, [selectedRole]);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,7 +93,7 @@ export default function AuthPage() {
     setIsLoading(false);
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
+  const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
@@ -99,6 +110,43 @@ export default function AuthPage() {
     }
     
     setIsLoading(false);
+  };
+
+  const handlePhoneSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    if (!signupOtpSent) {
+      if (!name.trim()) {
+        toast.error('Please enter your name');
+        setIsLoading(false);
+        return;
+      }
+      const { error } = await signupWithPhone(phone, name, selectedRole);
+      if (error) {
+        toast.error(error);
+      } else {
+        setSignupOtpSent(true);
+        toast.success('OTP sent to your phone!');
+      }
+    } else {
+      const { error } = await verifyOtp(phone, otp);
+      if (error) {
+        toast.error(error);
+      }
+    }
+
+    setIsLoading(false);
+  };
+
+  const resetLoginState = () => {
+    setOtpSent(false);
+    setOtp('');
+  };
+
+  const resetSignupState = () => {
+    setSignupOtpSent(false);
+    setOtp('');
   };
 
   return (
@@ -118,8 +166,8 @@ export default function AuthPage() {
           <Tabs defaultValue="login" className="w-full">
             <CardHeader className="pb-2">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                <TabsTrigger value="login" onClick={resetLoginState}>Login</TabsTrigger>
+                <TabsTrigger value="signup" onClick={resetSignupState}>Sign Up</TabsTrigger>
               </TabsList>
             </CardHeader>
 
@@ -130,61 +178,33 @@ export default function AuthPage() {
                 <div className="flex gap-2">
                   <Button
                     type="button"
-                    variant={loginMethod === 'email' ? 'default' : 'outline'}
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => {
-                      setLoginMethod('email');
-                      setOtpSent(false);
-                    }}
-                  >
-                    <Mail className="w-4 h-4 mr-2" />
-                    Email
-                  </Button>
-                  <Button
-                    type="button"
                     variant={loginMethod === 'phone' ? 'default' : 'outline'}
                     size="sm"
                     className="flex-1"
                     onClick={() => {
                       setLoginMethod('phone');
-                      setOtpSent(false);
+                      resetLoginState();
                     }}
                   >
                     <Phone className="w-4 h-4 mr-2" />
                     Phone
                   </Button>
+                  <Button
+                    type="button"
+                    variant={loginMethod === 'email' ? 'default' : 'outline'}
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => {
+                      setLoginMethod('email');
+                      resetLoginState();
+                    }}
+                  >
+                    <Mail className="w-4 h-4 mr-2" />
+                    Email
+                  </Button>
                 </div>
 
-                {loginMethod === 'email' ? (
-                  <form onSubmit={handleEmailLogin} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="login-email">Email</Label>
-                      <Input
-                        id="login-email"
-                        type="email"
-                        placeholder="you@example.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="login-password">Password</Label>
-                      <Input
-                        id="login-password"
-                        type="password"
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <Button type="submit" className="w-full" disabled={isLoading}>
-                      {isLoading ? 'Logging in...' : 'Login'}
-                    </Button>
-                  </form>
-                ) : (
+                {loginMethod === 'phone' ? (
                   <form onSubmit={handlePhoneLogin} className="space-y-4">
                     {!otpSent ? (
                       <div className="space-y-2">
@@ -198,14 +218,14 @@ export default function AuthPage() {
                           required
                         />
                         <p className="text-xs text-muted-foreground">
-                          Include country code (e.g., +1 for US)
+                          Include country code (e.g., +1 for US, +91 for India)
                         </p>
                       </div>
                     ) : (
                       <>
                         <button
                           type="button"
-                          onClick={() => setOtpSent(false)}
+                          onClick={resetLoginState}
                           className="flex items-center text-sm text-muted-foreground hover:text-foreground"
                         >
                           <ArrowLeft className="w-4 h-4 mr-1" />
@@ -232,6 +252,34 @@ export default function AuthPage() {
                       {isLoading 
                         ? (otpSent ? 'Verifying...' : 'Sending OTP...') 
                         : (otpSent ? 'Verify OTP' : 'Send OTP')}
+                    </Button>
+                  </form>
+                ) : (
+                  <form onSubmit={handleEmailLogin} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="login-email">Email</Label>
+                      <Input
+                        id="login-email"
+                        type="email"
+                        placeholder="you@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="login-password">Password</Label>
+                      <Input
+                        id="login-password"
+                        type="password"
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? 'Logging in...' : 'Login'}
                     </Button>
                   </form>
                 )}
@@ -262,45 +310,140 @@ export default function AuthPage() {
                   </div>
                 </div>
 
-                <form onSubmit={handleSignup} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-name">Full Name</Label>
-                    <Input
-                      id="signup-name"
-                      type="text"
-                      placeholder="John Doe"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="you@example.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      minLength={6}
-                    />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? 'Creating account...' : 'Create Account'}
+                {/* Signup Method Toggle */}
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant={signupMethod === 'phone' ? 'default' : 'outline'}
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => {
+                      setSignupMethod('phone');
+                      resetSignupState();
+                    }}
+                  >
+                    <Phone className="w-4 h-4 mr-2" />
+                    Phone
                   </Button>
-                </form>
+                  <Button
+                    type="button"
+                    variant={signupMethod === 'email' ? 'default' : 'outline'}
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => {
+                      setSignupMethod('email');
+                      resetSignupState();
+                    }}
+                  >
+                    <Mail className="w-4 h-4 mr-2" />
+                    Email
+                  </Button>
+                </div>
+
+                {signupMethod === 'phone' ? (
+                  <form onSubmit={handlePhoneSignup} className="space-y-4">
+                    {!signupOtpSent ? (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="signup-name-phone">Full Name</Label>
+                          <Input
+                            id="signup-name-phone"
+                            type="text"
+                            placeholder="John Doe"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="signup-phone">Phone Number</Label>
+                          <Input
+                            id="signup-phone"
+                            type="tel"
+                            placeholder="+1234567890"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            required
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Include country code (e.g., +1 for US, +91 for India)
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={resetSignupState}
+                          className="flex items-center text-sm text-muted-foreground hover:text-foreground"
+                        >
+                          <ArrowLeft className="w-4 h-4 mr-1" />
+                          Change details
+                        </button>
+                        <div className="space-y-2">
+                          <Label htmlFor="signup-otp">Enter OTP</Label>
+                          <Input
+                            id="signup-otp"
+                            type="text"
+                            placeholder="123456"
+                            value={otp}
+                            onChange={(e) => setOtp(e.target.value)}
+                            required
+                            maxLength={6}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Enter the 6-digit code sent to {phone}
+                          </p>
+                        </div>
+                      </>
+                    )}
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading 
+                        ? (signupOtpSent ? 'Verifying...' : 'Sending OTP...') 
+                        : (signupOtpSent ? 'Verify & Create Account' : 'Send OTP')}
+                    </Button>
+                  </form>
+                ) : (
+                  <form onSubmit={handleEmailSignup} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-name">Full Name</Label>
+                      <Input
+                        id="signup-name"
+                        type="text"
+                        placeholder="John Doe"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-email">Email</Label>
+                      <Input
+                        id="signup-email"
+                        type="email"
+                        placeholder="you@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-password">Password</Label>
+                      <Input
+                        id="signup-password"
+                        type="password"
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        minLength={6}
+                      />
+                    </div>
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? 'Creating account...' : 'Create Account'}
+                    </Button>
+                  </form>
+                )}
               </TabsContent>
             </CardContent>
           </Tabs>
