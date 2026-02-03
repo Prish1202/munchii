@@ -21,7 +21,7 @@ import {
   Clock,
   Users,
   Settings,
-  Utensils
+  Coffee
 } from 'lucide-react';
 import { UserRole } from '@/types/auth';
 
@@ -34,7 +34,7 @@ interface NavItem {
 const NAV_ITEMS: Record<UserRole, NavItem[]> = {
   customer: [
     { label: 'Home', href: '/customer', icon: <Home className="w-5 h-5" /> },
-    { label: 'Browse', href: '/customer/browse', icon: <Utensils className="w-5 h-5" /> },
+    { label: 'Browse', href: '/customer/browse', icon: <Coffee className="w-5 h-5" /> },
     { label: 'Orders', href: '/customer/orders', icon: <ShoppingBag className="w-5 h-5" /> },
     { label: 'Profile', href: '/customer/profile', icon: <User className="w-5 h-5" /> },
   ],
@@ -53,14 +53,14 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
   admin: [
     { label: 'Overview', href: '/admin', icon: <BarChart3 className="w-5 h-5" /> },
     { label: 'Users', href: '/admin/users', icon: <Users className="w-5 h-5" /> },
-    { label: 'Restaurants', href: '/admin/restaurants', icon: <Store className="w-5 h-5" /> },
+    { label: 'Cafés', href: '/admin/restaurants', icon: <Store className="w-5 h-5" /> },
     { label: 'Orders', href: '/admin/orders', icon: <ClipboardList className="w-5 h-5" /> },
   ],
 };
 
 const ROLE_COLORS: Record<UserRole, string> = {
   customer: 'bg-customer',
-  restaurant: 'bg-restaurant',
+  restaurant: 'bg-cafe',
   delivery: 'bg-delivery',
   admin: 'bg-admin',
 };
@@ -87,9 +87,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <div className="container flex h-16 items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
             <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", roleColor)}>
-              <Utensils className="w-5 h-5 text-primary-foreground" />
+              <Coffee className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="font-semibold text-lg">FoodMarket</span>
+            <span className="font-display font-semibold text-lg">BrewDrop</span>
           </Link>
           
           <div className="flex items-center gap-2">

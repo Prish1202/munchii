@@ -10,9 +10,9 @@ import {
   MapPin,
   Clock,
   Navigation,
-  Phone,
   CheckCircle,
-  Loader2
+  Loader2,
+  Coffee
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { useDeliveryOrders, useUpdateDeliveryStatus, useUpdateLocation, type DeliveryOrder } from '@/hooks/useDeliveryOrders';
@@ -20,15 +20,15 @@ import { formatDistanceToNow } from 'date-fns';
 
 const STATUS_FLOW: Record<string, { next: string; orderStatus?: string; label: string }> = {
   assigned: { next: 'en_route_pickup', label: 'Accept & Head to Pickup' },
-  en_route_pickup: { next: 'at_restaurant', label: 'Arrived at Restaurant' },
+  en_route_pickup: { next: 'at_restaurant', label: 'Arrived at Café' },
   at_restaurant: { next: 'en_route_delivery', orderStatus: 'picked_up', label: 'Picked Up - Start Delivery' },
   en_route_delivery: { next: 'delivered', orderStatus: 'delivered', label: 'Mark as Delivered' },
 };
 
 const STATUS_LABELS: Record<string, string> = {
   assigned: 'Assigned',
-  en_route_pickup: 'Heading to Pickup',
-  at_restaurant: 'At Restaurant',
+  en_route_pickup: 'Heading to Café',
+  at_restaurant: 'At Café',
   en_route_delivery: 'Out for Delivery',
   delivered: 'Delivered',
 };
@@ -41,7 +41,6 @@ export default function DeliveryDashboard() {
   const updateStatus = useUpdateDeliveryStatus();
   const updateLocation = useUpdateLocation();
 
-  // Filter active deliveries (not delivered)
   const activeDeliveries = deliveries.filter(d => d.status !== 'delivered');
   const completedToday = deliveries.filter(d => {
     if (d.status !== 'delivered') return false;
@@ -50,7 +49,6 @@ export default function DeliveryDashboard() {
     return deliveryDate.toDateString() === today.toDateString();
   });
 
-  // GPS tracking
   const startLocationTracking = useCallback((deliveryId: string) => {
     if (!navigator.geolocation) return;
 
@@ -75,7 +73,6 @@ export default function DeliveryDashboard() {
     }
   }, [watchId]);
 
-  // Start tracking when there's an active delivery en route
   useEffect(() => {
     const enRouteDelivery = activeDeliveries.find(
       d => d.status === 'en_route_pickup' || d.status === 'en_route_delivery'
@@ -103,9 +100,9 @@ export default function DeliveryDashboard() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'assigned': return 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20';
-      case 'en_route_pickup': return 'bg-blue-500/10 text-blue-600 border-blue-500/20';
-      case 'at_restaurant': return 'bg-purple-500/10 text-purple-600 border-purple-500/20';
+      case 'assigned': return 'bg-accent/10 text-accent border-accent/20';
+      case 'en_route_pickup': return 'bg-delivery/10 text-delivery border-delivery/20';
+      case 'at_restaurant': return 'bg-cafe/10 text-cafe border-cafe/20';
       case 'en_route_delivery': return 'bg-primary/10 text-primary border-primary/20';
       case 'delivered': return 'bg-green-500/10 text-green-600 border-green-500/20';
       default: return 'bg-muted text-muted-foreground';
@@ -118,11 +115,11 @@ export default function DeliveryDashboard() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Hey, {user?.name}!</h1>
-            <p className="text-muted-foreground">Ready to deliver?</p>
+            <h1 className="text-2xl font-display font-bold">Hey, {user?.name}! ☕</h1>
+            <p className="text-muted-foreground">Ready to deliver some brews?</p>
           </div>
           <div className="flex items-center gap-3">
-            <span className={`text-sm font-medium ${isOnline ? 'text-green-600' : 'text-muted-foreground'}`}>
+            <span className={`text-sm font-medium ${isOnline ? 'text-delivery' : 'text-muted-foreground'}`}>
               {isOnline ? 'Online' : 'Offline'}
             </span>
             <Switch checked={isOnline} onCheckedChange={setIsOnline} />
@@ -134,27 +131,27 @@ export default function DeliveryDashboard() {
           <Card>
             <CardContent className="p-4 text-center">
               <div className="w-10 h-10 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-2">
-                <Package className="w-5 h-5 text-primary" />
+                <Coffee className="w-5 h-5 text-primary" />
               </div>
-              <div className="text-xl font-bold">{completedToday.length}</div>
-              <div className="text-xs text-muted-foreground">Completed Today</div>
+              <div className="text-xl font-display font-bold">{completedToday.length}</div>
+              <div className="text-xs text-muted-foreground">Delivered Today</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
-              <div className="w-10 h-10 mx-auto rounded-full bg-yellow-500/10 flex items-center justify-center mb-2">
-                <Clock className="w-5 h-5 text-yellow-600" />
+              <div className="w-10 h-10 mx-auto rounded-full bg-accent/10 flex items-center justify-center mb-2">
+                <Clock className="w-5 h-5 text-accent" />
               </div>
-              <div className="text-xl font-bold">{activeDeliveries.length}</div>
+              <div className="text-xl font-display font-bold">{activeDeliveries.length}</div>
               <div className="text-xs text-muted-foreground">Active</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
-              <div className="w-10 h-10 mx-auto rounded-full bg-green-500/10 flex items-center justify-center mb-2">
-                <DollarSign className="w-5 h-5 text-green-600" />
+              <div className="w-10 h-10 mx-auto rounded-full bg-delivery/10 flex items-center justify-center mb-2">
+                <DollarSign className="w-5 h-5 text-delivery" />
               </div>
-              <div className="text-xl font-bold">
+              <div className="text-xl font-display font-bold">
                 ₹{completedToday.reduce((sum, d) => sum + (d.order?.total_amount || 0) * 0.1, 0).toFixed(0)}
               </div>
               <div className="text-xs text-muted-foreground">Earnings</div>
@@ -162,10 +159,10 @@ export default function DeliveryDashboard() {
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
-              <div className="w-10 h-10 mx-auto rounded-full bg-blue-500/10 flex items-center justify-center mb-2">
-                <MapPin className="w-5 h-5 text-blue-600" />
+              <div className="w-10 h-10 mx-auto rounded-full bg-cafe/10 flex items-center justify-center mb-2">
+                <MapPin className="w-5 h-5 text-cafe" />
               </div>
-              <div className="text-xl font-bold">{watchId !== null ? 'Active' : 'Off'}</div>
+              <div className="text-xl font-display font-bold">{watchId !== null ? 'Active' : 'Off'}</div>
               <div className="text-xs text-muted-foreground">GPS Tracking</div>
             </CardContent>
           </Card>
@@ -183,12 +180,12 @@ export default function DeliveryDashboard() {
         {/* Active Deliveries */}
         {isOnline && activeDeliveries.length > 0 && (
           <div className="space-y-4">
-            <h2 className="font-semibold text-lg">Active Deliveries</h2>
+            <h2 className="font-display font-semibold text-lg">Active Deliveries</h2>
             {activeDeliveries.map((delivery) => (
               <Card key={delivery.id} className="border-primary/30 bg-primary/5">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">
+                    <CardTitle className="text-base font-display">
                       Order #{delivery.order_id.slice(0, 8)}
                     </CardTitle>
                     <Badge className={getStatusColor(delivery.status)}>
@@ -204,10 +201,10 @@ export default function DeliveryDashboard() {
                     <span className="font-semibold">₹{delivery.order?.total_amount}</span>
                   </div>
 
-                  {/* Restaurant Info */}
+                  {/* Café Info */}
                   <div className="flex gap-3 p-3 rounded-lg bg-card border">
                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                      <Package className="w-5 h-5 text-primary" />
+                      <Coffee className="w-5 h-5 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-medium truncate">{delivery.order?.restaurant?.name}</div>
@@ -263,11 +260,11 @@ export default function DeliveryDashboard() {
           <Card className="border-dashed">
             <CardContent className="p-8 text-center">
               <div className="w-16 h-16 mx-auto rounded-full bg-muted flex items-center justify-center mb-4">
-                <Package className="w-8 h-8 text-muted-foreground" />
+                <Coffee className="w-8 h-8 text-muted-foreground" />
               </div>
-              <h3 className="font-semibold text-lg">No active deliveries</h3>
+              <h3 className="font-display font-semibold text-lg">No active deliveries</h3>
               <p className="text-muted-foreground text-sm mt-1">
-                New deliveries will appear here when assigned
+                New coffee orders will appear here when assigned
               </p>
             </CardContent>
           </Card>
@@ -278,9 +275,9 @@ export default function DeliveryDashboard() {
           <Card className="border-dashed">
             <CardContent className="p-8 text-center">
               <div className="w-16 h-16 mx-auto rounded-full bg-muted flex items-center justify-center mb-4">
-                <Package className="w-8 h-8 text-muted-foreground" />
+                <Coffee className="w-8 h-8 text-muted-foreground" />
               </div>
-              <h3 className="font-semibold text-lg">You're offline</h3>
+              <h3 className="font-display font-semibold text-lg">You're offline</h3>
               <p className="text-muted-foreground text-sm mt-1">
                 Go online to receive delivery assignments
               </p>
@@ -291,14 +288,14 @@ export default function DeliveryDashboard() {
         {/* Completed Today */}
         {completedToday.length > 0 && (
           <div className="space-y-4">
-            <h2 className="font-semibold text-lg">Completed Today</h2>
+            <h2 className="font-display font-semibold text-lg">Completed Today</h2>
             <div className="space-y-2">
               {completedToday.map((delivery) => (
                 <Card key={delivery.id}>
                   <CardContent className="p-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
-                        <CheckCircle className="w-5 h-5 text-green-600" />
+                      <div className="w-10 h-10 rounded-full bg-delivery/10 flex items-center justify-center">
+                        <CheckCircle className="w-5 h-5 text-delivery" />
                       </div>
                       <div>
                         <div className="font-medium">{delivery.order?.restaurant?.name}</div>
