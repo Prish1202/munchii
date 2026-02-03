@@ -8,11 +8,11 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-import { Utensils, ShoppingBag, Store, Truck, Mail, Phone, ArrowLeft } from 'lucide-react';
+import { Coffee, Heart, Store, Truck, Mail, Phone, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
 const ROLE_ICONS: Record<UserRole, React.ReactNode> = {
-  customer: <ShoppingBag className="w-5 h-5" />,
+  customer: <Heart className="w-5 h-5" />,
   restaurant: <Store className="w-5 h-5" />,
   delivery: <Truck className="w-5 h-5" />,
   admin: null,
@@ -20,7 +20,7 @@ const ROLE_ICONS: Record<UserRole, React.ReactNode> = {
 
 const ROLE_COLORS: Record<UserRole, string> = {
   customer: 'border-customer bg-customer/10 text-customer',
-  restaurant: 'border-restaurant bg-restaurant/10 text-restaurant',
+  restaurant: 'border-cafe bg-cafe/10 text-cafe',
   delivery: 'border-delivery bg-delivery/10 text-delivery',
   admin: 'border-admin bg-admin/10 text-admin',
 };
@@ -34,22 +34,20 @@ export default function AuthPage() {
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole>('customer');
-  const [loginMethod, setLoginMethod] = useState<AuthMethod>('phone'); // Default to phone for customers
-  const [signupMethod, setSignupMethod] = useState<AuthMethod>('phone'); // Default to phone for customers
+  const [loginMethod, setLoginMethod] = useState<AuthMethod>('phone');
+  const [signupMethod, setSignupMethod] = useState<AuthMethod>('phone');
   const [isLoading, setIsLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [signupOtpSent, setSignupOtpSent] = useState(false);
   const { login, loginWithPhone, signupWithPhone, verifyOtp, signup, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated && user) {
       navigate(ROLE_ROUTES[user.role]);
     }
   }, [isAuthenticated, user, navigate]);
 
-  // Update default method when role changes (for signup)
   useEffect(() => {
     if (selectedRole === 'customer') {
       setSignupMethod('phone');
@@ -151,23 +149,33 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6 animate-fade-in">
+      {/* Decorative coffee beans pattern */}
+      <div className="fixed inset-0 opacity-[0.02] pointer-events-none">
+        <div className="absolute top-20 left-10 w-8 h-8 rounded-full bg-foreground rotate-45" />
+        <div className="absolute top-40 right-20 w-6 h-6 rounded-full bg-foreground rotate-12" />
+        <div className="absolute bottom-32 left-1/4 w-10 h-10 rounded-full bg-foreground -rotate-30" />
+        <div className="absolute top-1/3 right-1/3 w-7 h-7 rounded-full bg-foreground rotate-60" />
+      </div>
+
+      <div className="w-full max-w-md space-y-6 animate-fade-in relative">
         {/* Logo */}
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary text-primary-foreground">
-            <Utensils className="w-7 h-7" />
+        <div className="text-center space-y-3">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-primary-foreground shadow-lg">
+            <Coffee className="w-8 h-8" />
           </div>
-          <h1 className="text-2xl font-bold">FoodMarket</h1>
-          <p className="text-muted-foreground text-sm">Your complete food delivery solution</p>
+          <div>
+            <h1 className="text-3xl font-display font-bold tracking-tight">BrewDrop</h1>
+            <p className="text-muted-foreground text-sm mt-1">Premium coffee, delivered fresh</p>
+          </div>
         </div>
 
         {/* Auth Forms */}
-        <Card>
+        <Card className="shadow-xl border-0 bg-card/80 backdrop-blur-sm">
           <Tabs defaultValue="login" className="w-full">
             <CardHeader className="pb-2">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login" onClick={resetLoginState}>Login</TabsTrigger>
-                <TabsTrigger value="signup" onClick={resetSignupState}>Sign Up</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 bg-muted/50">
+                <TabsTrigger value="login" onClick={resetLoginState} className="font-medium">Login</TabsTrigger>
+                <TabsTrigger value="signup" onClick={resetSignupState} className="font-medium">Sign Up</TabsTrigger>
               </TabsList>
             </CardHeader>
 
@@ -216,6 +224,7 @@ export default function AuthPage() {
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
                           required
+                          className="bg-background"
                         />
                         <p className="text-xs text-muted-foreground">
                           Include country code (e.g., +1 for US, +91 for India)
@@ -226,7 +235,7 @@ export default function AuthPage() {
                         <button
                           type="button"
                           onClick={resetLoginState}
-                          className="flex items-center text-sm text-muted-foreground hover:text-foreground"
+                          className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
                         >
                           <ArrowLeft className="w-4 h-4 mr-1" />
                           Change number
@@ -241,6 +250,7 @@ export default function AuthPage() {
                             onChange={(e) => setOtp(e.target.value)}
                             required
                             maxLength={6}
+                            className="bg-background text-center text-lg tracking-widest"
                           />
                           <p className="text-xs text-muted-foreground">
                             Enter the 6-digit code sent to {phone}
@@ -265,6 +275,7 @@ export default function AuthPage() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
+                        className="bg-background"
                       />
                     </div>
                     <div className="space-y-2">
@@ -276,6 +287,7 @@ export default function AuthPage() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
+                        className="bg-background"
                       />
                     </div>
                     <Button type="submit" className="w-full" disabled={isLoading}>
@@ -297,10 +309,10 @@ export default function AuthPage() {
                         type="button"
                         onClick={() => setSelectedRole(role)}
                         className={cn(
-                          "flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-all text-xs font-medium",
+                          "flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all text-xs font-medium",
                           selectedRole === role
                             ? ROLE_COLORS[role]
-                            : "border-border hover:border-muted-foreground/50"
+                            : "border-border hover:border-muted-foreground/50 bg-background"
                         )}
                       >
                         {ROLE_ICONS[role]}
@@ -353,6 +365,7 @@ export default function AuthPage() {
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             required
+                            className="bg-background"
                           />
                         </div>
                         <div className="space-y-2">
@@ -364,6 +377,7 @@ export default function AuthPage() {
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
                             required
+                            className="bg-background"
                           />
                           <p className="text-xs text-muted-foreground">
                             Include country code (e.g., +1 for US, +91 for India)
@@ -375,7 +389,7 @@ export default function AuthPage() {
                         <button
                           type="button"
                           onClick={resetSignupState}
-                          className="flex items-center text-sm text-muted-foreground hover:text-foreground"
+                          className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
                         >
                           <ArrowLeft className="w-4 h-4 mr-1" />
                           Change details
@@ -390,6 +404,7 @@ export default function AuthPage() {
                             onChange={(e) => setOtp(e.target.value)}
                             required
                             maxLength={6}
+                            className="bg-background text-center text-lg tracking-widest"
                           />
                           <p className="text-xs text-muted-foreground">
                             Enter the 6-digit code sent to {phone}
@@ -414,6 +429,7 @@ export default function AuthPage() {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         required
+                        className="bg-background"
                       />
                     </div>
                     <div className="space-y-2">
@@ -425,6 +441,7 @@ export default function AuthPage() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
+                        className="bg-background"
                       />
                     </div>
                     <div className="space-y-2">
@@ -437,6 +454,7 @@ export default function AuthPage() {
                         onChange={(e) => setPassword(e.target.value)}
                         required
                         minLength={6}
+                        className="bg-background"
                       />
                     </div>
                     <Button type="submit" className="w-full" disabled={isLoading}>

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,9 +9,8 @@ import { useMyRestaurant } from '@/hooks/useMenuManagement';
 import { 
   TrendingUp, 
   DollarSign, 
-  ShoppingBag, 
+  Coffee, 
   Clock,
-  ArrowUp,
   ChevronRight,
   Store,
   AlertCircle
@@ -51,13 +50,13 @@ export default function RestaurantDashboard() {
       <DashboardLayout>
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
           <Store className="w-16 h-16 text-muted-foreground mb-4" />
-          <h2 className="text-2xl font-bold mb-2">Set Up Your Restaurant</h2>
+          <h2 className="text-2xl font-display font-bold mb-2">Set Up Your Café</h2>
           <p className="text-muted-foreground mb-6 max-w-md">
-            You haven't created your restaurant profile yet. Set it up to start receiving orders.
+            You haven't created your café profile yet. Set it up to start receiving orders.
           </p>
           <Link to="/restaurant/settings">
-            <Button size="lg" className="bg-restaurant hover:bg-restaurant/90">
-              Create Restaurant Profile
+            <Button size="lg" className="bg-cafe hover:bg-cafe/90">
+              Create Café Profile
             </Button>
           </Link>
         </div>
@@ -71,11 +70,11 @@ export default function RestaurantDashboard() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">{restaurant.name}</h1>
+            <h1 className="text-2xl font-display font-bold">{restaurant.name}</h1>
             <p className="text-muted-foreground">Welcome back, {user?.name}</p>
           </div>
           <Link to="/restaurant/menu">
-            <Button className="bg-restaurant hover:bg-restaurant/90">
+            <Button className="bg-cafe hover:bg-cafe/90">
               Manage Menu
             </Button>
           </Link>
@@ -83,24 +82,24 @@ export default function RestaurantDashboard() {
 
         {/* Pending Orders Alert */}
         {pendingOrders.length > 0 && (
-          <Card className="border-amber-500 bg-amber-50 dark:bg-amber-950/20">
+          <Card className="border-accent bg-accent/5">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center animate-pulse">
-                    <AlertCircle className="w-5 h-5 text-white" />
+                  <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center animate-pulse">
+                    <AlertCircle className="w-5 h-5 text-accent-foreground" />
                   </div>
                   <div>
-                    <p className="font-semibold text-amber-700 dark:text-amber-400">
+                    <p className="font-semibold text-accent">
                       {pendingOrders.length} New Order{pendingOrders.length > 1 ? 's' : ''} Waiting!
                     </p>
-                    <p className="text-sm text-amber-600 dark:text-amber-500">
+                    <p className="text-sm text-muted-foreground">
                       Accept or reject incoming orders
                     </p>
                   </div>
                 </div>
                 <Link to="/restaurant/orders">
-                  <Button variant="outline" className="border-amber-500 text-amber-700 hover:bg-amber-100">
+                  <Button variant="outline" className="border-accent text-accent hover:bg-accent/10">
                     View Orders
                     <ChevronRight className="w-4 h-4 ml-1" />
                   </Button>
@@ -115,12 +114,12 @@ export default function RestaurantDashboard() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-lg bg-restaurant/10 flex items-center justify-center">
-                  <ShoppingBag className="w-5 h-5 text-restaurant" />
+                <div className="w-10 h-10 rounded-lg bg-cafe/10 flex items-center justify-center">
+                  <Coffee className="w-5 h-5 text-cafe" />
                 </div>
               </div>
               <div className="mt-3">
-                <div className="text-2xl font-bold">{todayOrders.length}</div>
+                <div className="text-2xl font-display font-bold">{todayOrders.length}</div>
                 <div className="text-sm text-muted-foreground">Today's Orders</div>
               </div>
             </CardContent>
@@ -129,12 +128,12 @@ export default function RestaurantDashboard() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-lg bg-restaurant/10 flex items-center justify-center">
-                  <DollarSign className="w-5 h-5 text-restaurant" />
+                <div className="w-10 h-10 rounded-lg bg-cafe/10 flex items-center justify-center">
+                  <DollarSign className="w-5 h-5 text-cafe" />
                 </div>
               </div>
               <div className="mt-3">
-                <div className="text-2xl font-bold">₹{todayRevenue.toFixed(0)}</div>
+                <div className="text-2xl font-display font-bold">₹{todayRevenue.toFixed(0)}</div>
                 <div className="text-sm text-muted-foreground">Today's Revenue</div>
               </div>
             </CardContent>
@@ -143,12 +142,12 @@ export default function RestaurantDashboard() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-amber-500" />
+                <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-accent" />
                 </div>
               </div>
               <div className="mt-3">
-                <div className="text-2xl font-bold">{pendingOrders.length}</div>
+                <div className="text-2xl font-display font-bold">{pendingOrders.length}</div>
                 <div className="text-sm text-muted-foreground">Pending Orders</div>
               </div>
             </CardContent>
@@ -157,12 +156,12 @@ export default function RestaurantDashboard() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-blue-500" />
+                <div className="w-10 h-10 rounded-lg bg-delivery/10 flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-delivery" />
                 </div>
               </div>
               <div className="mt-3">
-                <div className="text-2xl font-bold">{activeOrders.length}</div>
+                <div className="text-2xl font-display font-bold">{activeOrders.length}</div>
                 <div className="text-sm text-muted-foreground">Active Orders</div>
               </div>
             </CardContent>
@@ -172,10 +171,10 @@ export default function RestaurantDashboard() {
         {/* Quick Actions */}
         <div className="grid gap-4 sm:grid-cols-2">
           <Link to="/restaurant/orders">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+            <Card className="hover:shadow-lg transition-all hover:-translate-y-0.5 cursor-pointer h-full">
               <CardContent className="p-6 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-restaurant/10 flex items-center justify-center">
-                  <ShoppingBag className="w-6 h-6 text-restaurant" />
+                <div className="w-12 h-12 rounded-xl bg-cafe/10 flex items-center justify-center">
+                  <Coffee className="w-6 h-6 text-cafe" />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold">Manage Orders</h3>
@@ -187,10 +186,10 @@ export default function RestaurantDashboard() {
           </Link>
 
           <Link to="/restaurant/menu">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+            <Card className="hover:shadow-lg transition-all hover:-translate-y-0.5 cursor-pointer h-full">
               <CardContent className="p-6 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-restaurant/10 flex items-center justify-center">
-                  <Store className="w-6 h-6 text-restaurant" />
+                <div className="w-12 h-12 rounded-xl bg-cafe/10 flex items-center justify-center">
+                  <Store className="w-6 h-6 text-cafe" />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold">Menu Management</h3>
