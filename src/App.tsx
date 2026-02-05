@@ -31,6 +31,9 @@ import DeliveryDashboard from "./pages/delivery/Dashboard";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/Dashboard";
+import AdminUsers from "./pages/admin/Users";
+import AdminOrders from "./pages/admin/Orders";
+import AdminPayouts from "./pages/admin/Payouts";
 
 const queryClient = new QueryClient();
 
@@ -159,10 +162,26 @@ const App = () => (
                 }
               />
               <Route
-                path="/admin/*"
+                path="/admin/users"
                 element={
                   <ProtectedRoute allowedRoles={['admin']}>
-                    <AdminDashboard />
+                    <AdminUsers />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/orders"
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminOrders />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/payouts"
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminPayouts />
                   </ProtectedRoute>
                 }
               />
