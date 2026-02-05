@@ -53,10 +53,10 @@ export default function Index() {
           </Link>
           
           <div className="flex items-center gap-3">
-            <Link to="/auth">
+            <Link to="/login">
               <Button variant="ghost">Login</Button>
             </Link>
-            <Link to="/auth">
+            <Link to="/signup">
               <Button>Get Started</Button>
             </Link>
           </div>
@@ -86,12 +86,12 @@ export default function Index() {
           </p>
 
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-            <Link to="/auth">
+            <Link to="/signup">
               <Button size="lg" className="gap-2 text-base">
                 Order Coffee <Coffee className="w-4 h-4" />
               </Button>
             </Link>
-            <Link to="/auth">
+            <Link to="/signup">
               <Button size="lg" variant="outline" className="gap-2 text-base">
                 Partner with us <Store className="w-4 h-4" />
               </Button>
@@ -149,7 +149,7 @@ export default function Index() {
           <p className="mt-4 text-primary-foreground/80 max-w-lg mx-auto">
             Join thousands of coffee lovers and café partners already using BrewDrop.
           </p>
-          <Link to="/auth">
+          <Link to="/signup">
             <Button size="lg" variant="secondary" className="mt-8 gap-2 text-base">
               Start your coffee journey <ArrowRight className="w-4 h-4" />
             </Button>
