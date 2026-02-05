@@ -19,10 +19,12 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     );
   }
 
+  // Not authenticated - redirect to login
   if (!isAuthenticated || !user) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/login" replace />;
   }
 
+  // User doesn't have required role - redirect to their dashboard
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     return <Navigate to={ROLE_ROUTES[user.role]} replace />;
   }

@@ -2,14 +2,15 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 // Pages
 import Index from "./pages/Index";
-import Auth from "./pages/Auth";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
 
 // Customer Pages
@@ -48,7 +49,10 @@ const App = () => (
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              {/* Legacy redirect */}
+              <Route path="/auth" element={<Navigate to="/login" replace />} />
 
               {/* Customer Routes */}
               <Route
@@ -99,6 +103,15 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+              {/* Catch-all customer routes */}
+              <Route
+                path="/customer/*"
+                element={
+                  <ProtectedRoute allowedRoles={['customer']}>
+                    <CustomerDashboard />
+                  </ProtectedRoute>
+                }
+              />
 
               {/* Restaurant Routes */}
               <Route
@@ -130,6 +143,15 @@ const App = () => (
                 element={
                   <ProtectedRoute allowedRoles={['restaurant']}>
                     <RestaurantSettings />
+                  </ProtectedRoute>
+                }
+              />
+              {/* Catch-all restaurant routes */}
+              <Route
+                path="/restaurant/*"
+                element={
+                  <ProtectedRoute allowedRoles={['restaurant']}>
+                    <RestaurantDashboard />
                   </ProtectedRoute>
                 }
               />
@@ -182,6 +204,15 @@ const App = () => (
                 element={
                   <ProtectedRoute allowedRoles={['admin']}>
                     <AdminPayouts />
+                  </ProtectedRoute>
+                }
+              />
+              {/* Catch-all admin routes */}
+              <Route
+                path="/admin/*"
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminDashboard />
                   </ProtectedRoute>
                 }
               />
