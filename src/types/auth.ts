@@ -26,8 +26,8 @@ export interface AuthState {
 }
 
 export const ROLE_LABELS: Record<UserRole, string> = {
-  customer: 'Coffee Lover',
-  restaurant: 'Café Partner',
+  customer: 'Customer',
+  restaurant: 'Restaurant Partner',
   delivery: 'Delivery Partner',
   admin: 'Admin',
 };
