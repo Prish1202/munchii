@@ -3,13 +3,10 @@ import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { UserRole, UserWithRole, AuthState, ROLE_ROUTES } from '@/types/auth';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<{ error: string | null }>;
-  loginWithPhone: (phone: string) => Promise<{ error: string | null }>;
-  signupWithPhone: (phone: string, name: string, role: UserRole) => Promise<{ error: string | null }>;
-  verifyOtp: (phone: string, token: string) => Promise<{ error: string | null }>;
+  loginWithGoogle: () => Promise<{ error: string | null }>;
   signup: (email: string, password: string, name: string, role: UserRole) => Promise<{ error: string | null }>;
   logout: () => Promise<void>;
 }
@@ -26,23 +23,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserWithRole = async (userId: string, email: string): Promise<UserWithRole | null> => {
     try {
-      // Fetch profile
       const { data: profile } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .maybeSingle();
 
-      // Fetch role
       const { data: roleData } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
         .maybeSingle();
 
-      if (!roleData) {
-        return null;
-      }
+      if (!roleData) return null;
 
       return {
         id: userId,
@@ -58,13 +51,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setState(prev => ({ ...prev, session }));
-        
+
         if (session?.user) {
-          // Defer Supabase calls with setTimeout to prevent deadlock
           setTimeout(async () => {
             const userWithRole = await fetchUserWithRole(session.user.id, session.user.email || '');
             setState({
@@ -75,17 +66,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             });
           }, 0);
         } else {
-          setState({
-            user: null,
-            session: null,
-            isAuthenticated: false,
-            isLoading: false,
-          });
+          setState({ user: null, session: null, isAuthenticated: false, isLoading: false });
         }
       }
     );
 
-    // THEN check for existing session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
         const userWithRole = await fetchUserWithRole(session.user.id, session.user.email || '');
@@ -104,57 +89,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string): Promise<{ error: string | null }> => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      return { error: error.message };
-    }
-
-    return { error: null };
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return { error: error?.message || null };
   };
 
-  const loginWithPhone = async (phone: string): Promise<{ error: string | null }> => {
-    const { error } = await supabase.auth.signInWithOtp({
-      phone,
-    });
-
-    if (error) {
-      return { error: error.message };
-    }
-
-    return { error: null };
-  };
-
-  const signupWithPhone = async (phone: string, name: string, role: UserRole): Promise<{ error: string | null }> => {
-    const { error } = await supabase.auth.signInWithOtp({
-      phone,
+  const loginWithGoogle = async (): Promise<{ error: string | null }> => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
       options: {
-        data: { name, role },
+        redirectTo: `${window.location.origin}/`,
       },
     });
-
-    if (error) {
-      return { error: error.message };
-    }
-
-    return { error: null };
-  };
-
-  const verifyOtp = async (phone: string, token: string): Promise<{ error: string | null }> => {
-    const { error } = await supabase.auth.verifyOtp({
-      phone,
-      token,
-      type: 'sms',
-    });
-
-    if (error) {
-      return { error: error.message };
-    }
-
-    return { error: null };
+    return { error: error?.message || null };
   };
 
   const signup = async (
@@ -163,37 +109,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     name: string,
     role: UserRole
   ): Promise<{ error: string | null }> => {
-    const redirectUrl = `${window.location.origin}/`;
-
-    // Pass role in metadata - the database trigger will create the role
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: redirectUrl,
+        emailRedirectTo: `${window.location.origin}/`,
         data: { name, role },
       },
     });
-
-    if (error) {
-      return { error: error.message };
-    }
-
-    return { error: null };
+    return { error: error?.message || null };
   };
 
   const logout = async () => {
     await supabase.auth.signOut();
-    setState({
-      user: null,
-      session: null,
-      isAuthenticated: false,
-      isLoading: false,
-    });
+    setState({ user: null, session: null, isAuthenticated: false, isLoading: false });
   };
 
   return (
-    <AuthContext.Provider value={{ ...state, login, loginWithPhone, signupWithPhone, verifyOtp, signup, logout }}>
+    <AuthContext.Provider value={{ ...state, login, loginWithGoogle, signup, logout }}>
       {children}
     </AuthContext.Provider>
   );
@@ -201,9 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within AuthProvider');
   return context;
 }
 
@@ -213,7 +144,7 @@ export function useRequireAuth(allowedRoles?: UserRole[]) {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      navigate('/auth');
+      navigate('/login');
     } else if (!isLoading && isAuthenticated && user && allowedRoles) {
       if (!allowedRoles.includes(user.role)) {
         navigate(ROLE_ROUTES[user.role]);

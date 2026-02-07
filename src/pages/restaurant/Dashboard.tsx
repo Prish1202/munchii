@@ -9,7 +9,7 @@ import { useMyRestaurant } from '@/hooks/useMenuManagement';
 import { 
   TrendingUp, 
   DollarSign, 
-  Coffee, 
+  UtensilsCrossed, 
   Clock,
   ChevronRight,
   Store,
@@ -50,13 +50,13 @@ export default function RestaurantDashboard() {
       <DashboardLayout>
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
           <Store className="w-16 h-16 text-muted-foreground mb-4" />
-          <h2 className="text-2xl font-display font-bold mb-2">Set Up Your Café</h2>
+          <h2 className="text-2xl font-display font-bold mb-2">Set Up Your Restaurant</h2>
           <p className="text-muted-foreground mb-6 max-w-md">
-            You haven't created your café profile yet. Set it up to start receiving orders.
+            You haven't created your restaurant profile yet. Set it up to start receiving orders.
           </p>
           <Link to="/restaurant/settings">
-            <Button size="lg" className="bg-cafe hover:bg-cafe/90">
-              Create Café Profile
+            <Button size="lg" className="bg-restaurant hover:bg-restaurant/90">
+              Create Restaurant Profile
             </Button>
           </Link>
         </div>
@@ -74,7 +74,7 @@ export default function RestaurantDashboard() {
             <p className="text-muted-foreground">Welcome back, {user?.name}</p>
           </div>
           <Link to="/restaurant/menu">
-            <Button className="bg-cafe hover:bg-cafe/90">
+            <Button className="bg-restaurant hover:bg-restaurant/90">
               Manage Menu
             </Button>
           </Link>
@@ -113,10 +113,8 @@ export default function RestaurantDashboard() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-lg bg-cafe/10 flex items-center justify-center">
-                  <Coffee className="w-5 h-5 text-cafe" />
-                </div>
+              <div className="w-10 h-10 rounded-lg bg-restaurant/10 flex items-center justify-center">
+                <UtensilsCrossed className="w-5 h-5 text-restaurant" />
               </div>
               <div className="mt-3">
                 <div className="text-2xl font-display font-bold">{todayOrders.length}</div>
@@ -127,10 +125,8 @@ export default function RestaurantDashboard() {
 
           <Card>
             <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-lg bg-cafe/10 flex items-center justify-center">
-                  <DollarSign className="w-5 h-5 text-cafe" />
-                </div>
+              <div className="w-10 h-10 rounded-lg bg-restaurant/10 flex items-center justify-center">
+                <DollarSign className="w-5 h-5 text-restaurant" />
               </div>
               <div className="mt-3">
                 <div className="text-2xl font-display font-bold">₹{todayRevenue.toFixed(0)}</div>
@@ -141,10 +137,8 @@ export default function RestaurantDashboard() {
 
           <Card>
             <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-accent" />
-                </div>
+              <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
+                <Clock className="w-5 h-5 text-accent" />
               </div>
               <div className="mt-3">
                 <div className="text-2xl font-display font-bold">{pendingOrders.length}</div>
@@ -155,10 +149,8 @@ export default function RestaurantDashboard() {
 
           <Card>
             <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-lg bg-delivery/10 flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-delivery" />
-                </div>
+              <div className="w-10 h-10 rounded-lg bg-delivery/10 flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 text-delivery" />
               </div>
               <div className="mt-3">
                 <div className="text-2xl font-display font-bold">{activeOrders.length}</div>
@@ -173,8 +165,8 @@ export default function RestaurantDashboard() {
           <Link to="/restaurant/orders">
             <Card className="hover:shadow-lg transition-all hover:-translate-y-0.5 cursor-pointer h-full">
               <CardContent className="p-6 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-cafe/10 flex items-center justify-center">
-                  <Coffee className="w-6 h-6 text-cafe" />
+                <div className="w-12 h-12 rounded-xl bg-restaurant/10 flex items-center justify-center">
+                  <UtensilsCrossed className="w-6 h-6 text-restaurant" />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold">Manage Orders</h3>
@@ -188,8 +180,8 @@ export default function RestaurantDashboard() {
           <Link to="/restaurant/menu">
             <Card className="hover:shadow-lg transition-all hover:-translate-y-0.5 cursor-pointer h-full">
               <CardContent className="p-6 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-cafe/10 flex items-center justify-center">
-                  <Store className="w-6 h-6 text-cafe" />
+                <div className="w-12 h-12 rounded-xl bg-restaurant/10 flex items-center justify-center">
+                  <Store className="w-6 h-6 text-restaurant" />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold">Menu Management</h3>

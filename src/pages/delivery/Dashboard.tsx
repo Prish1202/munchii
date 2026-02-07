@@ -12,7 +12,7 @@ import {
   Navigation,
   CheckCircle,
   Loader2,
-  Coffee
+  UtensilsCrossed
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { useDeliveryOrders, useUpdateDeliveryStatus, useUpdateLocation, type DeliveryOrder } from '@/hooks/useDeliveryOrders';
@@ -20,15 +20,15 @@ import { formatDistanceToNow } from 'date-fns';
 
 const STATUS_FLOW: Record<string, { next: string; orderStatus?: string; label: string }> = {
   assigned: { next: 'en_route_pickup', label: 'Accept & Head to Pickup' },
-  en_route_pickup: { next: 'at_restaurant', label: 'Arrived at Café' },
+  en_route_pickup: { next: 'at_restaurant', label: 'Arrived at Restaurant' },
   at_restaurant: { next: 'en_route_delivery', orderStatus: 'picked_up', label: 'Picked Up - Start Delivery' },
   en_route_delivery: { next: 'delivered', orderStatus: 'delivered', label: 'Mark as Delivered' },
 };
 
 const STATUS_LABELS: Record<string, string> = {
   assigned: 'Assigned',
-  en_route_pickup: 'Heading to Café',
-  at_restaurant: 'At Café',
+  en_route_pickup: 'Heading to Restaurant',
+  at_restaurant: 'At Restaurant',
   en_route_delivery: 'Out for Delivery',
   delivered: 'Delivered',
 };
@@ -102,7 +102,7 @@ export default function DeliveryDashboard() {
     switch (status) {
       case 'assigned': return 'bg-accent/10 text-accent border-accent/20';
       case 'en_route_pickup': return 'bg-delivery/10 text-delivery border-delivery/20';
-      case 'at_restaurant': return 'bg-cafe/10 text-cafe border-cafe/20';
+      case 'at_restaurant': return 'bg-restaurant/10 text-restaurant border-restaurant/20';
       case 'en_route_delivery': return 'bg-primary/10 text-primary border-primary/20';
       case 'delivered': return 'bg-green-500/10 text-green-600 border-green-500/20';
       default: return 'bg-muted text-muted-foreground';
@@ -115,8 +115,8 @@ export default function DeliveryDashboard() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-display font-bold">Hey, {user?.name}! ☕</h1>
-            <p className="text-muted-foreground">Ready to deliver some brews?</p>
+            <h1 className="text-2xl font-display font-bold">Hey, {user?.name}! 🚀</h1>
+            <p className="text-muted-foreground">Ready to deliver some meals?</p>
           </div>
           <div className="flex items-center gap-3">
             <span className={`text-sm font-medium ${isOnline ? 'text-delivery' : 'text-muted-foreground'}`}>
@@ -131,7 +131,7 @@ export default function DeliveryDashboard() {
           <Card>
             <CardContent className="p-4 text-center">
               <div className="w-10 h-10 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-2">
-                <Coffee className="w-5 h-5 text-primary" />
+                <UtensilsCrossed className="w-5 h-5 text-primary" />
               </div>
               <div className="text-xl font-display font-bold">{completedToday.length}</div>
               <div className="text-xs text-muted-foreground">Delivered Today</div>
@@ -159,8 +159,8 @@ export default function DeliveryDashboard() {
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
-              <div className="w-10 h-10 mx-auto rounded-full bg-cafe/10 flex items-center justify-center mb-2">
-                <MapPin className="w-5 h-5 text-cafe" />
+              <div className="w-10 h-10 mx-auto rounded-full bg-restaurant/10 flex items-center justify-center mb-2">
+                <MapPin className="w-5 h-5 text-restaurant" />
               </div>
               <div className="text-xl font-display font-bold">{watchId !== null ? 'Active' : 'Off'}</div>
               <div className="text-xs text-muted-foreground">GPS Tracking</div>
@@ -201,10 +201,10 @@ export default function DeliveryDashboard() {
                     <span className="font-semibold">₹{delivery.order?.total_amount}</span>
                   </div>
 
-                  {/* Café Info */}
+                  {/* Restaurant Info */}
                   <div className="flex gap-3 p-3 rounded-lg bg-card border">
                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                      <Coffee className="w-5 h-5 text-primary" />
+                      <UtensilsCrossed className="w-5 h-5 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-medium truncate">{delivery.order?.restaurant?.name}</div>
@@ -260,11 +260,11 @@ export default function DeliveryDashboard() {
           <Card className="border-dashed">
             <CardContent className="p-8 text-center">
               <div className="w-16 h-16 mx-auto rounded-full bg-muted flex items-center justify-center mb-4">
-                <Coffee className="w-8 h-8 text-muted-foreground" />
+                <UtensilsCrossed className="w-8 h-8 text-muted-foreground" />
               </div>
               <h3 className="font-display font-semibold text-lg">No active deliveries</h3>
               <p className="text-muted-foreground text-sm mt-1">
-                New coffee orders will appear here when assigned
+                New food orders will appear here when assigned
               </p>
             </CardContent>
           </Card>
@@ -275,7 +275,7 @@ export default function DeliveryDashboard() {
           <Card className="border-dashed">
             <CardContent className="p-8 text-center">
               <div className="w-16 h-16 mx-auto rounded-full bg-muted flex items-center justify-center mb-4">
-                <Coffee className="w-8 h-8 text-muted-foreground" />
+                <UtensilsCrossed className="w-8 h-8 text-muted-foreground" />
               </div>
               <h3 className="font-display font-semibold text-lg">You're offline</h3>
               <p className="text-muted-foreground text-sm mt-1">

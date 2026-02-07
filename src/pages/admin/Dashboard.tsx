@@ -8,10 +8,8 @@ import {
   ShoppingBag, 
   TrendingUp,
   ArrowUp,
-  ArrowDown,
   CheckCircle,
   XCircle,
-  Clock,
   Wallet
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -43,10 +41,10 @@ export default function AdminDashboard() {
       change: '+12%'
     },
     { 
-      label: 'Active Cafés', 
+      label: 'Active Restaurants', 
       value: analytics?.totalRestaurants || 0, 
       icon: Store, 
-      color: 'bg-cafe',
+      color: 'bg-restaurant',
       change: '+5%'
     },
     { 
@@ -160,7 +158,7 @@ export default function AdminDashboard() {
                   {recentOrders.map((order) => (
                     <div key={order.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
                       <div>
-                        <p className="font-medium">{order.restaurant?.name || 'Unknown Café'}</p>
+                        <p className="font-medium">{order.restaurant?.name || 'Unknown Restaurant'}</p>
                         <p className="text-xs text-muted-foreground">
                           {format(new Date(order.created_at), 'MMM d, HH:mm')} • ₹{Number(order.total_amount).toFixed(0)}
                         </p>

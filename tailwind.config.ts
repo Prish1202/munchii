@@ -15,7 +15,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
-        display: ["Playfair Display", "serif"],
+        display: ["Poppins", "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -61,13 +61,11 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        // Role colors - Coffee themed
+        // Role colors
         customer: "hsl(var(--customer))",
-        cafe: "hsl(var(--cafe))",
+        restaurant: "hsl(var(--restaurant))",
         delivery: "hsl(var(--delivery))",
         admin: "hsl(var(--admin))",
-        // Legacy alias for backwards compatibility
-        restaurant: "hsl(var(--cafe))",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -87,16 +85,11 @@ export default {
           from: { opacity: "0", transform: "translateY(10px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
-        "steam": {
-          "0%, 100%": { opacity: "0.3", transform: "translateY(0) scale(1)" },
-          "50%": { opacity: "0.8", transform: "translateY(-8px) scale(1.1)" },
-        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.3s ease-out",
-        "steam": "steam 2s ease-in-out infinite",
       },
     },
   },
