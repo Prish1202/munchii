@@ -11,6 +11,8 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import ConfirmEmail from "./pages/ConfirmEmail";
+import EmailVerified from "./pages/EmailVerified";
 import NotFound from "./pages/NotFound";
 
 // Customer Pages
@@ -51,6 +53,8 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
+              <Route path="/confirm-email" element={<ConfirmEmail />} />
+              <Route path="/email-verified" element={<EmailVerified />} />
               {/* Legacy redirect */}
               <Route path="/auth" element={<Navigate to="/login" replace />} />
 
