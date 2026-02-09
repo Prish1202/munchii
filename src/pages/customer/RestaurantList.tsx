@@ -1,15 +1,19 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Skeleton } from '@/components/ui/skeleton';
+import { SearchBar } from '@/components/customer/SearchBar';
+import { RestaurantCard } from '@/components/customer/RestaurantCard';
+import { RestaurantCardSkeleton } from '@/components/customer/RestaurantCardSkeleton';
+import { EmptyState } from '@/components/customer/EmptyState';
 import { useRestaurants } from '@/hooks/useRestaurants';
-import { Search, Store, MapPin, ChevronRight } from 'lucide-react';
+import { Store, SlidersHorizontal } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+
+const SORT_OPTIONS = ['Relevance', 'Rating', 'Delivery Time', 'Cost: Low to High'];
 
 export default function RestaurantList() {
   const [search, setSearch] = useState('');
+  const [activeSort, setActiveSort] = useState('Relevance');
   const { data: restaurants, isLoading } = useRestaurants();
 
   const filteredRestaurants = restaurants?.filter(r =>
@@ -19,75 +23,64 @@ export default function RestaurantList() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 pb-20 md:pb-0">
+      <div className="space-y-5 pb-20 md:pb-0 max-w-3xl mx-auto">
         {/* Header */}
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold">Browse Restaurants</h1>
-          <p className="text-muted-foreground">Find your favorite food</p>
+        <div>
+          <h1 className="font-display font-bold text-2xl text-foreground">All Restaurants</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {isLoading ? 'Loading...' : `${filteredRestaurants?.length || 0} restaurants delivering to you`}
+          </p>
         </div>
 
         {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Search restaurants..."
-            className="pl-10"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+        <SearchBar value={search} onChange={setSearch} placeholder="Search restaurants..." />
+
+        {/* Sort / Filter bar */}
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+          <Button variant="outline" size="sm" className="rounded-full shrink-0 gap-1.5">
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+            Filter
+          </Button>
+          {SORT_OPTIONS.map((opt) => (
+            <Button
+              key={opt}
+              variant={activeSort === opt ? 'default' : 'outline'}
+              size="sm"
+              className={cn('rounded-full shrink-0 whitespace-nowrap')}
+              onClick={() => setActiveSort(opt)}
+            >
+              {opt}
+            </Button>
+          ))}
         </div>
 
-        {/* Restaurant List */}
-        <div className="space-y-4">
-          {isLoading ? (
-            Array.from({ length: 4 }).map((_, i) => (
-              <Card key={i}>
-                <CardContent className="p-4">
-                  <div className="flex gap-4">
-                    <Skeleton className="w-20 h-20 rounded-xl" />
-                    <div className="flex-1 space-y-2">
-                      <Skeleton className="h-5 w-32" />
-                      <Skeleton className="h-4 w-48" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          ) : filteredRestaurants?.length === 0 ? (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <Store className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="font-semibold">No restaurants found</h3>
-                <p className="text-sm text-muted-foreground">
-                  {search ? 'Try a different search term' : 'No restaurants are available yet'}
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            filteredRestaurants?.map((restaurant) => (
-              <Link key={restaurant.id} to={`/customer/restaurant/${restaurant.id}`}>
-                <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-4">
-                      <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                        <Store className="w-8 h-8 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-lg truncate">{restaurant.name}</h3>
-                        <p className="text-sm text-muted-foreground flex items-center gap-1 truncate">
-                          <MapPin className="w-4 h-4 flex-shrink-0" />
-                          {restaurant.address}
-                        </p>
-                      </div>
-                      <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))
-          )}
-        </div>
+        {/* Restaurant Grid */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <RestaurantCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : filteredRestaurants?.length === 0 ? (
+          <EmptyState
+            icon={<Store className="w-7 h-7 text-muted-foreground" />}
+            title="No restaurants found"
+            description={search ? 'Try adjusting your search or filters' : 'No restaurants are available in your area yet'}
+            action={
+              search ? (
+                <Button variant="outline" onClick={() => setSearch('')}>
+                  Clear search
+                </Button>
+              ) : undefined
+            }
+          />
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {filteredRestaurants?.map((restaurant) => (
+              <RestaurantCard key={restaurant.id} restaurant={restaurant} />
+            ))}
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );
