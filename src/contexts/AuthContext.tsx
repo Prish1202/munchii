@@ -6,8 +6,7 @@ import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<{ error: string | null }>;
-  loginWithGoogle: () => Promise<{ error: string | null }>;
-  signup: (email: string, password: string, name: string, role: UserRole) => Promise<{ error: string | null }>;
+  signup: (email: string, password: string, name: string, role: UserRole, phone?: string) => Promise<{ error: string | null }>;
   logout: () => Promise<void>;
 }
 
@@ -93,28 +92,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error?.message || null };
   };
 
-  const loginWithGoogle = async (): Promise<{ error: string | null }> => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/`,
-      },
-    });
-    return { error: error?.message || null };
-  };
-
   const signup = async (
     email: string,
     password: string,
     name: string,
-    role: UserRole
+    role: UserRole,
+    phone?: string
   ): Promise<{ error: string | null }> => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/`,
-        data: { name, role },
+        emailRedirectTo: `${window.location.origin}/email-verified`,
+        data: { name, role, phone },
       },
     });
     return { error: error?.message || null };
@@ -126,7 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ ...state, login, loginWithGoogle, signup, logout }}>
+    <AuthContext.Provider value={{ ...state, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   );
