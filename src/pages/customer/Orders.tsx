@@ -1,74 +1,64 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useCustomerOrders, OrderStatus } from '@/hooks/useOrders';
-import { Package, ChevronRight, Clock, Store } from 'lucide-react';
+import { useCustomerOrders, OrderStatus, useOrderItems } from '@/hooks/useOrders';
+import { useCart } from '@/contexts/CartContext';
+import { EmptyState } from '@/components/customer/EmptyState';
+import { Package, ChevronRight, Clock, Store, RotateCcw } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { toast } from 'sonner';
 
-const STATUS_CONFIG: Record<OrderStatus, { label: string; color: string }> = {
-  placed: { label: 'Placed', color: 'bg-blue-500' },
-  accepted: { label: 'Accepted', color: 'bg-indigo-500' },
-  preparing: { label: 'Preparing', color: 'bg-yellow-500' },
-  ready: { label: 'Ready', color: 'bg-orange-500' },
-  picked_up: { label: 'On the way', color: 'bg-purple-500' },
-  delivered: { label: 'Delivered', color: 'bg-green-500' },
-  cancelled: { label: 'Cancelled', color: 'bg-red-500' },
+const STATUS_CONFIG: Record<OrderStatus, { label: string; className: string }> = {
+  placed: { label: 'Placed', className: 'bg-blue-500 text-white' },
+  accepted: { label: 'Accepted', className: 'bg-indigo-500 text-white' },
+  preparing: { label: 'Preparing', className: 'bg-yellow-500 text-white' },
+  ready: { label: 'Ready', className: 'bg-orange-500 text-white' },
+  picked_up: { label: 'On the way', className: 'bg-purple-500 text-white' },
+  delivered: { label: 'Delivered', className: 'bg-green-600 text-white' },
+  cancelled: { label: 'Cancelled', className: 'bg-destructive text-destructive-foreground' },
 };
 
 export default function Orders() {
   const { data: orders, isLoading } = useCustomerOrders();
 
-  const activeOrders = orders?.filter(o => 
-    !['delivered', 'cancelled'].includes(o.status)
-  ) || [];
-  
-  const pastOrders = orders?.filter(o => 
-    ['delivered', 'cancelled'].includes(o.status)
-  ) || [];
+  const activeOrders = orders?.filter(o => !['delivered', 'cancelled'].includes(o.status)) || [];
+  const pastOrders = orders?.filter(o => ['delivered', 'cancelled'].includes(o.status)) || [];
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 pb-20 md:pb-0">
-        {/* Header */}
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold">Your Orders</h1>
-          <p className="text-muted-foreground">Track and view your order history</p>
+      <div className="max-w-3xl mx-auto pb-20 md:pb-0 space-y-6">
+        <div>
+          <h1 className="font-display font-bold text-2xl">Your Orders</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Track and view your order history</p>
         </div>
 
         {isLoading ? (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-32 w-full" />
+              <Skeleton key={i} className="h-24 w-full rounded-xl" />
             ))}
           </div>
         ) : orders?.length === 0 ? (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <Package className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="font-semibold mb-2">No orders yet</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Start ordering from your favorite restaurants
-              </p>
-              <Link to="/customer/browse" className="text-primary hover:underline">
-                Browse Restaurants
-              </Link>
-            </CardContent>
-          </Card>
+          <EmptyState
+            icon={<Package className="w-7 h-7 text-muted-foreground" />}
+            title="No orders yet"
+            description="Start ordering from your favorite restaurants"
+            action={<Link to="/customer/browse"><Button>Browse Restaurants</Button></Link>}
+          />
         ) : (
           <>
-            {/* Active Orders */}
             {activeOrders.length > 0 && (
               <section>
-                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <span className="relative flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+                <h2 className="font-display font-semibold text-base mb-3 flex items-center gap-2">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary" />
                   </span>
                   Active Orders
                 </h2>
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {activeOrders.map((order) => (
                     <OrderCard key={order.id} order={order} />
                   ))}
@@ -76,13 +66,12 @@ export default function Orders() {
               </section>
             )}
 
-            {/* Past Orders */}
             {pastOrders.length > 0 && (
               <section>
-                <h2 className="text-lg font-semibold mb-4">Past Orders</h2>
-                <div className="space-y-4">
+                <h2 className="font-display font-semibold text-base mb-3">Past Orders</h2>
+                <div className="space-y-3">
                   {pastOrders.map((order) => (
-                    <OrderCard key={order.id} order={order} />
+                    <OrderCard key={order.id} order={order} showReorder />
                   ))}
                 </div>
               </section>
@@ -94,41 +83,63 @@ export default function Orders() {
   );
 }
 
-function OrderCard({ order }: { order: any }) {
+function OrderCard({ order, showReorder }: { order: any; showReorder?: boolean }) {
+  const navigate = useNavigate();
+  const { addItem, clearCart } = useCart();
   const statusConfig = STATUS_CONFIG[order.status as OrderStatus];
+  const { data: orderItems } = useOrderItems(order.id);
+
+  const handleReorder = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!orderItems || orderItems.length === 0) {
+      toast.error('Could not load items for reorder');
+      return;
+    }
+    clearCart();
+    orderItems.forEach((item) => {
+      for (let i = 0; i < item.quantity; i++) {
+        addItem({
+          menuItemId: item.menu_item_id,
+          name: item.menu_item?.name || 'Item',
+          price: Number(item.price_at_time),
+          restaurantId: order.restaurant_id,
+          restaurantName: order.restaurant?.name || 'Restaurant',
+        });
+      }
+    });
+    toast.success('Items added to cart!');
+    navigate('/customer/cart');
+  };
 
   return (
     <Link to={`/customer/orders/${order.id}`}>
-      <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
-        <CardContent className="p-4">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex gap-3 flex-1 min-w-0">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Store className="w-6 h-6 text-primary" />
-              </div>
-              <div className="min-w-0">
-                <h3 className="font-semibold truncate">
-                  {order.restaurant?.name || 'Restaurant'}
-                </h3>
-                <p className="text-sm text-muted-foreground flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  {formatDistanceToNow(new Date(order.created_at), { addSuffix: true })}
-                </p>
-                <p className="text-primary font-medium mt-1">
-                  ₹{Number(order.total_amount).toFixed(2)}
-                </p>
-              </div>
+      <div className="bg-card rounded-xl border border-border p-4 hover:shadow-md transition-shadow">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex gap-3 flex-1 min-w-0">
+            <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+              <Store className="w-5 h-5 text-primary" />
             </div>
-            
-            <div className="flex items-center gap-2">
-              <Badge className={`${statusConfig.color} text-white`}>
-                {statusConfig.label}
-              </Badge>
-              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            <div className="min-w-0">
+              <h3 className="font-display font-semibold text-sm truncate">
+                {order.restaurant?.name || 'Restaurant'}
+              </h3>
+              <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                <Clock className="w-3 h-3" />
+                {formatDistanceToNow(new Date(order.created_at), { addSuffix: true })}
+              </p>
+              <p className="text-sm font-semibold text-primary mt-1">₹{Number(order.total_amount).toFixed(0)}</p>
             </div>
           </div>
-        </CardContent>
-      </Card>
+          <div className="flex flex-col items-end gap-2">
+            <Badge className={statusConfig.className}>{statusConfig.label}</Badge>
+            {showReorder && order.status === 'delivered' && (
+              <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={handleReorder}>
+                <RotateCcw className="w-3 h-3" /> Reorder
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
     </Link>
   );
 }

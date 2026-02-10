@@ -21,6 +21,8 @@ import CustomerDashboard from "./pages/customer/Dashboard";
 import RestaurantList from "./pages/customer/RestaurantList";
 import RestaurantMenu from "./pages/customer/RestaurantMenu";
 import Cart from "./pages/customer/Cart";
+import Checkout from "./pages/customer/Checkout";
+import OrderSuccess from "./pages/customer/OrderSuccess";
 import Orders from "./pages/customer/Orders";
 import OrderTracking from "./pages/customer/OrderTracking";
 
@@ -90,6 +92,22 @@ const App = () => (
                 element={
                   <ProtectedRoute allowedRoles={['customer']}>
                     <Cart />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/customer/checkout"
+                element={
+                  <ProtectedRoute allowedRoles={['customer']}>
+                    <Checkout />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/customer/order-success/:id"
+                element={
+                  <ProtectedRoute allowedRoles={['customer']}>
+                    <OrderSuccess />
                   </ProtectedRoute>
                 }
               />
