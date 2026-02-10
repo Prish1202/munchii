@@ -5,6 +5,7 @@ export interface Restaurant {
   id: string;
   name: string;
   address: string;
+  city: string | null;
   is_active: boolean;
   created_at: string;
   owner_id: string;
@@ -19,16 +20,21 @@ export interface MenuItem {
   created_at: string;
 }
 
-export function useRestaurants() {
+export function useRestaurants(city?: string | null) {
   return useQuery({
-    queryKey: ['restaurants'],
+    queryKey: ['restaurants', city],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('restaurants')
         .select('*')
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
+      if (city) {
+        query = query.ilike('city', city);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data as Restaurant[];
     },

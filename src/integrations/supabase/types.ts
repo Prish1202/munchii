@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      city_interests: {
+        Row: {
+          city: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          city: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       deliveries: {
         Row: {
           created_at: string
@@ -235,6 +256,7 @@ export type Database = {
       restaurants: {
         Row: {
           address: string
+          city: string | null
           created_at: string
           id: string
           is_active: boolean
@@ -244,6 +266,7 @@ export type Database = {
         }
         Insert: {
           address: string
+          city?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
@@ -253,6 +276,7 @@ export type Database = {
         }
         Update: {
           address?: string
+          city?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
