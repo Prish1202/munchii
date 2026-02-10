@@ -4,8 +4,10 @@ import { SearchBar } from '@/components/customer/SearchBar';
 import { RestaurantCard } from '@/components/customer/RestaurantCard';
 import { RestaurantCardSkeleton } from '@/components/customer/RestaurantCardSkeleton';
 import { EmptyState } from '@/components/customer/EmptyState';
+import { ComingSoon } from '@/components/customer/ComingSoon';
+import { useLocation } from '@/contexts/LocationContext';
 import { useRestaurants } from '@/hooks/useRestaurants';
-import { Store, SlidersHorizontal } from 'lucide-react';
+import { Store, SlidersHorizontal, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -14,12 +16,32 @@ const SORT_OPTIONS = ['Relevance', 'Rating', 'Delivery Time', 'Cost: Low to High
 export default function RestaurantList() {
   const [search, setSearch] = useState('');
   const [activeSort, setActiveSort] = useState('Relevance');
-  const { data: restaurants, isLoading } = useRestaurants();
+  const { city, isDetecting } = useLocation();
+  const { data: restaurants, isLoading } = useRestaurants(city);
 
   const filteredRestaurants = restaurants?.filter(r =>
     r.name.toLowerCase().includes(search.toLowerCase()) ||
     r.address.toLowerCase().includes(search.toLowerCase())
   );
+
+  if (isDetecting) {
+    return (
+      <DashboardLayout>
+        <div className="flex flex-col items-center justify-center py-20 gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Detecting your location...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!isLoading && (!restaurants || restaurants.length === 0) && !search) {
+    return (
+      <DashboardLayout>
+        <ComingSoon />
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -28,7 +50,7 @@ export default function RestaurantList() {
         <div>
           <h1 className="font-display font-bold text-2xl text-foreground">All Restaurants</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {isLoading ? 'Loading...' : `${filteredRestaurants?.length || 0} restaurants delivering to you`}
+            {isLoading ? 'Loading...' : `${filteredRestaurants?.length || 0} restaurants in ${city || 'your area'}`}
           </p>
         </div>
 
