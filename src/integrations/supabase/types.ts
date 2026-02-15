@@ -73,6 +73,42 @@ export type Database = {
           },
         ]
       }
+      delivery_partner_locations: {
+        Row: {
+          city: string | null
+          created_at: string
+          current_lat: number | null
+          current_lng: number | null
+          id: string
+          is_online: boolean
+          last_seen_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          current_lat?: number | null
+          current_lng?: number | null
+          id?: string
+          is_online?: boolean
+          last_seen_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          current_lat?: number | null
+          current_lng?: number | null
+          id?: string
+          is_online?: boolean
+          last_seen_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       menu_items: {
         Row: {
           available: boolean
