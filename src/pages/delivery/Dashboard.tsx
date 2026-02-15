@@ -14,8 +14,9 @@ import {
   Loader2,
   UtensilsCrossed
 } from 'lucide-react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useDeliveryOrders, useUpdateDeliveryStatus, useUpdateLocation, type DeliveryOrder } from '@/hooks/useDeliveryOrders';
+import { useDeliveryPartnerLocation } from '@/hooks/useDeliveryPartnerLocation';
 import { formatDistanceToNow } from 'date-fns';
 
 const STATUS_FLOW: Record<string, { next: string; orderStatus?: string; label: string }> = {
@@ -35,11 +36,11 @@ const STATUS_LABELS: Record<string, string> = {
 
 export default function DeliveryDashboard() {
   const { user } = useAuth();
-  const [isOnline, setIsOnline] = useState(true);
   const [watchId, setWatchId] = useState<number | null>(null);
   const { deliveries, isLoading } = useDeliveryOrders();
   const updateStatus = useUpdateDeliveryStatus();
   const updateLocation = useUpdateLocation();
+  const { isOnline, isLoading: locationLoading, toggleOnline, updateGPS } = useDeliveryPartnerLocation();
 
   const activeDeliveries = deliveries.filter(d => d.status !== 'delivered');
   const completedToday = deliveries.filter(d => {
@@ -54,17 +55,18 @@ export default function DeliveryDashboard() {
 
     const id = navigator.geolocation.watchPosition(
       (position) => {
-        updateLocation.mutate({
-          deliveryId,
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        });
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        // Update delivery-specific location
+        updateLocation.mutate({ deliveryId, lat, lng });
+        // Also update partner location table for assignment
+        updateGPS(lat, lng);
       },
       (error) => console.error('GPS Error:', error),
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 }
     );
     setWatchId(id);
-  }, [updateLocation]);
+  }, [updateLocation, updateGPS]);
 
   const stopLocationTracking = useCallback(() => {
     if (watchId !== null) {
@@ -73,6 +75,7 @@ export default function DeliveryDashboard() {
     }
   }, [watchId]);
 
+  // Track GPS when en route
   useEffect(() => {
     const enRouteDelivery = activeDeliveries.find(
       d => d.status === 'en_route_pickup' || d.status === 'en_route_delivery'
@@ -86,6 +89,17 @@ export default function DeliveryDashboard() {
 
     return () => stopLocationTracking();
   }, [activeDeliveries, isOnline, startLocationTracking, stopLocationTracking]);
+
+  // When going online, get initial GPS for assignment purposes
+  useEffect(() => {
+    if (isOnline && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => updateGPS(pos.coords.latitude, pos.coords.longitude),
+        () => {},
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+  }, [isOnline, updateGPS]);
 
   const handleStatusUpdate = (delivery: DeliveryOrder) => {
     const flow = STATUS_FLOW[delivery.status];
@@ -122,7 +136,11 @@ export default function DeliveryDashboard() {
             <span className={`text-sm font-medium ${isOnline ? 'text-delivery' : 'text-muted-foreground'}`}>
               {isOnline ? 'Online' : 'Offline'}
             </span>
-            <Switch checked={isOnline} onCheckedChange={setIsOnline} />
+            <Switch 
+              checked={isOnline} 
+              onCheckedChange={toggleOnline}
+              disabled={locationLoading}
+            />
           </div>
         </div>
 
