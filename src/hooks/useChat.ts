@@ -1,0 +1,286 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRealtimeSync } from './useRealtimeSync';
+import { encryptMessage, decryptMessage } from '@/lib/e2ee';
+import { toast } from 'sonner';
+import { useEffect, useState, useCallback } from 'react';
+
+export interface Conversation {
+  id: string;
+  user1_id: string;
+  user2_id: string;
+  created_at: string;
+  other_user?: {
+    id: string;
+    name: string;
+    username: string | null;
+    avatar_url: string | null;
+  };
+  last_message?: string;
+  last_message_at?: string;
+  unread_count?: number;
+}
+
+export interface Message {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  encrypted_message: string;
+  created_at: string;
+  decrypted?: string;
+}
+
+// Fetch & store public key for the current user
+export function usePublicKey() {
+  const { user } = useAuth();
+
+  const query = useQuery({
+    queryKey: ['public-key', user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('user_public_keys')
+        .select('public_key')
+        .eq('user_id', user!.id)
+        .maybeSingle();
+      return data?.public_key || null;
+    },
+    enabled: !!user?.id,
+  });
+
+  const upsertKey = useMutation({
+    mutationFn: async (publicKey: string) => {
+      const { error } = await supabase
+        .from('user_public_keys')
+        .upsert({ user_id: user!.id, public_key: publicKey }, { onConflict: 'user_id' });
+      if (error) throw error;
+    },
+  });
+
+  return { ...query, upsertKey };
+}
+
+// Get recipient public key
+export function useRecipientPublicKey(userId: string) {
+  return useQuery({
+    queryKey: ['public-key', userId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('user_public_keys')
+        .select('public_key')
+        .eq('user_id', userId)
+        .maybeSingle();
+      return data?.public_key || null;
+    },
+    enabled: !!userId,
+  });
+}
+
+export function useConversations() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
+    queryKey: ['conversations', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('conversations')
+        .select('*')
+        .or(`user1_id.eq.${user!.id},user2_id.eq.${user!.id}`)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+
+      // Enrich with other user profiles
+      const conversations = data as Conversation[];
+      const otherUserIds = conversations.map(c =>
+        c.user1_id === user!.id ? c.user2_id : c.user1_id
+      );
+
+      if (otherUserIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, name, username, avatar_url')
+          .in('id', otherUserIds);
+
+        const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+
+        for (const conv of conversations) {
+          const otherId = conv.user1_id === user!.id ? conv.user2_id : conv.user1_id;
+          conv.other_user = profileMap.get(otherId) as any;
+        }
+
+        // Get last message for each conversation
+        for (const conv of conversations) {
+          const { data: lastMsg } = await supabase
+            .from('messages')
+            .select('encrypted_message, created_at')
+            .eq('conversation_id', conv.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (lastMsg) {
+            conv.last_message_at = lastMsg.created_at;
+            try {
+              conv.last_message = await decryptMessage(lastMsg.encrypted_message);
+            } catch {
+              conv.last_message = '🔒 Encrypted message';
+            }
+          }
+        }
+
+        // Sort by last message time
+        conversations.sort((a, b) => {
+          const aTime = a.last_message_at || a.created_at;
+          const bTime = b.last_message_at || b.created_at;
+          return new Date(bTime).getTime() - new Date(aTime).getTime();
+        });
+      }
+
+      return conversations;
+    },
+    enabled: !!user?.id,
+  });
+
+  // Real-time updates on new conversations
+  const handleChange = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['conversations', user?.id] });
+  }, [queryClient, user?.id]);
+
+  useRealtimeSync({
+    channelName: `conversations-${user?.id}`,
+    table: 'conversations',
+    onInsert: handleChange,
+    onUpdate: handleChange,
+    enabled: !!user?.id,
+  });
+
+  return query;
+}
+
+export function useMessages(conversationId: string) {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [decryptedMessages, setDecryptedMessages] = useState<Message[]>([]);
+
+  const query = useQuery({
+    queryKey: ['messages', conversationId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      return data as Message[];
+    },
+    enabled: !!conversationId,
+  });
+
+  // Decrypt messages when data changes
+  useEffect(() => {
+    async function decrypt() {
+      if (!query.data) return;
+      const results: Message[] = [];
+      for (const msg of query.data) {
+        try {
+          const decrypted = await decryptMessage(msg.encrypted_message);
+          results.push({ ...msg, decrypted });
+        } catch {
+          results.push({ ...msg, decrypted: '🔒 Cannot decrypt' });
+        }
+      }
+      setDecryptedMessages(results);
+    }
+    decrypt();
+  }, [query.data]);
+
+  // Real-time new messages
+  const handleNewMessage = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
+    queryClient.invalidateQueries({ queryKey: ['conversations'] });
+  }, [queryClient, conversationId]);
+
+  useRealtimeSync({
+    channelName: `messages-${conversationId}`,
+    table: 'messages',
+    filter: `conversation_id=eq.${conversationId}`,
+    onInsert: handleNewMessage,
+    enabled: !!conversationId,
+  });
+
+  return { ...query, messages: decryptedMessages };
+}
+
+export function useSendMessage() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      conversationId,
+      recipientPublicKey,
+      plaintext,
+    }: {
+      conversationId: string;
+      recipientPublicKey: string;
+      plaintext: string;
+    }) => {
+      const encrypted = await encryptMessage(plaintext, recipientPublicKey);
+      const { error } = await supabase.from('messages').insert({
+        conversation_id: conversationId,
+        sender_id: user!.id,
+        encrypted_message: encrypted,
+      });
+      if (error) throw error;
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['messages', vars.conversationId] });
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+    },
+    onError: () => {
+      toast.error('Failed to send message');
+    },
+  });
+}
+
+export function useStartConversation() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (otherUserId: string) => {
+      // Ensure consistent ordering for the unique constraint
+      const [user1, user2] = [user!.id, otherUserId].sort();
+
+      // Check if conversation exists
+      const { data: existing } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('user1_id', user1)
+        .eq('user2_id', user2)
+        .maybeSingle();
+
+      if (existing) return existing.id;
+
+      const { data, error } = await supabase
+        .from('conversations')
+        .insert({ user1_id: user1, user2_id: user2 })
+        .select('id')
+        .single();
+
+      if (error) throw error;
+      return data.id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+    },
+    onError: (err: any) => {
+      if (err.message?.includes('violates row-level security')) {
+        toast.error('You can only chat with mutual followers');
+      } else {
+        toast.error('Failed to start conversation');
+      }
+    },
+  });
+}

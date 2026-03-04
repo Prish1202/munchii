@@ -70,6 +70,27 @@ export type Database = {
           },
         ]
       }
+      conversations: {
+        Row: {
+          created_at: string
+          id: string
+          user1_id: string
+          user2_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user1_id: string
+          user2_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user1_id?: string
+          user2_id?: string
+        }
+        Relationships: []
+      }
       followers: {
         Row: {
           created_at: string
@@ -125,6 +146,38 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          encrypted_message: string
+          id: string
+          sender_id: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          encrypted_message: string
+          id?: string
+          sender_id: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          encrypted_message?: string
+          id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
             referencedColumns: ["id"]
           },
         ]
@@ -307,6 +360,51 @@ export type Database = {
         }
         Relationships: []
       }
+      transfer_rate_limits: {
+        Row: {
+          id: string
+          transfer_count: number
+          user_id: string
+          window_start: string
+        }
+        Insert: {
+          id?: string
+          transfer_count?: number
+          user_id: string
+          window_start?: string
+        }
+        Update: {
+          id?: string
+          transfer_count?: number
+          user_id?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
+      user_public_keys: {
+        Row: {
+          created_at: string
+          id: string
+          public_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          public_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          public_key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -364,6 +462,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      transfer_coins: {
+        Args: { _coins: number; _recipient_id: string; _sender_id: string }
+        Returns: undefined
       }
     }
     Enums: {

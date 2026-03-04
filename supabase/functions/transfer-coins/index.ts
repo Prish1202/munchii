@@ -6,130 +6,88 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const MAX_TRANSFERS_PER_HOUR = 10;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  const json = (body: object, status = 200) =>
+    new Response(JSON.stringify(body), {
+      status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Not authenticated" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    if (!authHeader) return json({ error: "Not authenticated" }, 401);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Auth client to get sender
     const anonClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!);
     const { data: { user: sender }, error: authErr } = await anonClient.auth.getUser(
       authHeader.replace("Bearer ", "")
     );
-    if (authErr || !sender) {
-      return new Response(JSON.stringify({ error: "Invalid token" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    if (authErr || !sender) return json({ error: "Invalid token" }, 401);
 
     const { username, coins } = await req.json();
 
-    // Validate input
+    // Input validation
     if (!username || typeof username !== "string" || username.trim().length === 0) {
-      return new Response(JSON.stringify({ error: "Username is required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return json({ error: "Username is required" }, 400);
     }
-
     const cleanUsername = username.trim().toLowerCase();
 
     if (typeof coins !== "number" || !Number.isFinite(coins) || coins < 10) {
-      return new Response(JSON.stringify({ error: "Minimum transfer is 10 coins" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return json({ error: "Minimum transfer is 10 coins" }, 400);
     }
-
     if (coins !== Math.floor(coins)) {
-      return new Response(JSON.stringify({ error: "Coins must be a whole number" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return json({ error: "Coins must be a whole number" }, 400);
+    }
+    if (coins > 10000) {
+      return json({ error: "Maximum transfer is 10,000 coins" }, 400);
     }
 
-    // Admin client for secure operations
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-    // Find recipient by username
+    // Rate limiting: max 10 transfers per hour
+    const oneHourAgo = new Date(Date.now() - 3600000).toISOString();
+    const { count: recentTransfers } = await adminClient
+      .from("coin_transactions")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", sender.id)
+      .eq("type", "transfer")
+      .gte("created_at", oneHourAgo);
+
+    if ((recentTransfers || 0) >= MAX_TRANSFERS_PER_HOUR) {
+      return json({ error: "Rate limit exceeded. Max 10 transfers per hour." }, 429);
+    }
+
+    // Find recipient
     const { data: recipient, error: recipErr } = await adminClient
       .from("profiles")
       .select("id, name, username")
       .ilike("username", cleanUsername)
       .maybeSingle();
 
-    if (recipErr || !recipient) {
-      return new Response(JSON.stringify({ error: "User not found" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    if (recipErr || !recipient) return json({ error: "User not found" }, 404);
+    if (recipient.id === sender.id) return json({ error: "Cannot transfer to yourself" }, 400);
 
-    if (recipient.id === sender.id) {
-      return new Response(JSON.stringify({ error: "Cannot transfer to yourself" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Check sender balance
-    const { data: senderWallet } = await adminClient
-      .from("user_wallet")
-      .select("total_coins")
-      .eq("user_id", sender.id)
-      .single();
-
-    if (!senderWallet || senderWallet.total_coins < coins) {
-      return new Response(JSON.stringify({ error: "Insufficient balance" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Ensure recipient wallet exists
-    await adminClient
-      .from("user_wallet")
-      .upsert({ user_id: recipient.id, total_coins: 0 }, { onConflict: "user_id", ignoreDuplicates: true });
-
-    // Deduct from sender
-    const { error: deductErr } = await adminClient.rpc("transfer_coins", {
+    // Atomic transfer using the DB function
+    const { error: transferErr } = await adminClient.rpc("transfer_coins", {
       _sender_id: sender.id,
       _recipient_id: recipient.id,
       _coins: coins,
     });
 
-    if (deductErr) {
-      // Fallback: manual updates if RPC doesn't exist yet
-      const { error: e1 } = await adminClient
-        .from("user_wallet")
-        .update({ total_coins: senderWallet.total_coins - coins, updated_at: new Date().toISOString() })
-        .eq("user_id", sender.id);
-      if (e1) throw e1;
-
-      const { data: recipWallet } = await adminClient
-        .from("user_wallet")
-        .select("total_coins")
-        .eq("user_id", recipient.id)
-        .single();
-
-      const { error: e2 } = await adminClient
-        .from("user_wallet")
-        .update({ total_coins: (recipWallet?.total_coins || 0) + coins, updated_at: new Date().toISOString() })
-        .eq("user_id", recipient.id);
-      if (e2) throw e2;
+    if (transferErr) {
+      console.error("Transfer RPC error:", transferErr);
+      if (transferErr.message.includes("Insufficient")) {
+        return json({ error: "Insufficient balance" }, 400);
+      }
+      return json({ error: "Transfer failed. Please try again." }, 500);
     }
 
     // Log transactions for both users
@@ -138,19 +96,13 @@ serve(async (req) => {
       { user_id: recipient.id, coins, type: "earn" },
     ]);
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: `Sent ${coins} coins to @${recipient.username || recipient.name}`,
-        recipientName: recipient.name,
-      }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return json({
+      success: true,
+      message: `Sent ${coins} coins to @${recipient.username || recipient.name}`,
+      recipientName: recipient.name,
+    });
   } catch (err) {
     console.error("Transfer error:", err);
-    return new Response(JSON.stringify({ error: "Transfer failed. Please try again." }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return json({ error: "Transfer failed. Please try again." }, 500);
   }
 });

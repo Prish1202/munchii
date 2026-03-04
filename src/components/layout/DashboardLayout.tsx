@@ -17,7 +17,8 @@ import {
   BarChart3,
   Users,
   Settings,
-  UtensilsCrossed
+  UtensilsCrossed,
+  MessageSquare
 } from 'lucide-react';
 import { UserRole } from '@/types/auth';
 
@@ -31,6 +32,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
   customer: [
     { label: 'Home', href: '/customer', icon: <Home className="w-5 h-5" /> },
     { label: 'Browse', href: '/customer/browse', icon: <UtensilsCrossed className="w-5 h-5" /> },
+    { label: 'Chat', href: '/customer/messages', icon: <MessageSquare className="w-5 h-5" /> },
     { label: 'Orders', href: '/customer/orders', icon: <ShoppingBag className="w-5 h-5" /> },
     { label: 'Profile', href: '/customer/profile', icon: <User className="w-5 h-5" /> },
   ],
