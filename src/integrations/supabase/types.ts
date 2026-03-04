@@ -35,80 +35,6 @@ export type Database = {
         }
         Relationships: []
       }
-      deliveries: {
-        Row: {
-          created_at: string
-          current_lat: number | null
-          current_lng: number | null
-          id: string
-          order_id: string
-          status: Database["public"]["Enums"]["delivery_status"]
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          current_lat?: number | null
-          current_lng?: number | null
-          id?: string
-          order_id: string
-          status?: Database["public"]["Enums"]["delivery_status"]
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          current_lat?: number | null
-          current_lng?: number | null
-          id?: string
-          order_id?: string
-          status?: Database["public"]["Enums"]["delivery_status"]
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "deliveries_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: true
-            referencedRelation: "orders"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      delivery_partner_locations: {
-        Row: {
-          city: string | null
-          created_at: string
-          current_lat: number | null
-          current_lng: number | null
-          id: string
-          is_online: boolean
-          last_seen_at: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          city?: string | null
-          created_at?: string
-          current_lat?: number | null
-          current_lng?: number | null
-          id?: string
-          is_online?: boolean
-          last_seen_at?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          city?: string | null
-          created_at?: string
-          current_lat?: number | null
-          current_lng?: number | null
-          id?: string
-          is_online?: boolean
-          last_seen_at?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       menu_items: {
         Row: {
           available: boolean
@@ -193,7 +119,6 @@ export type Database = {
         Row: {
           created_at: string
           customer_id: string | null
-          delivery_partner_id: string | null
           id: string
           restaurant_id: string | null
           status: Database["public"]["Enums"]["order_status"]
@@ -203,7 +128,6 @@ export type Database = {
         Insert: {
           created_at?: string
           customer_id?: string | null
-          delivery_partner_id?: string | null
           id?: string
           restaurant_id?: string | null
           status?: Database["public"]["Enums"]["order_status"]
@@ -213,7 +137,6 @@ export type Database = {
         Update: {
           created_at?: string
           customer_id?: string | null
-          delivery_partner_id?: string | null
           id?: string
           restaurant_id?: string | null
           status?: Database["public"]["Enums"]["order_status"]
@@ -233,7 +156,6 @@ export type Database = {
       payouts: {
         Row: {
           created_at: string
-          delivery_amount: number
           id: string
           order_id: string
           platform_fee: number
@@ -241,7 +163,6 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          delivery_amount: number
           id?: string
           order_id: string
           platform_fee: number
@@ -249,7 +170,6 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          delivery_amount?: number
           id?: string
           order_id?: string
           platform_fee?: number
@@ -361,20 +281,14 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "customer" | "restaurant" | "delivery" | "admin"
-      delivery_status:
-        | "assigned"
-        | "en_route_pickup"
-        | "at_restaurant"
-        | "en_route_delivery"
-        | "delivered"
+      app_role: "customer" | "restaurant" | "admin"
       order_status:
         | "placed"
         | "accepted"
         | "preparing"
-        | "ready"
+        | "ready_for_pickup"
         | "picked_up"
-        | "delivered"
+        | "completed"
         | "cancelled"
     }
     CompositeTypes: {
@@ -503,21 +417,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["customer", "restaurant", "delivery", "admin"],
-      delivery_status: [
-        "assigned",
-        "en_route_pickup",
-        "at_restaurant",
-        "en_route_delivery",
-        "delivered",
-      ],
+      app_role: ["customer", "restaurant", "admin"],
       order_status: [
         "placed",
         "accepted",
         "preparing",
-        "ready",
+        "ready_for_pickup",
         "picked_up",
-        "delivered",
+        "completed",
         "cancelled",
       ],
     },

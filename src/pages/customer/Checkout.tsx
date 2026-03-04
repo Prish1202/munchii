@@ -3,16 +3,15 @@ import { Link, useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCreateOrder } from '@/hooks/useOrders';
-import { ArrowLeft, MapPin, Phone, CreditCard, Banknote, Wallet, Loader2 } from 'lucide-react';
+import { ArrowLeft, Phone, CreditCard, Banknote, Wallet, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const PAYMENT_METHODS = [
-  { id: 'cod', label: 'Cash on Delivery', icon: Banknote },
+  { id: 'cod', label: 'Pay at Pickup', icon: Banknote },
   { id: 'upi', label: 'UPI', icon: Wallet },
   { id: 'card', label: 'Credit / Debit Card', icon: CreditCard },
 ];
@@ -23,17 +22,15 @@ export default function Checkout() {
   const { items, restaurantId, restaurantName, totalAmount, clearCart } = useCart();
   const createOrder = useCreateOrder();
 
-  const [address, setAddress] = useState('');
   const [phone, setPhone] = useState(user?.phone || '');
   const [payment, setPayment] = useState('cod');
   const [isPlacing, setIsPlacing] = useState(false);
 
-  const deliveryFee = 40;
   const platformFee = 10;
   const tax = Math.round(totalAmount * 0.05 * 100) / 100;
-  const grandTotal = totalAmount + deliveryFee + platformFee + tax;
+  const grandTotal = totalAmount + platformFee + tax;
 
-  const canPlace = address.trim().length > 5 && phone.trim().length >= 10 && items.length > 0;
+  const canPlace = phone.trim().length >= 10 && items.length > 0;
 
   const handlePlaceOrder = async () => {
     if (!restaurantId || !canPlace) return;
@@ -83,19 +80,6 @@ export default function Checkout() {
 
         <h1 className="font-display font-bold text-2xl">Checkout</h1>
 
-        {/* Delivery Address */}
-        <section className="bg-card rounded-2xl border border-border p-4 space-y-3">
-          <div className="flex items-center gap-2 text-sm font-semibold">
-            <MapPin className="w-4 h-4 text-primary" />
-            Delivery Address
-          </div>
-          <Input
-            placeholder="Enter your full delivery address"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-          />
-        </section>
-
         {/* Phone */}
         <section className="bg-card rounded-2xl border border-border p-4 space-y-3">
           <div className="flex items-center gap-2 text-sm font-semibold">
@@ -112,7 +96,7 @@ export default function Checkout() {
 
         {/* Payment */}
         <section className="bg-card rounded-2xl border border-border p-4 space-y-3">
-          <Label className="text-sm font-semibold">Payment Method</Label>
+          <div className="text-sm font-semibold">Payment Method</div>
           <div className="space-y-2">
             {PAYMENT_METHODS.map((m) => {
               const Icon = m.icon;
@@ -149,7 +133,6 @@ export default function Checkout() {
           <Separator />
           <div className="space-y-1.5 text-sm">
             <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>₹{totalAmount.toFixed(0)}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Delivery Fee</span><span>₹{deliveryFee}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Platform Fee</span><span>₹{platformFee}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Taxes (5%)</span><span>₹{tax.toFixed(0)}</span></div>
           </div>
@@ -170,7 +153,7 @@ export default function Checkout() {
             {isPlacing ? (
               <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Placing Order...</>
             ) : (
-              `Place Order • ₹${grandTotal.toFixed(0)}`
+              `Place Pickup Order • ₹${grandTotal.toFixed(0)}`
             )}
           </Button>
         </div>

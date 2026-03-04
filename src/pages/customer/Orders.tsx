@@ -6,7 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useCustomerOrders, OrderStatus, useOrderItems } from '@/hooks/useOrders';
 import { useCart } from '@/contexts/CartContext';
 import { EmptyState } from '@/components/customer/EmptyState';
-import { Package, ChevronRight, Clock, Store, RotateCcw } from 'lucide-react';
+import { Package, Clock, Store, RotateCcw } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -14,17 +14,17 @@ const STATUS_CONFIG: Record<OrderStatus, { label: string; className: string }> =
   placed: { label: 'Placed', className: 'bg-blue-500 text-white' },
   accepted: { label: 'Accepted', className: 'bg-indigo-500 text-white' },
   preparing: { label: 'Preparing', className: 'bg-yellow-500 text-white' },
-  ready: { label: 'Ready', className: 'bg-orange-500 text-white' },
-  picked_up: { label: 'On the way', className: 'bg-purple-500 text-white' },
-  delivered: { label: 'Delivered', className: 'bg-green-600 text-white' },
+  ready_for_pickup: { label: 'Ready for Pickup', className: 'bg-orange-500 text-white' },
+  picked_up: { label: 'Picked Up', className: 'bg-purple-500 text-white' },
+  completed: { label: 'Completed', className: 'bg-green-600 text-white' },
   cancelled: { label: 'Cancelled', className: 'bg-destructive text-destructive-foreground' },
 };
 
 export default function Orders() {
   const { data: orders, isLoading } = useCustomerOrders();
 
-  const activeOrders = orders?.filter(o => !['delivered', 'cancelled'].includes(o.status)) || [];
-  const pastOrders = orders?.filter(o => ['delivered', 'cancelled'].includes(o.status)) || [];
+  const activeOrders = orders?.filter(o => !['completed', 'cancelled'].includes(o.status)) || [];
+  const pastOrders = orders?.filter(o => ['completed', 'cancelled'].includes(o.status)) || [];
 
   return (
     <DashboardLayout>
@@ -132,7 +132,7 @@ function OrderCard({ order, showReorder }: { order: any; showReorder?: boolean }
           </div>
           <div className="flex flex-col items-end gap-2">
             <Badge className={statusConfig.className}>{statusConfig.label}</Badge>
-            {showReorder && order.status === 'delivered' && (
+            {showReorder && order.status === 'completed' && (
               <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={handleReorder}>
                 <RotateCcw className="w-3 h-3" /> Reorder
               </Button>

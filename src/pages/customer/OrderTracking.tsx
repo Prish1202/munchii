@@ -15,12 +15,10 @@ import {
   Store,
   ChefHat,
   Package,
-  Truck,
-  MapPin,
+  ShoppingBag,
   Clock,
   Wifi,
   WifiOff,
-  Circle,
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -29,20 +27,20 @@ const ORDER_STEPS: { status: OrderStatus; label: string; icon: React.ReactNode }
   { status: 'placed', label: 'Order Placed', icon: <Package className="w-4 h-4" /> },
   { status: 'accepted', label: 'Accepted', icon: <Store className="w-4 h-4" /> },
   { status: 'preparing', label: 'Preparing', icon: <ChefHat className="w-4 h-4" /> },
-  { status: 'ready', label: 'Ready for Pickup', icon: <Package className="w-4 h-4" /> },
-  { status: 'picked_up', label: 'On the Way', icon: <Truck className="w-4 h-4" /> },
-  { status: 'delivered', label: 'Delivered', icon: <MapPin className="w-4 h-4" /> },
+  { status: 'ready_for_pickup', label: 'Ready for Pickup', icon: <ShoppingBag className="w-4 h-4" /> },
+  { status: 'picked_up', label: 'Picked Up', icon: <ShoppingBag className="w-4 h-4" /> },
+  { status: 'completed', label: 'Completed', icon: <CheckCircle2 className="w-4 h-4" /> },
 ];
 
-const STATUS_ORDER: OrderStatus[] = ['placed', 'accepted', 'preparing', 'ready', 'picked_up', 'delivered'];
+const STATUS_ORDER: OrderStatus[] = ['placed', 'accepted', 'preparing', 'ready_for_pickup', 'picked_up', 'completed'];
 
 const STATUS_MESSAGES: Record<OrderStatus, string> = {
   placed: 'Order placed!',
   accepted: 'Restaurant accepted your order!',
   preparing: 'Your food is being prepared!',
-  ready: 'Your order is ready for pickup!',
-  picked_up: 'Delivery partner is on the way!',
-  delivered: 'Your order has been delivered!',
+  ready_for_pickup: 'Your order is ready for pickup!',
+  picked_up: 'Your order has been picked up!',
+  completed: 'Your order is complete!',
   cancelled: 'Order was cancelled',
 };
 
@@ -83,14 +81,6 @@ export default function OrderTracking() {
     enabled: !!id,
   });
 
-  useRealtimeSync({
-    channelName: `order-delivery-${id}`,
-    table: 'deliveries',
-    filter: `order_id=eq.${id}`,
-    onUpdate: () => queryClient.invalidateQueries({ queryKey: ['order', id] }),
-    enabled: !!id,
-  });
-
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -122,7 +112,6 @@ export default function OrderTracking() {
   return (
     <DashboardLayout>
       <div className="max-w-xl mx-auto pb-20 md:pb-0 space-y-5">
-        {/* Header */}
         <div>
           <Link
             to="/customer/orders"
@@ -146,7 +135,6 @@ export default function OrderTracking() {
           </p>
         </div>
 
-        {/* Timeline */}
         {!isCancelled && (
           <div className="bg-card rounded-2xl border border-border p-5">
             <h3 className="font-display font-semibold text-sm mb-5">Order Status</h3>
@@ -157,7 +145,6 @@ export default function OrderTracking() {
                 const isLast = index === ORDER_STEPS.length - 1;
                 return (
                   <div key={step.status} className="flex gap-4 relative">
-                    {/* Line + dot */}
                     <div className="flex flex-col items-center">
                       <div
                         className={cn(
@@ -171,7 +158,6 @@ export default function OrderTracking() {
                         <div className={cn('w-0.5 h-8 my-1', isCompleted && index < currentStatusIndex ? 'bg-primary' : 'bg-border')} />
                       )}
                     </div>
-                    {/* Label */}
                     <div className="pt-1">
                       <p className={cn('text-sm font-medium', isCompleted ? 'text-foreground' : 'text-muted-foreground')}>
                         {step.label}
@@ -187,7 +173,6 @@ export default function OrderTracking() {
           </div>
         )}
 
-        {/* Restaurant */}
         <div className="bg-card rounded-2xl border border-border p-4 flex items-center gap-3">
           <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center">
             <Store className="w-5 h-5 text-primary" />
@@ -198,14 +183,11 @@ export default function OrderTracking() {
           </div>
         </div>
 
-        {/* Items */}
         <div className="bg-card rounded-2xl border border-border p-4 space-y-3">
           <h3 className="font-display font-semibold text-sm">Order Items</h3>
           {orderItems?.map((item) => (
             <div key={item.id} className="flex justify-between text-sm">
-              <span>
-                <span className="font-medium">{item.quantity}×</span> {item.menu_item?.name || 'Item'}
-              </span>
+              <span><span className="font-medium">{item.quantity}×</span> {item.menu_item?.name || 'Item'}</span>
               <span>₹{(Number(item.price_at_time) * item.quantity).toFixed(0)}</span>
             </div>
           ))}
@@ -216,7 +198,6 @@ export default function OrderTracking() {
           </div>
         </div>
 
-        {/* Details */}
         <div className="bg-card rounded-2xl border border-border p-4 space-y-2 text-sm">
           <h3 className="font-display font-semibold text-sm mb-1">Order Details</h3>
           <div className="flex justify-between">
@@ -228,8 +209,8 @@ export default function OrderTracking() {
             <span>{format(new Date(order.created_at), 'PPp')}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Payment</span>
-            <span>Cash on Delivery</span>
+            <span className="text-muted-foreground">Type</span>
+            <span>Pickup</span>
           </div>
         </div>
       </div>

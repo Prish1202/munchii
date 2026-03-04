@@ -1,4 +1,1 @@
 project_id = "fvariumpdjqfajltqqrv"
-
-[functions.assign-rider]
-verify_jwt = false

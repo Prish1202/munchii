@@ -10,7 +10,6 @@ export interface RestaurantOrder {
   id: string;
   customer_id: string;
   restaurant_id: string;
-  delivery_partner_id: string | null;
   status: OrderStatus;
   total_amount: number;
   created_at: string;
@@ -33,7 +32,6 @@ export function useRestaurantOrders() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // First get the restaurant for this owner
   const { data: restaurant } = useQuery({
     queryKey: ['my-restaurant', user?.id],
     queryFn: async () => {
@@ -42,7 +40,6 @@ export function useRestaurantOrders() {
         .select('id, name')
         .eq('owner_id', user!.id)
         .maybeSingle();
-
       if (error) throw error;
       return data;
     },
@@ -52,7 +49,6 @@ export function useRestaurantOrders() {
   const ordersQuery = useQuery({
     queryKey: ['restaurant-orders', restaurant?.id],
     queryFn: async () => {
-      // First get orders
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select(`
@@ -69,9 +65,7 @@ export function useRestaurantOrders() {
 
       if (ordersError) throw ordersError;
 
-      // Fetch customer profiles separately
       const customerIds = [...new Set(ordersData.map(o => o.customer_id).filter(Boolean))];
-      
       let customerMap: Record<string, { name: string; phone: string | null }> = {};
       
       if (customerIds.length > 0) {
@@ -88,29 +82,23 @@ export function useRestaurantOrders() {
         }
       }
 
-      // Merge customer data
-      const ordersWithCustomers = ordersData.map(order => ({
+      return ordersData.map(order => ({
         ...order,
         customer: order.customer_id ? customerMap[order.customer_id] : undefined,
-      }));
-
-      return ordersWithCustomers as RestaurantOrder[];
+      })) as RestaurantOrder[];
     },
     enabled: !!restaurant?.id,
   });
 
   const handleNewOrder = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['restaurant-orders', restaurant?.id] });
-    toast.info('🔔 New order received!', {
-      description: 'Check your incoming orders',
-    });
+    toast.info('🔔 New order received!', { description: 'Check your incoming orders' });
   }, [queryClient, restaurant?.id]);
 
   const handleOrderUpdate = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['restaurant-orders', restaurant?.id] });
   }, [queryClient, restaurant?.id]);
 
-  // Real-time subscription with reconnection handling
   const { isConnected } = useRealtimeSync({
     channelName: `restaurant-orders-${restaurant?.id}`,
     table: 'orders',
@@ -134,7 +122,6 @@ export function useUpdateOrderStatus() {
         .eq('id', orderId)
         .select()
         .single();
-
       if (error) throw error;
       return data;
     },

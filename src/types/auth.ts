@@ -1,6 +1,6 @@
 import { Session } from '@supabase/supabase-js';
 
-export type UserRole = 'customer' | 'restaurant' | 'delivery' | 'admin';
+export type UserRole = 'customer' | 'restaurant' | 'admin';
 
 export interface Profile {
   id: string;
@@ -28,15 +28,13 @@ export interface AuthState {
 export const ROLE_LABELS: Record<UserRole, string> = {
   customer: 'Customer',
   restaurant: 'Restaurant Partner',
-  delivery: 'Delivery Partner',
   admin: 'Admin',
 };
 
-export const SIGNUP_ROLES: UserRole[] = ['customer', 'restaurant', 'delivery'];
+export const SIGNUP_ROLES: UserRole[] = ['customer', 'restaurant'];
 
 export const ROLE_ROUTES: Record<UserRole, string> = {
   customer: '/customer',
   restaurant: '/restaurant',
-  delivery: '/delivery',
   admin: '/admin',
 };

@@ -1,31 +1,24 @@
 import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Separator } from '@/components/ui/separator';
 import { useRestaurantOrders, useUpdateOrderStatus, RestaurantOrder } from '@/hooks/useRestaurantOrders';
 import { useMyRestaurant } from '@/hooks/useMenuManagement';
 import { OrderStatus } from '@/hooks/useOrders';
 import { 
-  ArrowLeft, 
-  Check, 
-  X, 
-  ChefHat, 
-  Package,
-  Clock,
-  User
+  ArrowLeft, Check, X, ChefHat, Package, Clock, User, ShoppingBag
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; nextStatus?: OrderStatus; nextLabel?: string }> = {
   placed: { label: 'New', color: 'bg-blue-500', nextStatus: 'accepted', nextLabel: 'Accept' },
   accepted: { label: 'Accepted', color: 'bg-indigo-500', nextStatus: 'preparing', nextLabel: 'Start Preparing' },
-  preparing: { label: 'Preparing', color: 'bg-yellow-500', nextStatus: 'ready', nextLabel: 'Mark Ready' },
-  ready: { label: 'Ready', color: 'bg-green-500' },
-  picked_up: { label: 'Picked Up', color: 'bg-purple-500' },
-  delivered: { label: 'Delivered', color: 'bg-gray-500' },
+  preparing: { label: 'Preparing', color: 'bg-yellow-500', nextStatus: 'ready_for_pickup', nextLabel: 'Mark Ready for Pickup' },
+  ready_for_pickup: { label: 'Ready for Pickup', color: 'bg-orange-500', nextStatus: 'picked_up', nextLabel: 'Mark Picked Up' },
+  picked_up: { label: 'Picked Up', color: 'bg-purple-500', nextStatus: 'completed', nextLabel: 'Complete Order' },
+  completed: { label: 'Completed', color: 'bg-green-500' },
   cancelled: { label: 'Cancelled', color: 'bg-red-500' },
 };
 
@@ -35,17 +28,15 @@ export default function RestaurantOrders() {
   const updateStatus = useUpdateOrderStatus();
 
   const pendingOrders = orders?.filter(o => o.status === 'placed') || [];
-  const activeOrders = orders?.filter(o => ['accepted', 'preparing', 'ready'].includes(o.status)) || [];
-  const completedOrders = orders?.filter(o => ['picked_up', 'delivered', 'cancelled'].includes(o.status)) || [];
+  const activeOrders = orders?.filter(o => ['accepted', 'preparing', 'ready_for_pickup'].includes(o.status)) || [];
+  const completedOrders = orders?.filter(o => ['picked_up', 'completed', 'cancelled'].includes(o.status)) || [];
 
   if (!restaurant) {
     return (
       <DashboardLayout>
         <div className="text-center py-12">
           <p className="text-muted-foreground">Please set up your restaurant first.</p>
-          <Link to="/restaurant/settings" className="text-primary hover:underline">
-            Go to Settings
-          </Link>
+          <Link to="/restaurant/settings" className="text-primary hover:underline">Go to Settings</Link>
         </div>
       </DashboardLayout>
     );
@@ -54,14 +45,9 @@ export default function RestaurantOrders() {
   return (
     <DashboardLayout>
       <div className="space-y-6 pb-20 md:pb-0">
-        {/* Header */}
         <div>
-          <Link
-            to="/restaurant"
-            className="inline-flex items-center text-muted-foreground hover:text-foreground mb-2"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
+          <Link to="/restaurant" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-2">
+            <ArrowLeft className="w-4 h-4 mr-2" />Back to Dashboard
           </Link>
           <h1 className="text-2xl font-bold">Orders</h1>
           <p className="text-muted-foreground">Manage incoming and active orders</p>
@@ -69,13 +55,10 @@ export default function RestaurantOrders() {
 
         {isLoading ? (
           <div className="space-y-4">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-48 w-full" />
-            ))}
+            {Array.from({ length: 3 }).map((_, i) => (<Skeleton key={i} className="h-48 w-full" />))}
           </div>
         ) : (
           <>
-            {/* Pending Orders */}
             {pendingOrders.length > 0 && (
               <section>
                 <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -87,59 +70,38 @@ export default function RestaurantOrders() {
                 </h2>
                 <div className="space-y-4">
                   {pendingOrders.map((order) => (
-                    <OrderCard 
-                      key={order.id} 
-                      order={order} 
-                      onUpdateStatus={(status) => updateStatus.mutate({ orderId: order.id, status })}
-                      isUpdating={updateStatus.isPending}
-                    />
+                    <OrderCard key={order.id} order={order} onUpdateStatus={(status) => updateStatus.mutate({ orderId: order.id, status })} isUpdating={updateStatus.isPending} />
                   ))}
                 </div>
               </section>
             )}
 
-            {/* Active Orders */}
             {activeOrders.length > 0 && (
               <section>
                 <h2 className="text-lg font-semibold mb-4">Active Orders ({activeOrders.length})</h2>
                 <div className="space-y-4">
                   {activeOrders.map((order) => (
-                    <OrderCard 
-                      key={order.id} 
-                      order={order} 
-                      onUpdateStatus={(status) => updateStatus.mutate({ orderId: order.id, status })}
-                      isUpdating={updateStatus.isPending}
-                    />
+                    <OrderCard key={order.id} order={order} onUpdateStatus={(status) => updateStatus.mutate({ orderId: order.id, status })} isUpdating={updateStatus.isPending} />
                   ))}
                 </div>
               </section>
             )}
 
-            {/* No Orders */}
             {orders?.length === 0 && (
               <Card>
                 <CardContent className="p-8 text-center">
                   <Package className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
                   <h3 className="font-semibold mb-2">No orders yet</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Orders will appear here when customers place them
-                  </p>
+                  <p className="text-sm text-muted-foreground">Orders will appear here when customers place them</p>
                 </CardContent>
               </Card>
             )}
 
-            {/* Completed Orders */}
             {completedOrders.length > 0 && (
               <section>
                 <h2 className="text-lg font-semibold mb-4">Recent Completed ({completedOrders.length})</h2>
                 <div className="space-y-4">
-                  {completedOrders.slice(0, 5).map((order) => (
-                    <OrderCard 
-                      key={order.id} 
-                      order={order} 
-                      compact
-                    />
-                  ))}
+                  {completedOrders.slice(0, 5).map((order) => (<OrderCard key={order.id} order={order} compact />))}
                 </div>
               </section>
             )}
@@ -150,17 +112,7 @@ export default function RestaurantOrders() {
   );
 }
 
-function OrderCard({ 
-  order, 
-  onUpdateStatus, 
-  isUpdating,
-  compact = false 
-}: { 
-  order: RestaurantOrder; 
-  onUpdateStatus?: (status: OrderStatus) => void;
-  isUpdating?: boolean;
-  compact?: boolean;
-}) {
+function OrderCard({ order, onUpdateStatus, isUpdating, compact = false }: { order: RestaurantOrder; onUpdateStatus?: (status: OrderStatus) => void; isUpdating?: boolean; compact?: boolean }) {
   const config = STATUS_CONFIG[order.status];
   const isNew = order.status === 'placed';
 
@@ -175,9 +127,7 @@ function OrderCard({
           <div>
             <div className="flex items-center gap-2">
               <span className="font-semibold">#{order.id.slice(-6).toUpperCase()}</span>
-              <Badge className={`${config.color} text-white`}>
-                {config.label}
-              </Badge>
+              <Badge className={`${config.color} text-white`}>{config.label}</Badge>
             </div>
             <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
               <Clock className="w-3 h-3" />
@@ -191,7 +141,6 @@ function OrderCard({
 
         {!compact && (
           <>
-            {/* Customer */}
             {order.customer && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
                 <User className="w-4 h-4" />
@@ -200,42 +149,26 @@ function OrderCard({
               </div>
             )}
 
-            {/* Items */}
             <div className="bg-secondary/50 rounded-lg p-3 mb-4">
               <p className="text-sm">{orderItems}</p>
             </div>
 
-            {/* Actions */}
             {onUpdateStatus && (
               <div className="flex gap-2">
                 {isNew ? (
                   <>
-                    <Button
-                      variant="outline"
-                      className="flex-1 border-red-500 text-red-500 hover:bg-red-50"
-                      onClick={() => onUpdateStatus('cancelled')}
-                      disabled={isUpdating}
-                    >
-                      <X className="w-4 h-4 mr-2" />
-                      Reject
+                    <Button variant="outline" className="flex-1 border-red-500 text-red-500 hover:bg-red-50" onClick={() => onUpdateStatus('cancelled')} disabled={isUpdating}>
+                      <X className="w-4 h-4 mr-2" />Reject
                     </Button>
-                    <Button
-                      className="flex-1 bg-green-600 hover:bg-green-700"
-                      onClick={() => onUpdateStatus('accepted')}
-                      disabled={isUpdating}
-                    >
-                      <Check className="w-4 h-4 mr-2" />
-                      Accept
+                    <Button className="flex-1 bg-green-600 hover:bg-green-700" onClick={() => onUpdateStatus('accepted')} disabled={isUpdating}>
+                      <Check className="w-4 h-4 mr-2" />Accept
                     </Button>
                   </>
                 ) : config.nextStatus ? (
-                  <Button
-                    className="w-full bg-restaurant hover:bg-restaurant/90"
-                    onClick={() => onUpdateStatus(config.nextStatus!)}
-                    disabled={isUpdating}
-                  >
+                  <Button className="w-full bg-restaurant hover:bg-restaurant/90" onClick={() => onUpdateStatus(config.nextStatus!)} disabled={isUpdating}>
                     {order.status === 'accepted' && <ChefHat className="w-4 h-4 mr-2" />}
-                    {order.status === 'preparing' && <Package className="w-4 h-4 mr-2" />}
+                    {order.status === 'preparing' && <ShoppingBag className="w-4 h-4 mr-2" />}
+                    {order.status === 'ready_for_pickup' && <Package className="w-4 h-4 mr-2" />}
                     {config.nextLabel}
                   </Button>
                 ) : null}

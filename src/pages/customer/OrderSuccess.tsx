@@ -24,7 +24,7 @@ export default function OrderSuccess() {
 
         <div className="flex items-center gap-2 mt-4 text-sm text-muted-foreground bg-secondary/50 px-4 py-2.5 rounded-xl">
           <Clock className="w-4 h-4 text-primary" />
-          Estimated delivery in 25–35 minutes
+          You'll be notified when it's ready for pickup
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 mt-8 w-full">

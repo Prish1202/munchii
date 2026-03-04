@@ -7,20 +7,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { UtensilsCrossed, ShoppingBag, Store, Truck, Eye, EyeOff } from 'lucide-react';
+import { UtensilsCrossed, ShoppingBag, Store, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 
 const ROLE_ICONS: Record<UserRole, React.ReactNode> = {
   customer: <ShoppingBag className="w-5 h-5" />,
   restaurant: <Store className="w-5 h-5" />,
-  delivery: <Truck className="w-5 h-5" />,
   admin: null,
 };
 
 const ROLE_COLORS: Record<UserRole, string> = {
   customer: 'border-customer bg-customer/10 text-customer',
   restaurant: 'border-restaurant bg-restaurant/10 text-restaurant',
-  delivery: 'border-delivery bg-delivery/10 text-delivery',
   admin: 'border-admin bg-admin/10 text-admin',
 };
 
@@ -44,9 +42,7 @@ export default function SignupPage() {
   const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
     const { error } = await signup(email, password, name, selectedRole, phone);
-
     if (error) {
       if (error.includes('already registered')) {
         toast.error('This email is already registered. Please login instead.');
@@ -56,7 +52,6 @@ export default function SignupPage() {
     } else {
       navigate('/confirm-email');
     }
-
     setIsLoading(false);
   };
 
@@ -88,7 +83,7 @@ export default function SignupPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label className="text-sm font-medium">I am a...</Label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 {SIGNUP_ROLES.map((role) => (
                   <button
                     key={role}
@@ -111,63 +106,25 @@ export default function SignupPage() {
             <form onSubmit={handleEmailSignup} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="signup-name">Full Name</Label>
-                <Input
-                  id="signup-name"
-                  type="text"
-                  placeholder="John Doe"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  className="bg-background"
-                />
+                <Input id="signup-name" type="text" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} required className="bg-background" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="signup-email">Email</Label>
-                <Input
-                  id="signup-email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="bg-background"
-                />
+                <Input id="signup-email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="bg-background" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="signup-phone">Mobile Number</Label>
-                <Input
-                  id="signup-phone"
-                  type="tel"
-                  placeholder="+91 9876543210"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  required
-                  className="bg-background"
-                />
+                <Input id="signup-phone" type="tel" placeholder="+91 9876543210" value={phone} onChange={(e) => setPhone(e.target.value)} required className="bg-background" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="signup-password">Password</Label>
                 <div className="relative">
-                  <Input
-                    id="signup-password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    className="bg-background pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  >
+                  <Input id="signup-password" type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required className="bg-background pr-10" />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Must be at least 6 characters
-                </p>
+                <p className="text-xs text-muted-foreground">Must be at least 6 characters</p>
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? 'Creating account...' : 'Create Account'}
@@ -176,9 +133,7 @@ export default function SignupPage() {
 
             <div className="text-center text-sm text-muted-foreground pt-2">
               Already have an account?{' '}
-              <Link to="/login" className="text-primary hover:underline font-medium">
-                Login
-              </Link>
+              <Link to="/login" className="text-primary hover:underline font-medium">Login</Link>
             </div>
           </CardContent>
         </Card>
