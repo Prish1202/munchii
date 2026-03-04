@@ -28,7 +28,8 @@ import OrderTracking from "./pages/customer/OrderTracking";
 import CustomerProfile from "./pages/customer/Profile";
 import PublicProfile from "./pages/customer/PublicProfile";
 import FollowersList from "./pages/customer/FollowersList";
-
+import Conversations from "./pages/customer/Conversations";
+import ChatView from "./pages/customer/ChatView";
 // Restaurant Pages
 import RestaurantDashboard from "./pages/restaurant/Dashboard";
 import RestaurantOrders from "./pages/restaurant/Orders";
@@ -73,6 +74,8 @@ const App = () => (
               <Route path="/customer/profile" element={<ProtectedRoute allowedRoles={['customer']}><CustomerProfile /></ProtectedRoute>} />
               <Route path="/customer/profile/:type" element={<ProtectedRoute allowedRoles={['customer']}><FollowersList /></ProtectedRoute>} />
               <Route path="/customer/user/:userId" element={<ProtectedRoute allowedRoles={['customer']}><PublicProfile /></ProtectedRoute>} />
+              <Route path="/customer/messages" element={<ProtectedRoute allowedRoles={['customer']}><Conversations /></ProtectedRoute>} />
+              <Route path="/customer/chat/:conversationId" element={<ProtectedRoute allowedRoles={['customer']}><ChatView /></ProtectedRoute>} />
               <Route path="/customer/*" element={<ProtectedRoute allowedRoles={['customer']}><CustomerDashboard /></ProtectedRoute>} />
 
               {/* Restaurant Routes */}

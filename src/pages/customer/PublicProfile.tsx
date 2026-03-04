@@ -1,16 +1,18 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile, useUserStats } from '@/hooks/useProfile';
 import { useWallet } from '@/hooks/useWallet';
 import { useFollowerCounts, useIsFollowing, useToggleFollow } from '@/hooks/useFollowers';
+import { useStartConversation } from '@/hooks/useChat';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Coins, ShoppingBag, UserPlus, UserMinus, Loader2 } from 'lucide-react';
+import { Coins, ShoppingBag, UserPlus, UserMinus, Loader2, MessageSquare } from 'lucide-react';
 
 export default function PublicProfile() {
   const { userId } = useParams<{ userId: string }>();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { data: profile, isLoading } = useProfile(userId);
   const { data: wallet } = useWallet(userId);
@@ -18,6 +20,15 @@ export default function PublicProfile() {
   const { data: counts } = useFollowerCounts(userId || '');
   const { data: isFollowing } = useIsFollowing(userId || '');
   const toggleFollow = useToggleFollow();
+  const startConversation = useStartConversation();
+
+  const handleMessage = async () => {
+    if (!userId) return;
+    try {
+      const convId = await startConversation.mutateAsync(userId);
+      navigate(`/customer/chat/${convId}`);
+    } catch { /* error handled in hook */ }
+  };
 
   const isOwnProfile = user?.id === userId;
 
@@ -66,14 +77,24 @@ export default function PublicProfile() {
           </div>
 
           {!isOwnProfile && userId && (
-            <Button
-              className="mt-4"
-              variant={isFollowing ? 'outline' : 'default'}
-              onClick={() => toggleFollow.mutate({ targetUserId: userId, isFollowing: !!isFollowing })}
-              disabled={toggleFollow.isPending}
-            >
-              {isFollowing ? <><UserMinus className="w-4 h-4 mr-2" /> Unfollow</> : <><UserPlus className="w-4 h-4 mr-2" /> Follow</>}
-            </Button>
+            <div className="flex gap-2 mt-4 justify-center">
+              <Button
+                variant={isFollowing ? 'outline' : 'default'}
+                onClick={() => toggleFollow.mutate({ targetUserId: userId, isFollowing: !!isFollowing })}
+                disabled={toggleFollow.isPending}
+              >
+                {isFollowing ? <><UserMinus className="w-4 h-4 mr-2" /> Unfollow</> : <><UserPlus className="w-4 h-4 mr-2" /> Follow</>}
+              </Button>
+              {isFollowing && (
+                <Button
+                  variant="outline"
+                  onClick={handleMessage}
+                  disabled={startConversation.isPending}
+                >
+                  <MessageSquare className="w-4 h-4 mr-2" /> Message
+                </Button>
+              )}
+            </div>
           )}
         </div>
 
