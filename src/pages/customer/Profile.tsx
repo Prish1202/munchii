@@ -10,8 +10,9 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Coins, Edit2, ShoppingBag, Users, TrendingUp, ArrowUpRight, ArrowDownLeft, Save, X } from 'lucide-react';
+import { Coins, Edit2, ShoppingBag, Users, TrendingUp, ArrowUpRight, ArrowDownLeft, Save, X, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { CoinTransfer } from '@/components/customer/CoinTransfer';
 import { useCustomerOrders } from '@/hooks/useOrders';
 
 export default function Profile() {
@@ -140,37 +141,48 @@ export default function Profile() {
         </div>
 
         {activeTab === 'coins' && (
-          <section className="bg-card rounded-2xl border border-border p-4 space-y-3">
-            <h3 className="font-display font-semibold text-sm">Coin History</h3>
-            {(!transactions || transactions.length === 0) ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">No transactions yet. Earn coins by completing orders!</p>
-            ) : (
-              <div className="space-y-2">
-                {transactions.map(tx => (
-                  <div key={tx.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                    <div className="flex items-center gap-2">
-                      {tx.type === 'earn' ? (
-                        <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center">
-                          <ArrowDownLeft className="w-4 h-4 text-green-600" />
+          <>
+            {/* Transfer Section */}
+            <CoinTransfer availableCoins={wallet?.total_coins || 0} />
+
+            <section className="bg-card rounded-2xl border border-border p-4 space-y-3">
+              <h3 className="font-display font-semibold text-sm">Coin History</h3>
+              {(!transactions || transactions.length === 0) ? (
+                <p className="text-sm text-muted-foreground py-4 text-center">No transactions yet. Earn coins by completing orders!</p>
+              ) : (
+                <div className="space-y-2">
+                  {transactions.map(tx => (
+                    <div key={tx.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                      <div className="flex items-center gap-2">
+                        {tx.type === 'earn' ? (
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <ArrowDownLeft className="w-4 h-4 text-primary" />
+                          </div>
+                        ) : tx.type === 'transfer' ? (
+                          <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center">
+                            <Send className="w-4 h-4 text-accent" />
+                          </div>
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center">
+                            <ArrowUpRight className="w-4 h-4 text-destructive" />
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-sm font-medium capitalize">
+                            {tx.type === 'earn' ? 'Earned' : tx.type === 'redeem' ? 'Redeemed' : 'Sent'}
+                          </p>
+                          <p className="text-xs text-muted-foreground">{new Date(tx.created_at).toLocaleDateString()}</p>
                         </div>
-                      ) : (
-                        <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center">
-                          <ArrowUpRight className="w-4 h-4 text-red-500" />
-                        </div>
-                      )}
-                      <div>
-                        <p className="text-sm font-medium capitalize">{tx.type === 'earn' ? 'Earned' : tx.type === 'redeem' ? 'Redeemed' : 'Transfer'}</p>
-                        <p className="text-xs text-muted-foreground">{new Date(tx.created_at).toLocaleDateString()}</p>
                       </div>
+                      <span className={cn('text-sm font-semibold', tx.type === 'earn' ? 'text-primary' : 'text-destructive')}>
+                        {tx.type === 'earn' ? '+' : '-'}{tx.coins} 🪙
+                      </span>
                     </div>
-                    <span className={cn('text-sm font-semibold', tx.type === 'earn' ? 'text-green-600' : 'text-red-500')}>
-                      {tx.type === 'earn' ? '+' : '-'}{tx.coins} 🪙
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
+                  ))}
+                </div>
+              )}
+            </section>
+          </>
         )}
 
         {activeTab === 'activity' && (
