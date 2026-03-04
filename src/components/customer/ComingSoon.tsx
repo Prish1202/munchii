@@ -6,6 +6,7 @@ import { useLocation } from '@/contexts/LocationContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { motion } from 'framer-motion';
 
 export function ComingSoon() {
   const { city } = useLocation();
@@ -38,9 +39,13 @@ export function ComingSoon() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center py-20 px-6 text-center max-w-md mx-auto">
-      <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-        <Rocket className="w-10 h-10 text-primary" />
+    <motion.div
+      className="flex flex-col items-center justify-center py-20 px-6 text-center max-w-md mx-auto"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      <div className="w-20 h-20 rounded-3xl gradient-social flex items-center justify-center mb-6 shadow-lg animate-float">
+        <Rocket className="w-10 h-10 text-primary-foreground" />
       </div>
 
       <h1 className="font-display font-bold text-2xl text-foreground">
@@ -54,7 +59,7 @@ export function ComingSoon() {
 
       <div className="flex flex-col sm:flex-row gap-3 mt-8 w-full">
         <Button
-          className="flex-1 gap-2"
+          className="flex-1 gap-2 gradient-primary border-0 rounded-xl font-semibold"
           onClick={handleNotify}
           disabled={notifying}
         >
@@ -63,7 +68,7 @@ export function ComingSoon() {
         </Button>
         <Button
           variant="outline"
-          className="flex-1 gap-2"
+          className="flex-1 gap-2 rounded-xl font-semibold"
           onClick={() => setCityOpen(true)}
         >
           <MapPin className="w-4 h-4" />
@@ -72,6 +77,6 @@ export function ComingSoon() {
       </div>
 
       <CitySelector open={cityOpen} onOpenChange={setCityOpen} />
-    </div>
+    </motion.div>
   );
 }
