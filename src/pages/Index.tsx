@@ -18,25 +18,25 @@ const FEATURES = [
   {
     icon: MapPin,
     title: 'Pickup Only',
-    description: 'No delivery fees. Pick up hot meals from campus kitchens. Save ₹₹₹ every order.',
+    description: 'Zero delivery fees. Walk up, grab your hot meal, and save more on every order.',
     gradient: 'gradient-primary',
   },
   {
     icon: Coins,
-    title: 'Earn Rewards',
-    description: 'Get 4% back as coins on every order. Stack them, redeem them, share them.',
+    title: 'Reward Points',
+    description: 'Earn 4% points on every order. Use them on your next meal — 1 point = ₹1.',
     gradient: 'gradient-coin',
   },
   {
     icon: MessageCircle,
     title: 'E2EE Chat',
-    description: 'End-to-end encrypted messaging. Chat privately with fellow foodies.',
+    description: 'End-to-end encrypted messaging. Chat privately with fellow foodies on campus.',
     gradient: 'gradient-social',
   },
   {
     icon: Users,
     title: 'Social Network',
-    description: 'Follow friends, share coins, discover what your campus is eating.',
+    description: 'Follow friends, share points with them, discover what your campus is eating.',
     gradient: 'gradient-mint',
   },
 ];
@@ -51,7 +51,7 @@ const TRUST_POINTS = [
 const STATS = [
   { value: '10K+', label: 'Students' },
   { value: '₹0', label: 'Delivery Fee' },
-  { value: '4%', label: 'Cashback' },
+  { value: '4%', label: 'Points Back' },
   { value: '4.9', label: 'Rating', icon: Star },
 ];
 
@@ -92,10 +92,23 @@ export default function Index() {
 
       {/* Hero */}
       <section className="relative py-20 md:py-32">
-        {/* Background blobs */}
-        <div className="absolute top-10 right-0 w-96 h-96 bg-primary/8 rounded-full blur-[100px]" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-social/8 rounded-full blur-[100px]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 w-64 h-64 bg-coin/8 rounded-full blur-[80px]" />
+        {/* Decorative background pattern */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {/* Gradient orbs */}
+          <div className="absolute top-10 right-10 w-[500px] h-[500px] bg-hero-orb-1 rounded-full blur-[120px] animate-pulse-soft" />
+          <div className="absolute -bottom-20 -left-20 w-[400px] h-[400px] bg-hero-orb-2 rounded-full blur-[100px] animate-pulse-soft" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-hero-orb-3 rounded-full blur-[90px] animate-pulse-soft" style={{ animationDelay: '2s' }} />
+          
+          {/* Grid pattern overlay */}
+          <div className="absolute inset-0 bg-grid-pattern opacity-[0.03]" />
+          
+          {/* Floating food emojis */}
+          <div className="absolute top-20 left-[10%] text-4xl animate-float opacity-20" style={{ animationDelay: '0s' }}>🍕</div>
+          <div className="absolute top-32 right-[15%] text-3xl animate-float opacity-15" style={{ animationDelay: '0.5s' }}>🍔</div>
+          <div className="absolute bottom-32 left-[20%] text-3xl animate-float opacity-15" style={{ animationDelay: '1s' }}>🧋</div>
+          <div className="absolute bottom-20 right-[10%] text-4xl animate-float opacity-20" style={{ animationDelay: '1.5s' }}>🍜</div>
+          <div className="absolute top-1/2 left-[5%] text-2xl animate-float opacity-10" style={{ animationDelay: '2s' }}>🥗</div>
+        </div>
         
         <div className="container text-center relative">
           <motion.div
@@ -129,8 +142,8 @@ export default function Index() {
             variants={fadeUp}
             custom={2}
           >
-            The campus food network where every order earns you rewards.
-            Pick up fresh meals, share coins with friends, and chat with fellow foodies.
+            Your campus food network — order takeaway, collect reward points on every meal,
+            share them with friends, and connect with fellow foodies. 1 point = ₹1.
           </motion.p>
 
           <motion.div
@@ -142,7 +155,7 @@ export default function Index() {
           >
             <Link to="/signup">
               <Button size="lg" className="gradient-primary border-0 text-base font-semibold shadow-xl glow-primary gap-2 h-14 px-8 rounded-2xl">
-                Start Earning <Coins className="w-5 h-5" />
+                Order Now <ArrowRight className="w-5 h-5" />
               </Button>
             </Link>
             <Link to="/signup">
@@ -171,8 +184,9 @@ export default function Index() {
       </section>
 
       {/* Stats */}
-      <section className="py-12 border-y bg-secondary/30">
-        <div className="container">
+      <section className="py-12 border-y bg-secondary/30 relative overflow-hidden">
+        <div className="absolute inset-0 bg-dot-pattern opacity-[0.04]" />
+        <div className="container relative">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {STATS.map((stat) => (
               <motion.div
@@ -195,10 +209,11 @@ export default function Index() {
       </section>
 
       {/* Features */}
-      <section className="py-20 md:py-28">
-        <div className="container">
+      <section className="py-20 md:py-28 relative">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-hero-orb-2 rounded-full blur-[150px] opacity-50" />
+        <div className="container relative">
           <div className="text-center mb-14">
-            <h2 className="text-3xl md:text-4xl font-display font-bold">Not just food delivery</h2>
+            <h2 className="text-3xl md:text-4xl font-display font-bold">More than just ordering food</h2>
             <p className="text-muted-foreground mt-3 text-lg">A complete campus food ecosystem built for Gen-Z</p>
           </div>
 
@@ -206,7 +221,7 @@ export default function Index() {
             {FEATURES.map((feature, i) => (
               <motion.div
                 key={feature.title}
-                className="group relative p-6 rounded-3xl border bg-card hover:shadow-xl transition-all duration-300"
+                className="group relative p-6 rounded-3xl border bg-card/80 backdrop-blur-sm hover:shadow-xl transition-all duration-300"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -224,8 +239,9 @@ export default function Index() {
       </section>
 
       {/* How It Works */}
-      <section className="py-20 bg-secondary/30 border-y">
-        <div className="container">
+      <section className="py-20 bg-secondary/30 border-y relative overflow-hidden">
+        <div className="absolute inset-0 bg-grid-pattern opacity-[0.02]" />
+        <div className="container relative">
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-display font-bold">How it works</h2>
             <p className="text-muted-foreground mt-3 text-lg">Three steps to campus food heaven</p>
@@ -233,9 +249,9 @@ export default function Index() {
 
           <div className="grid md:grid-cols-3 gap-8 max-w-3xl mx-auto">
             {[
-              { step: '01', title: 'Browse & Order', desc: 'Find your favorite campus food spots', emoji: '🍕' },
-              { step: '02', title: 'Pick Up & Earn', desc: 'Grab your food. Get 4% back as coins', emoji: '🪙' },
-              { step: '03', title: 'Share & Socialize', desc: 'Send coins to friends. Chat. Repeat.', emoji: '💬' },
+              { step: '01', title: 'Browse & Order', desc: 'Find your favorite campus food spots and place your order', emoji: '🍕' },
+              { step: '02', title: 'Pick Up & Collect', desc: 'Grab your food and collect 4% reward points', emoji: '🎯' },
+              { step: '03', title: 'Share & Connect', desc: 'Share points with friends. Chat with foodies. Repeat!', emoji: '💬' },
             ].map((item, i) => (
               <motion.div
                 key={item.step}
@@ -258,17 +274,18 @@ export default function Index() {
       {/* CTA */}
       <section className="py-24 relative overflow-hidden">
         <div className="absolute inset-0 gradient-primary opacity-95" />
-        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-[80px]" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-primary-foreground/10 rounded-full blur-[80px]" />
+        <div className="absolute bottom-0 left-0 w-72 h-72 bg-primary-foreground/5 rounded-full blur-[60px]" />
         <div className="container text-center relative z-10">
           <h2 className="text-3xl md:text-5xl font-display font-bold text-primary-foreground">
-            Your campus. Your food. Your rewards.
+            Your campus. Your food. Your points.
           </h2>
           <p className="mt-5 text-primary-foreground/80 max-w-lg mx-auto text-lg">
-            Join the food revolution. No delivery fees, no data games — just great food and real rewards.
+            Join the food revolution. No delivery fees, no data games — just great food and points you can actually use.
           </p>
           <Link to="/signup">
             <Button size="lg" variant="secondary" className="mt-10 gap-2 text-base font-bold h-14 px-8 rounded-2xl shadow-xl">
-              Join FoodyZone <ArrowRight className="w-5 h-5" />
+              Order Now <ArrowRight className="w-5 h-5" />
             </Button>
           </Link>
         </div>

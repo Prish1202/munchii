@@ -118,7 +118,7 @@ export default function CustomerDashboard() {
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-card rounded-2xl border border-border p-3 text-center">
             <p className="text-xs text-muted-foreground">Earned</p>
-            <p className="font-display font-bold text-primary">{wallet?.total_coins || 0} 🪙</p>
+            <p className="font-display font-bold text-primary">{wallet?.total_coins || 0} pts</p>
           </div>
           <div className="bg-card rounded-2xl border border-border p-3 text-center">
             <p className="text-xs text-muted-foreground">Saved</p>

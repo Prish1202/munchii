@@ -5,19 +5,19 @@ import { Coins, Users, MessageCircle, Sparkles } from 'lucide-react';
 const BANNERS = [
   {
     id: 1,
-    title: 'Earn 4% back',
-    subtitle: 'on every order as coins',
+    title: 'Get 4% points',
+    subtitle: 'on every order — 1 point = ₹1',
     icon: Coins,
     gradient: 'from-primary to-primary-glow',
-    emoji: '🪙',
+    emoji: '🎯',
   },
   {
     id: 2,
-    title: 'Share coins',
+    title: 'Share points',
     subtitle: 'with your campus friends',
     icon: Users,
     gradient: 'from-social to-primary',
-    emoji: '💸',
+    emoji: '🤝',
   },
   {
     id: 3,
