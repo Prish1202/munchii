@@ -15,10 +15,6 @@ import {
   Store,
   Menu as MenuIcon,
   BarChart3,
-  Package,
-  Truck,
-  MapPin,
-  Clock,
   Users,
   Settings,
   UtensilsCrossed
@@ -44,12 +40,6 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Orders', href: '/restaurant/orders', icon: <ClipboardList className="w-5 h-5" /> },
     { label: 'Settings', href: '/restaurant/settings', icon: <Settings className="w-5 h-5" /> },
   ],
-  delivery: [
-    { label: 'Dashboard', href: '/delivery', icon: <Home className="w-5 h-5" /> },
-    { label: 'Active', href: '/delivery/active', icon: <Truck className="w-5 h-5" /> },
-    { label: 'History', href: '/delivery/history', icon: <Clock className="w-5 h-5" /> },
-    { label: 'Earnings', href: '/delivery/earnings', icon: <Package className="w-5 h-5" /> },
-  ],
   admin: [
     { label: 'Overview', href: '/admin', icon: <BarChart3 className="w-5 h-5" /> },
     { label: 'Users', href: '/admin/users', icon: <Users className="w-5 h-5" /> },
@@ -61,7 +51,6 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
 const ROLE_COLORS: Record<UserRole, string> = {
   customer: 'bg-customer',
   restaurant: 'bg-restaurant',
-  delivery: 'bg-delivery',
   admin: 'bg-admin',
 };
 

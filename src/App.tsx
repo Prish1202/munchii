@@ -32,9 +32,6 @@ import RestaurantOrders from "./pages/restaurant/Orders";
 import MenuManagement from "./pages/restaurant/MenuManagement";
 import RestaurantSettings from "./pages/restaurant/Settings";
 
-// Delivery Pages
-import DeliveryDashboard from "./pages/delivery/Dashboard";
-
 // Admin Pages
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminUsers from "./pages/admin/Users";
@@ -59,189 +56,33 @@ const App = () => (
               <Route path="/signup" element={<Signup />} />
               <Route path="/confirm-email" element={<ConfirmEmail />} />
               <Route path="/email-verified" element={<EmailVerified />} />
-              {/* Legacy redirect */}
               <Route path="/auth" element={<Navigate to="/login" replace />} />
 
               {/* Customer Routes */}
-              <Route
-                path="/customer"
-                element={
-                  <ProtectedRoute allowedRoles={['customer']}>
-                    <CustomerDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/customer/browse"
-                element={
-                  <ProtectedRoute allowedRoles={['customer']}>
-                    <RestaurantList />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/customer/restaurant/:id"
-                element={
-                  <ProtectedRoute allowedRoles={['customer']}>
-                    <RestaurantMenu />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/customer/cart"
-                element={
-                  <ProtectedRoute allowedRoles={['customer']}>
-                    <Cart />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/customer/checkout"
-                element={
-                  <ProtectedRoute allowedRoles={['customer']}>
-                    <Checkout />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/customer/order-success/:id"
-                element={
-                  <ProtectedRoute allowedRoles={['customer']}>
-                    <OrderSuccess />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/customer/orders"
-                element={
-                  <ProtectedRoute allowedRoles={['customer']}>
-                    <Orders />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/customer/orders/:id"
-                element={
-                  <ProtectedRoute allowedRoles={['customer']}>
-                    <OrderTracking />
-                  </ProtectedRoute>
-                }
-              />
-              {/* Catch-all customer routes */}
-              <Route
-                path="/customer/*"
-                element={
-                  <ProtectedRoute allowedRoles={['customer']}>
-                    <CustomerDashboard />
-                  </ProtectedRoute>
-                }
-              />
+              <Route path="/customer" element={<ProtectedRoute allowedRoles={['customer']}><CustomerDashboard /></ProtectedRoute>} />
+              <Route path="/customer/browse" element={<ProtectedRoute allowedRoles={['customer']}><RestaurantList /></ProtectedRoute>} />
+              <Route path="/customer/restaurant/:id" element={<ProtectedRoute allowedRoles={['customer']}><RestaurantMenu /></ProtectedRoute>} />
+              <Route path="/customer/cart" element={<ProtectedRoute allowedRoles={['customer']}><Cart /></ProtectedRoute>} />
+              <Route path="/customer/checkout" element={<ProtectedRoute allowedRoles={['customer']}><Checkout /></ProtectedRoute>} />
+              <Route path="/customer/order-success/:id" element={<ProtectedRoute allowedRoles={['customer']}><OrderSuccess /></ProtectedRoute>} />
+              <Route path="/customer/orders" element={<ProtectedRoute allowedRoles={['customer']}><Orders /></ProtectedRoute>} />
+              <Route path="/customer/orders/:id" element={<ProtectedRoute allowedRoles={['customer']}><OrderTracking /></ProtectedRoute>} />
+              <Route path="/customer/*" element={<ProtectedRoute allowedRoles={['customer']}><CustomerDashboard /></ProtectedRoute>} />
 
               {/* Restaurant Routes */}
-              <Route
-                path="/restaurant"
-                element={
-                  <ProtectedRoute allowedRoles={['restaurant']}>
-                    <RestaurantDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/restaurant/orders"
-                element={
-                  <ProtectedRoute allowedRoles={['restaurant']}>
-                    <RestaurantOrders />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/restaurant/menu"
-                element={
-                  <ProtectedRoute allowedRoles={['restaurant']}>
-                    <MenuManagement />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/restaurant/settings"
-                element={
-                  <ProtectedRoute allowedRoles={['restaurant']}>
-                    <RestaurantSettings />
-                  </ProtectedRoute>
-                }
-              />
-              {/* Catch-all restaurant routes */}
-              <Route
-                path="/restaurant/*"
-                element={
-                  <ProtectedRoute allowedRoles={['restaurant']}>
-                    <RestaurantDashboard />
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* Delivery Routes */}
-              <Route
-                path="/delivery"
-                element={
-                  <ProtectedRoute allowedRoles={['delivery']}>
-                    <DeliveryDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/delivery/*"
-                element={
-                  <ProtectedRoute allowedRoles={['delivery']}>
-                    <DeliveryDashboard />
-                  </ProtectedRoute>
-                }
-              />
+              <Route path="/restaurant" element={<ProtectedRoute allowedRoles={['restaurant']}><RestaurantDashboard /></ProtectedRoute>} />
+              <Route path="/restaurant/orders" element={<ProtectedRoute allowedRoles={['restaurant']}><RestaurantOrders /></ProtectedRoute>} />
+              <Route path="/restaurant/menu" element={<ProtectedRoute allowedRoles={['restaurant']}><MenuManagement /></ProtectedRoute>} />
+              <Route path="/restaurant/settings" element={<ProtectedRoute allowedRoles={['restaurant']}><RestaurantSettings /></ProtectedRoute>} />
+              <Route path="/restaurant/*" element={<ProtectedRoute allowedRoles={['restaurant']}><RestaurantDashboard /></ProtectedRoute>} />
 
               {/* Admin Routes */}
-              <Route
-                path="/admin"
-                element={
-                  <ProtectedRoute allowedRoles={['admin']}>
-                    <AdminDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/users"
-                element={
-                  <ProtectedRoute allowedRoles={['admin']}>
-                    <AdminUsers />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/orders"
-                element={
-                  <ProtectedRoute allowedRoles={['admin']}>
-                    <AdminOrders />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/payouts"
-                element={
-                  <ProtectedRoute allowedRoles={['admin']}>
-                    <AdminPayouts />
-                  </ProtectedRoute>
-                }
-              />
-              {/* Catch-all admin routes */}
-              <Route
-                path="/admin/*"
-                element={
-                  <ProtectedRoute allowedRoles={['admin']}>
-                    <AdminDashboard />
-                  </ProtectedRoute>
-                }
-              />
+              <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
+              <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['admin']}><AdminUsers /></ProtectedRoute>} />
+              <Route path="/admin/orders" element={<ProtectedRoute allowedRoles={['admin']}><AdminOrders /></ProtectedRoute>} />
+              <Route path="/admin/payouts" element={<ProtectedRoute allowedRoles={['admin']}><AdminPayouts /></ProtectedRoute>} />
+              <Route path="/admin/*" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
 
-              {/* Catch all */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

@@ -111,9 +111,9 @@ export default function AdminDashboard() {
                 <div className="flex items-center justify-between p-3 rounded-lg bg-green-500/10">
                   <div className="flex items-center gap-3">
                     <CheckCircle className="w-5 h-5 text-green-600" />
-                    <span>Delivered Orders</span>
+                    <span>Completed Orders</span>
                   </div>
-                  <span className="font-bold text-green-600">{analytics?.deliveredOrders || 0}</span>
+                  <span className="font-bold text-green-600">{analytics?.completedOrders || 0}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg bg-destructive/10">
                   <div className="flex items-center gap-3">
@@ -132,9 +132,9 @@ export default function AdminDashboard() {
                 <div className="flex items-center justify-between p-3 rounded-lg bg-blue-500/10">
                   <div className="flex items-center gap-3">
                     <TrendingUp className="w-5 h-5 text-blue-600" />
-                    <span>Delivery Rate</span>
+                    <span>Completion Rate</span>
                   </div>
-                  <span className="font-bold text-blue-600">{analytics?.deliveryRate || 0}%</span>
+                  <span className="font-bold text-blue-600">{analytics?.completionRate || 0}%</span>
                 </div>
               </div>
             </CardContent>

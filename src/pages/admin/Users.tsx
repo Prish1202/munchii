@@ -3,22 +3,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { useAdminUsers } from '@/hooks/useAdminData';
 import { useState } from 'react';
-import { Search, Users, Coffee, Truck, Shield } from 'lucide-react';
+import { Search, Users, Coffee, Shield } from 'lucide-react';
 import { format } from 'date-fns';
 
 const ROLE_CONFIG = {
-  customer: { label: 'Coffee Lover', icon: Coffee, color: 'bg-customer text-white' },
-  restaurant: { label: 'Café Partner', icon: Coffee, color: 'bg-cafe text-white' },
-  delivery: { label: 'Delivery Partner', icon: Truck, color: 'bg-delivery text-white' },
+  customer: { label: 'Customer', icon: Coffee, color: 'bg-customer text-white' },
+  restaurant: { label: 'Restaurant Partner', icon: Coffee, color: 'bg-cafe text-white' },
   admin: { label: 'Admin', icon: Shield, color: 'bg-admin text-white' },
 };
 
@@ -44,8 +38,7 @@ export default function AdminUsers() {
           <p className="text-muted-foreground">View and manage all platform users</p>
         </div>
 
-        {/* Stats */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-3">
           {Object.entries(ROLE_CONFIG).map(([role, config]) => (
             <Card key={role}>
               <CardContent className="p-4">
@@ -63,22 +56,13 @@ export default function AdminUsers() {
           ))}
         </div>
 
-        {/* Users Table */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                All Users
-              </CardTitle>
+              <CardTitle className="flex items-center gap-2"><Users className="w-5 h-5" />All Users</CardTitle>
               <div className="relative w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search users..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9"
-                />
+                <Input placeholder="Search users..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
               </div>
             </div>
           </CardHeader>
@@ -102,23 +86,13 @@ export default function AdminUsers() {
                       <TableRow key={user.id}>
                         <TableCell className="font-medium">{user.name}</TableCell>
                         <TableCell>{user.phone || '-'}</TableCell>
-                        <TableCell>
-                          <Badge className={roleConfig?.color}>
-                            {roleConfig?.label || user.role}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {format(new Date(user.created_at), 'MMM d, yyyy')}
-                        </TableCell>
+                        <TableCell><Badge className={roleConfig?.color}>{roleConfig?.label || user.role}</Badge></TableCell>
+                        <TableCell className="text-muted-foreground">{format(new Date(user.created_at), 'MMM d, yyyy')}</TableCell>
                       </TableRow>
                     );
                   })}
                   {filteredUsers?.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                        No users found
-                      </TableCell>
-                    </TableRow>
+                    <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">No users found</TableCell></TableRow>
                   )}
                 </TableBody>
               </Table>

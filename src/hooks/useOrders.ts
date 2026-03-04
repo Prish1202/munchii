@@ -5,13 +5,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useRealtimeSync } from './useRealtimeSync';
 
-export type OrderStatus = 'placed' | 'accepted' | 'preparing' | 'ready' | 'picked_up' | 'delivered' | 'cancelled';
+export type OrderStatus = 'placed' | 'accepted' | 'preparing' | 'ready_for_pickup' | 'picked_up' | 'completed' | 'cancelled';
 
 export interface Order {
   id: string;
   customer_id: string;
   restaurant_id: string;
-  delivery_partner_id: string | null;
   status: OrderStatus;
   total_amount: number;
   created_at: string;
@@ -37,9 +36,9 @@ const STATUS_MESSAGES: Record<OrderStatus, string> = {
   placed: 'Order placed!',
   accepted: 'Restaurant accepted your order!',
   preparing: 'Your food is being prepared!',
-  ready: 'Your order is ready for pickup!',
-  picked_up: 'Delivery partner picked up your order!',
-  delivered: 'Your order has been delivered!',
+  ready_for_pickup: 'Your order is ready for pickup!',
+  picked_up: 'Your order has been picked up!',
+  completed: 'Your order is complete!',
   cancelled: 'Order cancelled',
 };
 
@@ -66,9 +65,7 @@ export function useCustomerOrders() {
   });
 
   const handleUpdate = useCallback((payload: any) => {
-    console.log('Customer order update:', payload);
     queryClient.invalidateQueries({ queryKey: ['customer-orders', user?.id] });
-    
     const newStatus = payload.new?.status as OrderStatus;
     if (newStatus && STATUS_MESSAGES[newStatus]) {
       toast.info(STATUS_MESSAGES[newStatus]);
@@ -79,7 +76,6 @@ export function useCustomerOrders() {
     queryClient.invalidateQueries({ queryKey: ['customer-orders', user?.id] });
   }, [queryClient, user?.id]);
 
-  // Real-time subscription with reconnection handling
   const { isConnected } = useRealtimeSync({
     channelName: `customer-orders-${user?.id}`,
     table: 'orders',
@@ -98,10 +94,7 @@ export function useOrderItems(orderId: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('order_items')
-        .select(`
-          *,
-          menu_item:menu_items(name)
-        `)
+        .select(`*, menu_item:menu_items(name)`)
         .eq('order_id', orderId);
 
       if (error) throw error;
@@ -127,7 +120,6 @@ export function useCreateOrder() {
 
   return useMutation({
     mutationFn: async ({ restaurantId, items, totalAmount }: CreateOrderInput) => {
-      // Create order
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
@@ -141,7 +133,6 @@ export function useCreateOrder() {
 
       if (orderError) throw orderError;
 
-      // Create order items
       const orderItems = items.map(item => ({
         order_id: order.id,
         menu_item_id: item.menuItemId,
@@ -154,7 +145,6 @@ export function useCreateOrder() {
         .insert(orderItems);
 
       if (itemsError) throw itemsError;
-
       return order;
     },
     onSuccess: () => {
