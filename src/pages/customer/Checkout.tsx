@@ -7,8 +7,9 @@ import { Separator } from '@/components/ui/separator';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCreateOrder } from '@/hooks/useOrders';
-import { ArrowLeft, Phone, CreditCard, Banknote, Wallet, Loader2 } from 'lucide-react';
+import { ArrowLeft, Phone, CreditCard, Banknote, Wallet, Loader2, Coins } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useWallet, useRedeemCoins } from '@/hooks/useWallet';
 
 const PAYMENT_METHODS = [
   { id: 'cod', label: 'Pay at Pickup', icon: Banknote },
@@ -22,13 +23,21 @@ export default function Checkout() {
   const { items, restaurantId, restaurantName, totalAmount, clearCart } = useCart();
   const createOrder = useCreateOrder();
 
+  const { data: wallet } = useWallet();
+  const redeemCoins = useRedeemCoins();
+
   const [phone, setPhone] = useState(user?.phone || '');
   const [payment, setPayment] = useState('cod');
   const [isPlacing, setIsPlacing] = useState(false);
+  const [useCoins, setUseCoins] = useState(false);
 
   const platformFee = 10;
   const tax = Math.round(totalAmount * 0.05 * 100) / 100;
-  const grandTotal = totalAmount + platformFee + tax;
+  const subtotalWithFees = totalAmount + platformFee + tax;
+  const availableCoins = wallet?.total_coins || 0;
+  const maxCoinDiscount = Math.min(availableCoins, Math.floor(subtotalWithFees * 0.5)); // max 50% discount
+  const coinDiscount = useCoins ? maxCoinDiscount : 0;
+  const grandTotal = subtotalWithFees - coinDiscount;
 
   const canPlace = phone.trim().length >= 10 && items.length > 0;
 
@@ -45,6 +54,9 @@ export default function Checkout() {
         })),
         totalAmount: grandTotal,
       });
+      if (coinDiscount > 0) {
+        await redeemCoins.mutateAsync({ coins: coinDiscount, orderId: order.id });
+      }
       clearCart();
       navigate(`/customer/order-success/${order.id}`);
     } catch {
@@ -119,7 +131,30 @@ export default function Checkout() {
           </div>
         </section>
 
+        {/* Coins Discount */}
+        {availableCoins > 0 && (
+          <section className="bg-card rounded-2xl border border-border p-4">
+            <button
+              onClick={() => setUseCoins(!useCoins)}
+              className={cn(
+                'w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-colors',
+                useCoins ? 'border-primary bg-primary/5' : 'border-border'
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <Coins className={cn('w-5 h-5', useCoins ? 'text-primary' : 'text-muted-foreground')} />
+                <div className="text-left">
+                  <span className="text-sm font-medium">Use {maxCoinDiscount} coins</span>
+                  <p className="text-xs text-muted-foreground">Save ₹{maxCoinDiscount} · Balance: {availableCoins} coins</p>
+                </div>
+              </div>
+              <div className={cn('w-5 h-5 rounded-full border-2 transition-colors', useCoins ? 'bg-primary border-primary' : 'border-muted-foreground/40')} />
+            </button>
+          </section>
+        )}
+
         {/* Order summary */}
+
         <section className="bg-card rounded-2xl border border-border p-4 space-y-3">
           <h3 className="text-sm font-semibold">Order Summary — {restaurantName}</h3>
           <div className="space-y-2 text-sm">
@@ -136,6 +171,12 @@ export default function Checkout() {
             <div className="flex justify-between"><span className="text-muted-foreground">Platform Fee</span><span>₹{platformFee}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Taxes (5%)</span><span>₹{tax.toFixed(0)}</span></div>
           </div>
+          {coinDiscount > 0 && (
+            <div className="flex justify-between text-green-600">
+              <span className="text-muted-foreground">Coin Discount</span>
+              <span>-₹{coinDiscount}</span>
+            </div>
+          )}
           <Separator />
           <div className="flex justify-between font-bold text-lg">
             <span>Total</span>
