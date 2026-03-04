@@ -6,114 +6,114 @@
 
 @layer base {
   :root {
-    /* Gen-Z Fresh — Warm Neon meets Clean */
-    --background: 40 30% 98%;
-    --foreground: 240 10% 8%;
+    /* Fresh Teal × Warm Sunset — Campus Vibes */
+    --background: 210 20% 98%;
+    --foreground: 220 15% 8%;
 
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 8%;
+    --card-foreground: 220 15% 8%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 8%;
+    --popover-foreground: 220 15% 8%;
 
-    /* Electric Coral */
-    --primary: 14 100% 57%;
+    /* Deep Teal */
+    --primary: 172 80% 38%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 30 100% 65%;
+    --primary-glow: 160 70% 48%;
 
-    /* Soft Lavender */
-    --secondary: 260 30% 96%;
-    --secondary-foreground: 260 20% 30%;
+    /* Warm Cream */
+    --secondary: 35 40% 96%;
+    --secondary-foreground: 35 30% 25%;
 
-    /* Cloud */
-    --muted: 220 14% 93%;
-    --muted-foreground: 220 10% 46%;
+    /* Soft Slate */
+    --muted: 215 16% 92%;
+    --muted-foreground: 215 12% 48%;
 
-    /* Neon Mint */
-    --accent: 160 70% 45%;
+    /* Sunset Orange */
+    --accent: 24 95% 58%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 80% 60%;
+    --destructive: 0 75% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 14 100% 57%;
+    --border: 215 15% 90%;
+    --input: 215 15% 90%;
+    --ring: 172 80% 38%;
 
     --radius: 1rem;
 
     /* Coin Gold */
-    --coin: 45 100% 55%;
-    --coin-foreground: 40 60% 20%;
+    --coin: 42 95% 52%;
+    --coin-foreground: 38 60% 18%;
 
-    /* Social Purple */
-    --social: 270 80% 65%;
+    /* Social Indigo */
+    --social: 245 70% 60%;
     --social-foreground: 0 0% 100%;
 
-    --sidebar-background: 260 30% 97%;
-    --sidebar-foreground: 240 10% 8%;
-    --sidebar-primary: 14 100% 57%;
+    --sidebar-background: 210 18% 97%;
+    --sidebar-foreground: 220 15% 8%;
+    --sidebar-primary: 172 80% 38%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 260 30% 96%;
-    --sidebar-accent-foreground: 260 20% 30%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 14 100% 57%;
+    --sidebar-accent: 35 40% 96%;
+    --sidebar-accent-foreground: 35 30% 25%;
+    --sidebar-border: 215 15% 90%;
+    --sidebar-ring: 172 80% 38%;
 
-    --customer: 14 100% 57%;
-    --restaurant: 0 75% 45%;
-    --delivery: 160 60% 40%;
-    --admin: 260 70% 55%;
+    --customer: 172 80% 38%;
+    --restaurant: 0 70% 50%;
+    --delivery: 160 55% 42%;
+    --admin: 245 65% 55%;
   }
 
   .dark {
-    --background: 240 10% 5%;
-    --foreground: 40 20% 95%;
+    --background: 220 15% 5%;
+    --foreground: 210 20% 95%;
 
-    --card: 240 10% 9%;
-    --card-foreground: 40 20% 95%;
+    --card: 220 15% 9%;
+    --card-foreground: 210 20% 95%;
 
-    --popover: 240 10% 9%;
-    --popover-foreground: 40 20% 95%;
+    --popover: 220 15% 9%;
+    --popover-foreground: 210 20% 95%;
 
-    --primary: 14 100% 60%;
+    --primary: 172 75% 42%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 30 100% 65%;
+    --primary-glow: 160 65% 50%;
 
-    --secondary: 260 15% 15%;
-    --secondary-foreground: 260 20% 80%;
+    --secondary: 220 12% 14%;
+    --secondary-foreground: 35 20% 80%;
 
-    --muted: 240 10% 15%;
-    --muted-foreground: 220 10% 50%;
+    --muted: 220 12% 16%;
+    --muted-foreground: 215 10% 52%;
 
-    --accent: 160 60% 50%;
+    --accent: 24 90% 55%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 70% 50%;
+    --destructive: 0 65% 48%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 10% 16%;
-    --input: 240 10% 16%;
-    --ring: 14 100% 60%;
+    --border: 220 12% 17%;
+    --input: 220 12% 17%;
+    --ring: 172 75% 42%;
 
-    --coin: 45 100% 55%;
-    --coin-foreground: 45 30% 90%;
+    --coin: 42 95% 52%;
+    --coin-foreground: 42 30% 90%;
 
-    --social: 270 70% 70%;
+    --social: 245 60% 65%;
     --social-foreground: 0 0% 100%;
 
-    --sidebar-background: 240 10% 7%;
-    --sidebar-foreground: 40 20% 95%;
-    --sidebar-primary: 14 100% 60%;
+    --sidebar-background: 220 15% 7%;
+    --sidebar-foreground: 210 20% 95%;
+    --sidebar-primary: 172 75% 42%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 260 15% 15%;
-    --sidebar-accent-foreground: 260 20% 80%;
-    --sidebar-border: 240 10% 16%;
-    --sidebar-ring: 14 100% 60%;
+    --sidebar-accent: 220 12% 14%;
+    --sidebar-accent-foreground: 35 20% 80%;
+    --sidebar-border: 220 12% 17%;
+    --sidebar-ring: 172 75% 42%;
 
-    --customer: 14 100% 60%;
-    --restaurant: 0 70% 50%;
+    --customer: 172 75% 42%;
+    --restaurant: 0 65% 48%;
     --delivery: 160 50% 45%;
-    --admin: 260 60% 60%;
+    --admin: 245 55% 58%;
   }
 }
 
@@ -150,19 +150,19 @@
   }
 
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(14 100% 57%), hsl(30 100% 65%));
+    background: linear-gradient(135deg, hsl(172 80% 38%), hsl(160 70% 48%));
   }
 
   .gradient-coin {
-    background: linear-gradient(135deg, hsl(45 100% 55%), hsl(30 100% 65%));
+    background: linear-gradient(135deg, hsl(42 95% 52%), hsl(24 95% 58%));
   }
 
   .gradient-social {
-    background: linear-gradient(135deg, hsl(270 80% 65%), hsl(14 100% 57%));
+    background: linear-gradient(135deg, hsl(245 70% 60%), hsl(172 80% 38%));
   }
 
   .gradient-mint {
-    background: linear-gradient(135deg, hsl(160 70% 45%), hsl(180 60% 50%));
+    background: linear-gradient(135deg, hsl(160 55% 42%), hsl(180 50% 48%));
   }
 
   .glass {
@@ -178,17 +178,41 @@
   }
 
   .text-gradient {
-    background: linear-gradient(135deg, hsl(14 100% 57%), hsl(270 80% 65%));
+    background: linear-gradient(135deg, hsl(172 80% 38%), hsl(24 95% 58%));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .glow-primary {
-    box-shadow: 0 0 30px -5px hsl(14 100% 57% / 0.3);
+    box-shadow: 0 0 30px -5px hsl(172 80% 38% / 0.3);
   }
 
   .glow-coin {
-    box-shadow: 0 0 20px -5px hsl(45 100% 55% / 0.4);
+    box-shadow: 0 0 20px -5px hsl(42 95% 52% / 0.4);
+  }
+
+  .bg-hero-orb-1 {
+    background: hsl(172 80% 38% / 0.08);
+  }
+
+  .bg-hero-orb-2 {
+    background: hsl(245 70% 60% / 0.06);
+  }
+
+  .bg-hero-orb-3 {
+    background: hsl(42 95% 52% / 0.06);
+  }
+
+  .bg-grid-pattern {
+    background-image: 
+      linear-gradient(hsl(var(--foreground)) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  .bg-dot-pattern {
+    background-image: radial-gradient(hsl(var(--foreground)) 1px, transparent 1px);
+    background-size: 24px 24px;
   }
 }
