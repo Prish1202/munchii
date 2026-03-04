@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { MapPin, Star, Clock } from 'lucide-react';
+import { MapPin, Star, Clock, Coins } from 'lucide-react';
 import type { Restaurant } from '@/hooks/useRestaurants';
 
 const FOOD_IMAGES = [
@@ -20,9 +20,9 @@ function getRating() {
   return (3.8 + Math.random() * 1.1).toFixed(1);
 }
 
-function getDeliveryTime() {
-  const min = 15 + Math.floor(Math.random() * 15);
-  return `${min}-${min + 10} min`;
+function getPickupTime() {
+  const min = 10 + Math.floor(Math.random() * 10);
+  return `${min}-${min + 5} min`;
 }
 
 interface RestaurantCardProps {
@@ -34,7 +34,7 @@ export function RestaurantCard({ restaurant }: RestaurantCardProps) {
   
   return (
     <Link to={`/customer/restaurant/${restaurant.id}`} className="block group">
-      <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group-hover:-translate-y-0.5">
+      <div className="bg-card rounded-3xl border border-border overflow-hidden hover:shadow-xl transition-all duration-300 group-hover:-translate-y-1">
         {/* Image */}
         <div className="relative aspect-[16/10] overflow-hidden">
           <img
@@ -43,25 +43,36 @@ export function RestaurantCard({ restaurant }: RestaurantCardProps) {
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             loading="lazy"
           />
-          {/* Offer badge */}
-          <div className="absolute top-3 left-3">
-            <span className="bg-primary text-primary-foreground text-xs font-bold px-2.5 py-1 rounded-lg shadow-md">
-              20% OFF
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+          
+          {/* Badges */}
+          <div className="absolute top-3 left-3 flex gap-2">
+            <span className="gradient-primary text-primary-foreground text-[11px] font-bold px-2.5 py-1 rounded-xl shadow-lg">
+              PICKUP
             </span>
+          </div>
+          
+          {/* Earn badge */}
+          <div className="absolute bottom-3 right-3">
+            <div className="flex items-center gap-1 bg-card/90 backdrop-blur-sm px-2 py-1 rounded-lg">
+              <Coins className="w-3 h-3 text-coin" />
+              <span className="text-[10px] font-bold text-foreground">Earn 4%</span>
+            </div>
+          </div>
+
+          {/* Rating */}
+          <div className="absolute top-3 right-3 flex items-center gap-1 bg-card/90 backdrop-blur-sm px-2 py-1 rounded-lg">
+            <Star className="w-3 h-3 fill-coin text-coin" />
+            <span className="text-xs font-bold text-foreground">{getRating()}</span>
           </div>
         </div>
 
         {/* Content */}
         <div className="p-3.5">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="font-display font-semibold text-base text-foreground truncate">
-              {restaurant.name}
-            </h3>
-            <div className="flex items-center gap-1 bg-green-600 text-primary-foreground px-1.5 py-0.5 rounded-md shrink-0">
-              <Star className="w-3 h-3 fill-current" />
-              <span className="text-xs font-bold">{getRating()}</span>
-            </div>
-          </div>
+          <h3 className="font-display font-bold text-[15px] text-foreground truncate">
+            {restaurant.name}
+          </h3>
           
           <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1 truncate">
             <MapPin className="w-3 h-3 shrink-0" />
@@ -69,11 +80,11 @@ export function RestaurantCard({ restaurant }: RestaurantCardProps) {
           </p>
           
           <div className="flex items-center justify-between mt-2.5 pt-2.5 border-t border-border">
-            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
               <Clock className="w-3 h-3" />
-              {getDeliveryTime()}
+              {getPickupTime()}
             </span>
-            <span className="text-xs text-muted-foreground">₹150 for two</span>
+            <span className="text-xs font-semibold text-accent">₹0 fee</span>
           </div>
         </div>
       </div>

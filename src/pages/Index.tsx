@@ -2,32 +2,57 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { ROLE_ROUTES } from '@/types/auth';
 import { Button } from '@/components/ui/button';
-import { UtensilsCrossed, ShoppingBag, Store, Truck, ArrowRight, Star, Clock } from 'lucide-react';
+import { UtensilsCrossed, ArrowRight, Star, Coins, MessageCircle, Users, Shield, MapPin, Zap, Heart, Sparkles } from 'lucide-react';
 import { useEffect } from 'react';
+import { motion } from 'framer-motion';
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (i: number) => ({
+    opacity: 1, y: 0,
+    transition: { delay: i * 0.1, duration: 0.5, ease: "easeOut" as const }
+  })
+};
 
 const FEATURES = [
   {
-    icon: ShoppingBag,
-    title: 'Wide Selection',
-    description: 'Browse menus from top restaurants near you — from comfort food to gourmet cuisine',
+    icon: MapPin,
+    title: 'Pickup Only',
+    description: 'No delivery fees. Pick up hot meals from campus kitchens. Save ₹₹₹ every order.',
+    gradient: 'gradient-primary',
   },
   {
-    icon: Store,
-    title: 'Restaurant Partners',
-    description: 'Manage your menu, orders, and analytics from one powerful dashboard',
+    icon: Coins,
+    title: 'Earn Rewards',
+    description: 'Get 4% back as coins on every order. Stack them, redeem them, share them.',
+    gradient: 'gradient-coin',
   },
   {
-    icon: Truck,
-    title: 'Fast Delivery',
-    description: 'Hot meals at your door in minutes with real-time order tracking',
+    icon: MessageCircle,
+    title: 'E2EE Chat',
+    description: 'End-to-end encrypted messaging. Chat privately with fellow foodies.',
+    gradient: 'gradient-social',
+  },
+  {
+    icon: Users,
+    title: 'Social Network',
+    description: 'Follow friends, share coins, discover what your campus is eating.',
+    gradient: 'gradient-mint',
   },
 ];
 
+const TRUST_POINTS = [
+  { icon: Shield, text: 'Built in India 🇮🇳' },
+  { icon: Zap, text: 'Low platform fees' },
+  { icon: Heart, text: 'Student-first ecosystem' },
+  { icon: Shield, text: 'Data privacy focused' },
+];
+
 const STATS = [
-  { value: '10K+', label: 'Happy Customers' },
-  { value: '200+', label: 'Restaurant Partners' },
-  { value: '500+', label: 'Delivery Partners' },
-  { value: '4.9', label: 'App Rating', icon: Star },
+  { value: '10K+', label: 'Students' },
+  { value: '₹0', label: 'Delivery Fee' },
+  { value: '4%', label: 'Cashback' },
+  { value: '4.9', label: 'Rating', icon: Star },
 ];
 
 export default function Index() {
@@ -41,132 +66,225 @@ export default function Index() {
   }, [isAuthenticated, user, navigate]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-hidden">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-sm">
+      <header className="sticky top-0 z-50 glass-strong border-b">
         <div className="container flex h-16 items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+          <Link to="/" className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-2xl gradient-primary flex items-center justify-center shadow-lg glow-primary">
               <UtensilsCrossed className="w-5 h-5 text-primary-foreground" />
             </div>
             <span className="font-display font-bold text-xl">FoodyZone</span>
           </Link>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <Link to="/login">
-              <Button variant="ghost">Login</Button>
+              <Button variant="ghost" className="font-medium">Login</Button>
             </Link>
             <Link to="/signup">
-              <Button>Get Started</Button>
+              <Button className="gradient-primary border-0 font-semibold shadow-lg glow-primary">
+                Get Started
+              </Button>
             </Link>
           </div>
         </div>
       </header>
 
       {/* Hero */}
-      <section className="py-20 md:py-32 relative overflow-hidden">
-        <div className="absolute top-20 right-10 w-64 h-64 bg-accent/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-10 left-10 w-48 h-48 bg-primary/10 rounded-full blur-3xl" />
+      <section className="relative py-20 md:py-32">
+        {/* Background blobs */}
+        <div className="absolute top-10 right-0 w-96 h-96 bg-primary/8 rounded-full blur-[100px]" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-social/8 rounded-full blur-[100px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 w-64 h-64 bg-coin/8 rounded-full blur-[80px]" />
         
         <div className="container text-center relative">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-accent text-sm font-medium mb-6">
-            <Clock className="w-4 h-4" />
-            Hot meals delivered in under 30 minutes
-          </div>
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={fadeUp}
+            custom={0}
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary text-secondary-foreground text-sm font-semibold mb-8 border border-border">
+              <Sparkles className="w-4 h-4 text-primary" />
+              Campus food, reimagined
+            </div>
+          </motion.div>
           
-          <h1 className="text-4xl md:text-6xl font-display font-bold tracking-tight max-w-3xl mx-auto">
-            Delicious food,{' '}
-            <span className="text-primary">delivered</span> to your door
-          </h1>
+          <motion.h1
+            className="text-5xl md:text-7xl font-display font-bold tracking-tight max-w-4xl mx-auto leading-[1.1]"
+            initial="hidden"
+            animate="visible"
+            variants={fadeUp}
+            custom={1}
+          >
+            Order. Earn.{' '}
+            <span className="text-gradient">Share.</span>{' '}
+            Socialize.
+          </motion.h1>
           
-          <p className="mt-6 text-lg text-muted-foreground max-w-xl mx-auto">
-            From local restaurants to your table. Fresh meals, snacks, and everything 
-            your hungry heart desires.
-          </p>
+          <motion.p
+            className="mt-6 text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed"
+            initial="hidden"
+            animate="visible"
+            variants={fadeUp}
+            custom={2}
+          >
+            The campus food network where every order earns you rewards.
+            Pick up fresh meals, share coins with friends, and chat with fellow foodies.
+          </motion.p>
 
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+          <motion.div
+            className="mt-10 flex flex-wrap items-center justify-center gap-4"
+            initial="hidden"
+            animate="visible"
+            variants={fadeUp}
+            custom={3}
+          >
             <Link to="/signup">
-              <Button size="lg" className="gap-2 text-base">
-                Order Food <UtensilsCrossed className="w-4 h-4" />
+              <Button size="lg" className="gradient-primary border-0 text-base font-semibold shadow-xl glow-primary gap-2 h-14 px-8 rounded-2xl">
+                Start Earning <Coins className="w-5 h-5" />
               </Button>
             </Link>
             <Link to="/signup">
-              <Button size="lg" variant="outline" className="gap-2 text-base">
-                Partner with us <Store className="w-4 h-4" />
+              <Button size="lg" variant="outline" className="text-base font-semibold gap-2 h-14 px-8 rounded-2xl border-2">
+                Partner with us <UtensilsCrossed className="w-4 h-4" />
               </Button>
             </Link>
-          </div>
+          </motion.div>
+
+          {/* Floating badges */}
+          <motion.div
+            className="mt-12 flex flex-wrap items-center justify-center gap-3"
+            initial="hidden"
+            animate="visible"
+            variants={fadeUp}
+            custom={4}
+          >
+            {TRUST_POINTS.map((point) => (
+              <div key={point.text} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card border border-border text-xs font-medium text-muted-foreground">
+                <point.icon className="w-3.5 h-3.5 text-accent" />
+                {point.text}
+              </div>
+            ))}
+          </motion.div>
         </div>
       </section>
 
       {/* Stats */}
       <section className="py-12 border-y bg-secondary/30">
         <div className="container">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {STATS.map((stat) => (
-              <div key={stat.label} className="text-center">
-                <div className="text-3xl md:text-4xl font-display font-bold text-primary flex items-center justify-center gap-1">
+              <motion.div
+                key={stat.label}
+                className="text-center"
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4 }}
+              >
+                <div className="text-3xl md:text-4xl font-display font-bold text-gradient flex items-center justify-center gap-1">
                   {stat.value}
-                  {stat.icon && <Star className="w-6 h-6 fill-accent text-accent" />}
+                  {stat.icon && <Star className="w-5 h-5 fill-coin text-coin" />}
                 </div>
-                <div className="text-sm text-muted-foreground mt-1">{stat.label}</div>
-              </div>
+                <div className="text-sm text-muted-foreground mt-1 font-medium">{stat.label}</div>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
       {/* Features */}
-      <section className="py-20">
+      <section className="py-20 md:py-28">
         <div className="container">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-display font-bold">The complete food delivery experience</h2>
-            <p className="text-muted-foreground mt-2">From kitchen to table, we've got every step covered</p>
+          <div className="text-center mb-14">
+            <h2 className="text-3xl md:text-4xl font-display font-bold">Not just food delivery</h2>
+            <p className="text-muted-foreground mt-3 text-lg">A complete campus food ecosystem built for Gen-Z</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {FEATURES.map((feature) => (
-              <div 
-                key={feature.title} 
-                className="p-6 rounded-2xl border bg-card hover:shadow-lg transition-all hover:-translate-y-1"
+          <div className="grid md:grid-cols-2 gap-5 max-w-4xl mx-auto">
+            {FEATURES.map((feature, i) => (
+              <motion.div
+                key={feature.title}
+                className="group relative p-6 rounded-3xl border bg-card hover:shadow-xl transition-all duration-300"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1, duration: 0.4 }}
               >
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                  <feature.icon className="w-6 h-6 text-primary" />
+                <div className={`w-12 h-12 rounded-2xl ${feature.gradient} flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform`}>
+                  <feature.icon className="w-6 h-6 text-primary-foreground" />
                 </div>
-                <h3 className="text-xl font-display font-semibold">{feature.title}</h3>
-                <p className="text-muted-foreground mt-2">{feature.description}</p>
-              </div>
+                <h3 className="text-xl font-display font-bold">{feature.title}</h3>
+                <p className="text-muted-foreground mt-2 leading-relaxed">{feature.description}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="py-20 bg-secondary/30 border-y">
+        <div className="container">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl md:text-4xl font-display font-bold">How it works</h2>
+            <p className="text-muted-foreground mt-3 text-lg">Three steps to campus food heaven</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-3xl mx-auto">
+            {[
+              { step: '01', title: 'Browse & Order', desc: 'Find your favorite campus food spots', emoji: '🍕' },
+              { step: '02', title: 'Pick Up & Earn', desc: 'Grab your food. Get 4% back as coins', emoji: '🪙' },
+              { step: '03', title: 'Share & Socialize', desc: 'Send coins to friends. Chat. Repeat.', emoji: '💬' },
+            ].map((item, i) => (
+              <motion.div
+                key={item.step}
+                className="text-center"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.15 }}
+              >
+                <div className="text-5xl mb-4 animate-float" style={{ animationDelay: `${i * 0.3}s` }}>{item.emoji}</div>
+                <div className="text-xs font-display font-bold text-primary mb-2">{item.step}</div>
+                <h3 className="font-display font-bold text-lg">{item.title}</h3>
+                <p className="text-muted-foreground text-sm mt-1">{item.desc}</p>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="py-20 bg-primary text-primary-foreground">
-        <div className="container text-center">
-          <h2 className="text-3xl md:text-4xl font-display font-bold">Ready to order?</h2>
-          <p className="mt-4 text-primary-foreground/80 max-w-lg mx-auto">
-            Join thousands of foodies and restaurant partners already using FoodyZone.
+      <section className="py-24 relative overflow-hidden">
+        <div className="absolute inset-0 gradient-primary opacity-95" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-[80px]" />
+        <div className="container text-center relative z-10">
+          <h2 className="text-3xl md:text-5xl font-display font-bold text-primary-foreground">
+            Your campus. Your food. Your rewards.
+          </h2>
+          <p className="mt-5 text-primary-foreground/80 max-w-lg mx-auto text-lg">
+            Join the food revolution. No delivery fees, no data games — just great food and real rewards.
           </p>
           <Link to="/signup">
-            <Button size="lg" variant="secondary" className="mt-8 gap-2 text-base">
-              Start ordering now <ArrowRight className="w-4 h-4" />
+            <Button size="lg" variant="secondary" className="mt-10 gap-2 text-base font-bold h-14 px-8 rounded-2xl shadow-xl">
+              Join FoodyZone <ArrowRight className="w-5 h-5" />
             </Button>
           </Link>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-8 border-t">
+      <footer className="py-10 border-t">
         <div className="container flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl gradient-primary flex items-center justify-center">
               <UtensilsCrossed className="w-4 h-4 text-primary-foreground" />
             </div>
-            <span className="font-display font-semibold">FoodyZone</span>
+            <span className="font-display font-bold">FoodyZone</span>
           </div>
           <p className="text-sm text-muted-foreground">
-            © 2024 FoodyZone. Made with 🍕 for food lovers.
+            © 2026 FoodyZone · Made with 🍕 in India · Student-first food network
           </p>
         </div>
       </footer>
