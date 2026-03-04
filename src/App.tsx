@@ -25,6 +25,9 @@ import Checkout from "./pages/customer/Checkout";
 import OrderSuccess from "./pages/customer/OrderSuccess";
 import Orders from "./pages/customer/Orders";
 import OrderTracking from "./pages/customer/OrderTracking";
+import CustomerProfile from "./pages/customer/Profile";
+import PublicProfile from "./pages/customer/PublicProfile";
+import FollowersList from "./pages/customer/FollowersList";
 
 // Restaurant Pages
 import RestaurantDashboard from "./pages/restaurant/Dashboard";
@@ -67,6 +70,9 @@ const App = () => (
               <Route path="/customer/order-success/:id" element={<ProtectedRoute allowedRoles={['customer']}><OrderSuccess /></ProtectedRoute>} />
               <Route path="/customer/orders" element={<ProtectedRoute allowedRoles={['customer']}><Orders /></ProtectedRoute>} />
               <Route path="/customer/orders/:id" element={<ProtectedRoute allowedRoles={['customer']}><OrderTracking /></ProtectedRoute>} />
+              <Route path="/customer/profile" element={<ProtectedRoute allowedRoles={['customer']}><CustomerProfile /></ProtectedRoute>} />
+              <Route path="/customer/profile/:type" element={<ProtectedRoute allowedRoles={['customer']}><FollowersList /></ProtectedRoute>} />
+              <Route path="/customer/user/:userId" element={<ProtectedRoute allowedRoles={['customer']}><PublicProfile /></ProtectedRoute>} />
               <Route path="/customer/*" element={<ProtectedRoute allowedRoles={['customer']}><CustomerDashboard /></ProtectedRoute>} />
 
               {/* Restaurant Routes */}

@@ -35,6 +35,62 @@ export type Database = {
         }
         Relationships: []
       }
+      coin_transactions: {
+        Row: {
+          coins: number
+          created_at: string
+          id: string
+          order_id: string | null
+          type: Database["public"]["Enums"]["coin_type"]
+          user_id: string
+        }
+        Insert: {
+          coins: number
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          type: Database["public"]["Enums"]["coin_type"]
+          user_id: string
+        }
+        Update: {
+          coins?: number
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          type?: Database["public"]["Enums"]["coin_type"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coin_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      followers: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: []
+      }
       menu_items: {
         Row: {
           available: boolean
@@ -187,25 +243,34 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
+          campus: string | null
           created_at: string
           id: string
           name: string
           phone: string | null
           updated_at: string
+          username: string | null
         }
         Insert: {
+          avatar_url?: string | null
+          campus?: string | null
           created_at?: string
           id: string
           name: string
           phone?: string | null
           updated_at?: string
+          username?: string | null
         }
         Update: {
+          avatar_url?: string | null
+          campus?: string | null
           created_at?: string
           id?: string
           name?: string
           phone?: string | null
           updated_at?: string
+          username?: string | null
         }
         Relationships: []
       }
@@ -263,6 +328,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_wallet: {
+        Row: {
+          id: string
+          total_coins: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          total_coins?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          total_coins?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -282,6 +368,7 @@ export type Database = {
     }
     Enums: {
       app_role: "customer" | "restaurant" | "admin"
+      coin_type: "earn" | "redeem" | "transfer"
       order_status:
         | "placed"
         | "accepted"
@@ -418,6 +505,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["customer", "restaurant", "admin"],
+      coin_type: ["earn", "redeem", "transfer"],
       order_status: [
         "placed",
         "accepted",
