@@ -116,7 +116,10 @@ export type Database = {
         Row: {
           available: boolean
           created_at: string
+          description: string | null
+          discount_percent: number | null
           id: string
+          image_url: string | null
           name: string
           price: number
           restaurant_id: string
@@ -125,7 +128,10 @@ export type Database = {
         Insert: {
           available?: boolean
           created_at?: string
+          description?: string | null
+          discount_percent?: number | null
           id?: string
+          image_url?: string | null
           name: string
           price: number
           restaurant_id: string
@@ -134,7 +140,10 @@ export type Database = {
         Update: {
           available?: boolean
           created_at?: string
+          description?: string | null
+          discount_percent?: number | null
           id?: string
+          image_url?: string | null
           name?: string
           price?: number
           restaurant_id?: string

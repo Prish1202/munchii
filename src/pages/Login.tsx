@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { UtensilsCrossed, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
+import { motion } from 'framer-motion';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -32,16 +33,39 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="fixed inset-0 opacity-[0.03] pointer-events-none">
-        <div className="absolute top-20 left-10 w-8 h-8 rounded-full bg-foreground rotate-45" />
-        <div className="absolute top-40 right-20 w-6 h-6 rounded-full bg-foreground rotate-12" />
-        <div className="absolute bottom-32 left-1/4 w-10 h-10 rounded-full bg-foreground -rotate-30" />
-      </div>
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background pattern */}
+      <div className="fixed inset-0 bg-dot-pattern opacity-[0.03] pointer-events-none" />
+      
+      {/* Gradient orbs */}
+      <div className="fixed top-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-hero-orb-1 blur-3xl pointer-events-none" />
+      <div className="fixed bottom-[-20%] left-[-10%] w-[400px] h-[400px] rounded-full bg-hero-orb-3 blur-3xl pointer-events-none" />
 
-      <div className="w-full max-w-md space-y-6 animate-fade-in relative">
+      {/* Floating food emojis */}
+      <motion.div
+        className="absolute top-16 left-[15%] text-3xl pointer-events-none"
+        animate={{ y: [0, -15, 0], rotate: [0, 8, 0] }}
+        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+      >🍕</motion.div>
+      <motion.div
+        className="absolute bottom-24 right-[12%] text-2xl pointer-events-none"
+        animate={{ y: [0, -12, 0], rotate: [0, -6, 0] }}
+        transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+      >☕</motion.div>
+      <motion.div
+        className="absolute top-[30%] right-[8%] text-2xl pointer-events-none"
+        animate={{ y: [0, -10, 0] }}
+        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+      >🍜</motion.div>
+
+      <motion.div
+        className="w-full max-w-md space-y-6 relative z-10"
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
+      >
         <div className="text-center space-y-3">
-          <Link to="/" className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-primary-foreground shadow-lg">
+          <Link to="/" className="inline-flex items-center justify-center w-16 h-16 rounded-2xl gradient-primary text-primary-foreground shadow-lg glow-primary">
             <UtensilsCrossed className="w-8 h-8" />
           </Link>
           <div>
@@ -50,9 +74,9 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <Card className="shadow-xl border-0 bg-card/80 backdrop-blur-sm">
+        <Card className="shadow-xl border-0 glass-strong rounded-2xl">
           <CardHeader className="pb-4">
-            <CardTitle className="text-xl">Login</CardTitle>
+            <CardTitle className="text-xl font-display">Login</CardTitle>
             <CardDescription>Enter your credentials to continue</CardDescription>
           </CardHeader>
 
@@ -67,7 +91,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="bg-background"
+                  className="bg-background rounded-xl"
                 />
               </div>
               <div className="space-y-2">
@@ -80,7 +104,7 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="bg-background pr-10"
+                    className="bg-background pr-10 rounded-xl"
                   />
                   <button
                     type="button"
@@ -91,7 +115,7 @@ export default function LoginPage() {
                   </button>
                 </div>
               </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full rounded-xl gradient-primary text-primary-foreground hover:opacity-90 transition-opacity" disabled={isLoading}>
                 {isLoading ? 'Logging in...' : 'Login'}
               </Button>
             </form>
@@ -104,7 +128,9 @@ export default function LoginPage() {
             </div>
           </CardContent>
         </Card>
-      </div>
+
+        <p className="text-center text-xs text-muted-foreground">Built in India 🇮🇳 • Your data stays private</p>
+      </motion.div>
     </div>
   );
 }

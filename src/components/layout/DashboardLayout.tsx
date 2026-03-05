@@ -70,7 +70,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const isCustomer = user.role === 'customer';
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      {/* Background pattern */}
+      <div className="fixed inset-0 bg-dot-pattern opacity-[0.02] pointer-events-none z-0" />
       {/* Top bar */}
       <header className="sticky top-0 z-50 border-b glass-strong">
         <div className="container flex h-14 items-center justify-between">
