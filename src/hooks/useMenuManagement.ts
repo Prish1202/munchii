@@ -9,6 +9,9 @@ export interface MenuItem {
   name: string;
   price: number;
   available: boolean;
+  image_url: string | null;
+  description: string | null;
+  discount_percent: number;
   created_at: string;
   updated_at: string;
 }
@@ -56,7 +59,7 @@ export function useCreateMenuItem() {
   const { data: restaurant } = useMyRestaurant();
 
   return useMutation({
-    mutationFn: async (item: { name: string; price: number }) => {
+    mutationFn: async (item: { name: string; price: number; image_url?: string; description?: string; discount_percent?: number }) => {
       const { data, error } = await supabase
         .from('menu_items')
         .insert({
@@ -64,7 +67,10 @@ export function useCreateMenuItem() {
           name: item.name,
           price: item.price,
           available: true,
-        })
+          image_url: item.image_url || null,
+          description: item.description || null,
+          discount_percent: item.discount_percent || 0,
+        } as any)
         .select()
         .single();
 
@@ -86,10 +92,10 @@ export function useUpdateMenuItem() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, ...updates }: { id: string; name?: string; price?: number; available?: boolean }) => {
+    mutationFn: async ({ id, ...updates }: { id: string; name?: string; price?: number; available?: boolean; image_url?: string; description?: string; discount_percent?: number }) => {
       const { data, error } = await supabase
         .from('menu_items')
-        .update(updates)
+        .update(updates as any)
         .eq('id', id)
         .select()
         .single();

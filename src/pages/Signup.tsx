@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { cn } from '@/lib/utils';
 import { UtensilsCrossed, ShoppingBag, Store, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
+import { motion } from 'framer-motion';
 
 const ROLE_ICONS: Record<UserRole, React.ReactNode> = {
   customer: <ShoppingBag className="w-5 h-5" />,
@@ -17,9 +18,9 @@ const ROLE_ICONS: Record<UserRole, React.ReactNode> = {
 };
 
 const ROLE_COLORS: Record<UserRole, string> = {
-  customer: 'border-customer bg-customer/10 text-customer',
-  restaurant: 'border-restaurant bg-restaurant/10 text-restaurant',
-  admin: 'border-admin bg-admin/10 text-admin',
+  customer: 'border-primary bg-primary/10 text-primary',
+  restaurant: 'border-accent bg-accent/10 text-accent',
+  admin: 'border-muted bg-muted/10 text-muted-foreground',
 };
 
 export default function SignupPage() {
@@ -56,16 +57,34 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="fixed inset-0 opacity-[0.03] pointer-events-none">
-        <div className="absolute top-20 left-10 w-8 h-8 rounded-full bg-foreground rotate-45" />
-        <div className="absolute top-40 right-20 w-6 h-6 rounded-full bg-foreground rotate-12" />
-        <div className="absolute bottom-32 left-1/4 w-10 h-10 rounded-full bg-foreground -rotate-30" />
-      </div>
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background pattern */}
+      <div className="fixed inset-0 bg-dot-pattern opacity-[0.03] pointer-events-none" />
+      
+      {/* Gradient orbs */}
+      <div className="fixed top-[-15%] left-[-10%] w-[450px] h-[450px] rounded-full bg-hero-orb-1 blur-3xl pointer-events-none" />
+      <div className="fixed bottom-[-15%] right-[-10%] w-[400px] h-[400px] rounded-full bg-hero-orb-2 blur-3xl pointer-events-none" />
 
-      <div className="w-full max-w-md space-y-6 animate-fade-in relative">
+      {/* Floating food emojis */}
+      <motion.div
+        className="absolute top-20 right-[15%] text-3xl pointer-events-none"
+        animate={{ y: [0, -15, 0], rotate: [0, 10, 0] }}
+        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+      >🍔</motion.div>
+      <motion.div
+        className="absolute bottom-32 left-[10%] text-2xl pointer-events-none"
+        animate={{ y: [0, -12, 0], rotate: [0, -8, 0] }}
+        transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 0.7 }}
+      >🥗</motion.div>
+
+      <motion.div
+        className="w-full max-w-md space-y-6 relative z-10"
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
+      >
         <div className="text-center space-y-3">
-          <Link to="/" className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-primary-foreground shadow-lg">
+          <Link to="/" className="inline-flex items-center justify-center w-16 h-16 rounded-2xl gradient-primary text-primary-foreground shadow-lg glow-primary">
             <UtensilsCrossed className="w-8 h-8" />
           </Link>
           <div>
@@ -74,9 +93,9 @@ export default function SignupPage() {
           </div>
         </div>
 
-        <Card className="shadow-xl border-0 bg-card/80 backdrop-blur-sm">
+        <Card className="shadow-xl border-0 glass-strong rounded-2xl">
           <CardHeader className="pb-4">
-            <CardTitle className="text-xl">Sign Up</CardTitle>
+            <CardTitle className="text-xl font-display">Sign Up</CardTitle>
             <CardDescription>Choose your role and create an account</CardDescription>
           </CardHeader>
 
@@ -106,27 +125,27 @@ export default function SignupPage() {
             <form onSubmit={handleEmailSignup} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="signup-name">Full Name</Label>
-                <Input id="signup-name" type="text" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} required className="bg-background" />
+                <Input id="signup-name" type="text" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} required className="bg-background rounded-xl" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="signup-email">Email</Label>
-                <Input id="signup-email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="bg-background" />
+                <Input id="signup-email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="bg-background rounded-xl" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="signup-phone">Mobile Number</Label>
-                <Input id="signup-phone" type="tel" placeholder="+91 9876543210" value={phone} onChange={(e) => setPhone(e.target.value)} required className="bg-background" />
+                <Input id="signup-phone" type="tel" placeholder="+91 9876543210" value={phone} onChange={(e) => setPhone(e.target.value)} required className="bg-background rounded-xl" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="signup-password">Password</Label>
                 <div className="relative">
-                  <Input id="signup-password" type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required className="bg-background pr-10" />
+                  <Input id="signup-password" type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required className="bg-background pr-10 rounded-xl" />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
                 <p className="text-xs text-muted-foreground">Must be at least 6 characters</p>
               </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full rounded-xl gradient-primary text-primary-foreground hover:opacity-90 transition-opacity" disabled={isLoading}>
                 {isLoading ? 'Creating account...' : 'Create Account'}
               </Button>
             </form>
@@ -137,7 +156,9 @@ export default function SignupPage() {
             </div>
           </CardContent>
         </Card>
-      </div>
+
+        <p className="text-center text-xs text-muted-foreground">Built in India 🇮🇳 • Your data stays private</p>
+      </motion.div>
     </div>
   );
 }
