@@ -26,10 +26,12 @@ import OrderSuccess from "./pages/customer/OrderSuccess";
 import Orders from "./pages/customer/Orders";
 import OrderTracking from "./pages/customer/OrderTracking";
 import CustomerProfile from "./pages/customer/Profile";
+import CustomerCoins from "./pages/customer/Coins";
 import PublicProfile from "./pages/customer/PublicProfile";
 import FollowersList from "./pages/customer/FollowersList";
 import Conversations from "./pages/customer/Conversations";
 import ChatView from "./pages/customer/ChatView";
+import { UsernameSetup } from "./components/customer/UsernameSetup";
 // Restaurant Pages
 import RestaurantDashboard from "./pages/restaurant/Dashboard";
 import RestaurantOrders from "./pages/restaurant/Orders";
