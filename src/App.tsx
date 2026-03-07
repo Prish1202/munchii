@@ -19,6 +19,7 @@ import NotFound from "./pages/NotFound";
 // Customer Pages
 import CustomerDashboard from "./pages/customer/Dashboard";
 import RestaurantList from "./pages/customer/RestaurantList";
+import Explore from "./pages/customer/Explore";
 import RestaurantMenu from "./pages/customer/RestaurantMenu";
 import Cart from "./pages/customer/Cart";
 import Checkout from "./pages/customer/Checkout";
@@ -66,6 +67,7 @@ const App = () => (
 
               {/* Customer Routes */}
               <Route path="/customer" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><CustomerDashboard /></UsernameSetup></ProtectedRoute>} />
+              <Route path="/customer/explore" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><Explore /></UsernameSetup></ProtectedRoute>} />
               <Route path="/customer/browse" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><RestaurantList /></UsernameSetup></ProtectedRoute>} />
               <Route path="/customer/restaurant/:id" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><RestaurantMenu /></UsernameSetup></ProtectedRoute>} />
               <Route path="/customer/cart" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><Cart /></UsernameSetup></ProtectedRoute>} />
