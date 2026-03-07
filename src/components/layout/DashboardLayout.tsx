@@ -86,7 +86,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="flex items-center gap-1.5">
             {/* Coin balance pill */}
             {isCustomer && (
-              <Link to="/customer/profile" className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-coin/10 border border-coin/20 mr-1">
+              <Link to="/customer/coins" className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-coin/10 border border-coin/20 mr-1">
                 <Sparkles className="w-3.5 h-3.5 text-coin" />
                 <span className="text-xs font-bold text-coin-foreground">{wallet?.total_coins || 0}</span>
               </Link>

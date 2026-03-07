@@ -65,20 +65,21 @@ const App = () => (
               <Route path="/auth" element={<Navigate to="/login" replace />} />
 
               {/* Customer Routes */}
-              <Route path="/customer" element={<ProtectedRoute allowedRoles={['customer']}><CustomerDashboard /></ProtectedRoute>} />
-              <Route path="/customer/browse" element={<ProtectedRoute allowedRoles={['customer']}><RestaurantList /></ProtectedRoute>} />
-              <Route path="/customer/restaurant/:id" element={<ProtectedRoute allowedRoles={['customer']}><RestaurantMenu /></ProtectedRoute>} />
-              <Route path="/customer/cart" element={<ProtectedRoute allowedRoles={['customer']}><Cart /></ProtectedRoute>} />
-              <Route path="/customer/checkout" element={<ProtectedRoute allowedRoles={['customer']}><Checkout /></ProtectedRoute>} />
-              <Route path="/customer/order-success/:id" element={<ProtectedRoute allowedRoles={['customer']}><OrderSuccess /></ProtectedRoute>} />
-              <Route path="/customer/orders" element={<ProtectedRoute allowedRoles={['customer']}><Orders /></ProtectedRoute>} />
-              <Route path="/customer/orders/:id" element={<ProtectedRoute allowedRoles={['customer']}><OrderTracking /></ProtectedRoute>} />
-              <Route path="/customer/profile" element={<ProtectedRoute allowedRoles={['customer']}><CustomerProfile /></ProtectedRoute>} />
-              <Route path="/customer/profile/:type" element={<ProtectedRoute allowedRoles={['customer']}><FollowersList /></ProtectedRoute>} />
-              <Route path="/customer/user/:userId" element={<ProtectedRoute allowedRoles={['customer']}><PublicProfile /></ProtectedRoute>} />
-              <Route path="/customer/messages" element={<ProtectedRoute allowedRoles={['customer']}><Conversations /></ProtectedRoute>} />
-              <Route path="/customer/chat/:conversationId" element={<ProtectedRoute allowedRoles={['customer']}><ChatView /></ProtectedRoute>} />
-              <Route path="/customer/*" element={<ProtectedRoute allowedRoles={['customer']}><CustomerDashboard /></ProtectedRoute>} />
+              <Route path="/customer" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><CustomerDashboard /></UsernameSetup></ProtectedRoute>} />
+              <Route path="/customer/browse" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><RestaurantList /></UsernameSetup></ProtectedRoute>} />
+              <Route path="/customer/restaurant/:id" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><RestaurantMenu /></UsernameSetup></ProtectedRoute>} />
+              <Route path="/customer/cart" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><Cart /></UsernameSetup></ProtectedRoute>} />
+              <Route path="/customer/checkout" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><Checkout /></UsernameSetup></ProtectedRoute>} />
+              <Route path="/customer/order-success/:id" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><OrderSuccess /></UsernameSetup></ProtectedRoute>} />
+              <Route path="/customer/orders" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><Orders /></UsernameSetup></ProtectedRoute>} />
+              <Route path="/customer/orders/:id" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><OrderTracking /></UsernameSetup></ProtectedRoute>} />
+              <Route path="/customer/profile" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><CustomerProfile /></UsernameSetup></ProtectedRoute>} />
+              <Route path="/customer/coins" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><CustomerCoins /></UsernameSetup></ProtectedRoute>} />
+              <Route path="/customer/profile/:type" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><FollowersList /></UsernameSetup></ProtectedRoute>} />
+              <Route path="/customer/user/:userId" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><PublicProfile /></UsernameSetup></ProtectedRoute>} />
+              <Route path="/customer/messages" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><Conversations /></UsernameSetup></ProtectedRoute>} />
+              <Route path="/customer/chat/:conversationId" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><ChatView /></UsernameSetup></ProtectedRoute>} />
+              <Route path="/customer/*" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><CustomerDashboard /></UsernameSetup></ProtectedRoute>} />
 
               {/* Restaurant Routes */}
               <Route path="/restaurant" element={<ProtectedRoute allowedRoles={['restaurant']}><RestaurantDashboard /></ProtectedRoute>} />
