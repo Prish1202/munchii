@@ -19,6 +19,7 @@ import NotFound from "./pages/NotFound";
 // Customer Pages
 import CustomerDashboard from "./pages/customer/Dashboard";
 import RestaurantList from "./pages/customer/RestaurantList";
+import Explore from "./pages/customer/Explore";
 import RestaurantMenu from "./pages/customer/RestaurantMenu";
 import Cart from "./pages/customer/Cart";
 import Checkout from "./pages/customer/Checkout";

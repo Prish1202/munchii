@@ -8,13 +8,14 @@ import { useQueryClient } from '@tanstack/react-query';
 
 interface CoinTransferProps {
   availableCoins: number;
+  prefillUsername?: string;
 }
 
-export function CoinTransfer({ availableCoins }: CoinTransferProps) {
-  const [username, setUsername] = useState('');
+export function CoinTransfer({ availableCoins, prefillUsername }: CoinTransferProps) {
+  const [username, setUsername] = useState(prefillUsername || '');
   const [coins, setCoins] = useState('');
   const [isSending, setIsSending] = useState(false);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(!!prefillUsername);
   const queryClient = useQueryClient();
 
   const coinsNum = parseInt(coins, 10);
