@@ -36,7 +36,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
   customer: [
     { label: 'Home', href: '/customer', icon: <Home className="w-5 h-5" /> },
     { label: 'Explore', href: '/customer/browse', icon: <Search className="w-5 h-5" /> },
-    { label: 'Coins', href: '/customer/profile', icon: <Coins className="w-5 h-5" /> },
+    { label: 'Coins', href: '/customer/coins', icon: <Coins className="w-5 h-5" /> },
     { label: 'Chat', href: '/customer/messages', icon: <MessageSquare className="w-5 h-5" /> },
     { label: 'Profile', href: '/customer/profile', icon: <User className="w-5 h-5" /> },
   ],
@@ -86,7 +86,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="flex items-center gap-1.5">
             {/* Coin balance pill */}
             {isCustomer && (
-              <Link to="/customer/profile" className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-coin/10 border border-coin/20 mr-1">
+              <Link to="/customer/coins" className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-coin/10 border border-coin/20 mr-1">
                 <Sparkles className="w-3.5 h-3.5 text-coin" />
                 <span className="text-xs font-bold text-coin-foreground">{wallet?.total_coins || 0}</span>
               </Link>
