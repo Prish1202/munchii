@@ -17,7 +17,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; nextStatus?:
   accepted: { label: 'Accepted', color: 'bg-indigo-500', nextStatus: 'preparing', nextLabel: 'Start Preparing' },
   preparing: { label: 'Preparing', color: 'bg-yellow-500', nextStatus: 'ready_for_pickup', nextLabel: 'Mark Ready for Pickup' },
   ready_for_pickup: { label: 'Ready for Pickup', color: 'bg-orange-500', nextStatus: 'picked_up', nextLabel: 'Mark Picked Up' },
-  picked_up: { label: 'Picked Up', color: 'bg-purple-500', nextStatus: 'completed', nextLabel: 'Complete Order' },
+  picked_up: { label: 'Picked Up', color: 'bg-purple-500' },
   completed: { label: 'Completed', color: 'bg-green-500' },
   cancelled: { label: 'Cancelled', color: 'bg-red-500' },
 };
