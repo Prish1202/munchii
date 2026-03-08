@@ -93,6 +93,29 @@ export function useRestaurantOrders() {
     enabled: !!restaurant?.id,
   });
 
+  // Ringing sound for pending orders
+  const { playRing, stop: stopRing } = useOrderRingSound();
+  const prevPendingCountRef = useRef(0);
+
+  // Start/stop ringing based on pending orders
+  useEffect(() => {
+    const pendingOrders = ordersQuery.data?.filter(o => o.status === 'placed') || [];
+    const pendingCount = pendingOrders.length;
+
+    if (pendingCount > 0) {
+      playRing();
+    } else {
+      stopRing();
+    }
+
+    // Play ring on NEW incoming order (count increased)
+    if (pendingCount > prevPendingCountRef.current && prevPendingCountRef.current >= 0) {
+      playRing();
+    }
+
+    prevPendingCountRef.current = pendingCount;
+  }, [ordersQuery.data, playRing, stopRing]);
+
   const handleNewOrder = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['restaurant-orders', restaurant?.id] });
     toast.info('🔔 New order received!', { description: 'Check your incoming orders' });
