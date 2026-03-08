@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -8,13 +8,12 @@ interface PresenceState {
 }
 
 /**
- * Tracks own presence and monitors another user's online status.
- * Uses Supabase Realtime Presence (no DB writes).
+ * Tracks own presence and returns the set of online user IDs.
+ * Works for both single-user and multi-user monitoring.
  */
 export function usePresence(otherUserId?: string) {
   const { user } = useAuth();
-  const [isOnline, setIsOnline] = useState(false);
-  const [lastSeen, setLastSeen] = useState<string | null>(null);
+  const [onlineIds, setOnlineIds] = useState<Set<string>>(new Set());
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   useEffect(() => {
@@ -26,21 +25,8 @@ export function usePresence(otherUserId?: string) {
 
     channel
       .on('presence', { event: 'sync' }, () => {
-        if (!otherUserId) return;
         const state = channel.presenceState<PresenceState>();
-        const entries = state[otherUserId];
-        if (entries && entries.length > 0) {
-          setIsOnline(true);
-          setLastSeen(entries[0].online_at);
-        } else {
-          setIsOnline(false);
-        }
-      })
-      .on('presence', { event: 'leave' }, ({ key }) => {
-        if (key === otherUserId) {
-          setIsOnline(false);
-          setLastSeen(new Date().toISOString());
-        }
+        setOnlineIds(new Set(Object.keys(state)));
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
@@ -59,7 +45,12 @@ export function usePresence(otherUserId?: string) {
         channelRef.current = null;
       }
     };
-  }, [user?.id, otherUserId]);
+  }, [user?.id]);
 
-  return { isOnline, lastSeen };
+  const isOnline = useMemo(
+    () => (otherUserId ? onlineIds.has(otherUserId) : false),
+    [onlineIds, otherUserId]
+  );
+
+  return { isOnline, onlineIds };
 }
