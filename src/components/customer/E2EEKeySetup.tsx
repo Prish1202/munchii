@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePublicKey } from '@/hooks/useChat';
 import {
@@ -25,31 +25,35 @@ export function E2EEKeySetup({ children }: E2EEKeySetupProps) {
   const { user } = useAuth();
   const { data: existingPublicKey, isLoading: loadingKey, upsertKey } = usePublicKey();
   const [status, setStatus] = useState<'checking' | 'ready' | 'generating' | 'restoring' | 'missing_private'>('checking');
+  const upsertKeyRef = useRef(upsertKey);
+  upsertKeyRef.current = upsertKey;
+  const ranRef = useRef(false);
 
   useEffect(() => {
-    async function check() {
-      if (loadingKey || !user) return;
+    if (loadingKey || !user) return;
+    if (ranRef.current) return;
+    ranRef.current = true;
 
-      const hasLocal = await hasPrivateKey(user.id);
+    async function check() {
+      const hasLocal = await hasPrivateKey(user!.id);
 
       // Existing account key + local key: validate key consistency
       if (existingPublicKey && hasLocal) {
-        const isMatch = await isLocalPrivateKeyMatchingPublicKey(user.id, existingPublicKey);
+        const isMatch = await isLocalPrivateKeyMatchingPublicKey(user!.id, existingPublicKey);
 
         if (!isMatch) {
           setStatus('restoring');
-          const restored = await restorePrivateKeyFromAccount(user.id);
+          const restored = await restorePrivateKeyFromAccount(user!.id);
 
           if (!restored) {
-            // No cloud backup yet; promote this device key as account source of truth
-            const localPublicKey = await exportPublicKeyFromPrivateKey(user.id);
+            const localPublicKey = await exportPublicKeyFromPrivateKey(user!.id);
             if (localPublicKey) {
-              await upsertKey.mutateAsync(localPublicKey);
+              await upsertKeyRef.current.mutateAsync(localPublicKey);
             }
           }
         }
 
-        await backupPrivateKeyToAccount(user.id);
+        await backupPrivateKeyToAccount(user!.id);
         setStatus('ready');
         return;
       }
@@ -57,7 +61,7 @@ export function E2EEKeySetup({ children }: E2EEKeySetupProps) {
       // Public key exists but local key missing: restore from account backup
       if (existingPublicKey && !hasLocal) {
         setStatus('restoring');
-        const restored = await restorePrivateKeyFromAccount(user.id);
+        const restored = await restorePrivateKeyFromAccount(user!.id);
 
         if (restored) {
           setStatus('ready');
@@ -71,9 +75,9 @@ export function E2EEKeySetup({ children }: E2EEKeySetupProps) {
       // No key pair exists for account yet: generate once and store both public and backup
       setStatus('generating');
       try {
-        const pubKey = await generateKeyPair(user.id);
-        await upsertKey.mutateAsync(pubKey);
-        await backupPrivateKeyToAccount(user.id);
+        const pubKey = await generateKeyPair(user!.id);
+        await upsertKeyRef.current.mutateAsync(pubKey);
+        await backupPrivateKeyToAccount(user!.id);
         setStatus('ready');
       } catch (err) {
         console.error('Key generation failed:', err);
@@ -81,7 +85,7 @@ export function E2EEKeySetup({ children }: E2EEKeySetupProps) {
     }
 
     check();
-  }, [existingPublicKey, loadingKey, upsertKey, user]);
+  }, [existingPublicKey, loadingKey, user]);
 
   if (status === 'checking' || status === 'generating' || status === 'restoring') {
     return (
