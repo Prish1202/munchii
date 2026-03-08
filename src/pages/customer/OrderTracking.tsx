@@ -35,13 +35,13 @@ const ORDER_STEPS: { status: OrderStatus; label: string; icon: React.ReactNode }
 const STATUS_ORDER: OrderStatus[] = ['placed', 'accepted', 'preparing', 'ready_for_pickup', 'picked_up', 'completed'];
 
 const STATUS_MESSAGES: Record<OrderStatus, string> = {
-  placed: 'Order placed!',
-  accepted: 'Restaurant accepted your order!',
-  preparing: 'Your food is being prepared!',
-  ready_for_pickup: 'Your order is ready for pickup!',
-  picked_up: 'Your order has been picked up!',
-  completed: 'Your order is complete!',
-  cancelled: 'Order was cancelled',
+  placed: '🛒 Order placed!',
+  accepted: '✅ Restaurant accepted your order!',
+  preparing: '👨‍🍳 Your food is being prepared!',
+  ready_for_pickup: '📦 Your order is ready for pickup!',
+  picked_up: '🎉 Your order has been picked up!',
+  completed: '🏆 Order complete! Points credited to your wallet.',
+  cancelled: '❌ Order was cancelled',
 };
 
 export default function OrderTracking() {
