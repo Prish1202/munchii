@@ -14,7 +14,7 @@ export function usePushNotifications() {
 
   // Request permission on mount
   useEffect(() => {
-    if (typeof Notification === 'undefined' || !user?.id) return;
+    if (typeof Notification === 'undefined' || !user?.id || !preferences.push_notifications) return;
     if (Notification.permission === 'default') {
       // Small delay so it doesn't fire immediately on page load
       const timer = setTimeout(() => {
