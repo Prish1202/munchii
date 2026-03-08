@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRealtimeSync } from './useRealtimeSync';
 import { encryptMessage, decryptMessage } from '@/lib/e2ee';
 import { useMessageNotificationSound } from './useNotificationSound';
+import { useNotificationPreferences } from './useNotificationPreferences';
 import { toast } from 'sonner';
 import { useEffect, useState, useCallback, useRef } from 'react';
 
