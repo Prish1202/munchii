@@ -1,6 +1,7 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useNotificationPreferences } from './useNotificationPreferences';
 
 /**
  * Requests browser notification permission and shows native push notifications
