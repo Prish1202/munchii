@@ -67,6 +67,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { data: wallet } = useWallet();
   const { data: conversations } = useConversations();
   const location = useLocation();
+  usePushNotifications();
 
   if (!user) return null;
 
