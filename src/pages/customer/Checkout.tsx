@@ -169,7 +169,6 @@ export default function Checkout() {
           <div className="space-y-1.5 text-sm">
             <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>₹{totalAmount.toFixed(0)}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Platform Fee</span><span>₹{platformFee}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Taxes (5%)</span><span>₹{tax.toFixed(0)}</span></div>
           </div>
           {coinDiscount > 0 && (
             <div className="flex justify-between text-green-600">
@@ -182,6 +181,12 @@ export default function Checkout() {
             <span>Total</span>
             <span className="text-primary">₹{grandTotal.toFixed(0)}</span>
           </div>
+          {estimatedPoints > 0 && (
+            <div className="flex items-center gap-2 text-xs text-primary bg-primary/5 rounded-lg px-3 py-2 mt-2">
+              <Coins className="w-4 h-4" />
+              <span>You'll earn <strong>{estimatedPoints} points</strong> (3% of item price) on completion</span>
+            </div>
+          )}
         </section>
 
         {/* Place order */}
