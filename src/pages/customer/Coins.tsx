@@ -70,7 +70,7 @@ export default function Coins() {
                 <ShoppingBag className="w-4 h-4 text-accent" />
               </div>
               <div>
-                <p className="text-sm font-semibold">Earn 4% on every order</p>
+                <p className="text-sm font-semibold">Earn 3% on every order</p>
                 <p className="text-xs text-muted-foreground">Points are credited automatically when your order is completed.</p>
               </div>
             </div>
