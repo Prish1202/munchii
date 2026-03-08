@@ -148,8 +148,7 @@ export function useConversations() {
               const ciphertext = isMine && lastMsg.encrypted_for_sender
                 ? lastMsg.encrypted_for_sender
                 : lastMsg.encrypted_message;
-              const decrypted = await decryptMessage(ciphertext, user!.id);
-              conv.last_message = decrypted.startsWith('__IMAGE__') ? '📷 Photo' : decrypted;
+              conv.last_message = await decryptMessage(ciphertext, user!.id);
             } catch {
               conv.last_message = '🔒 Encrypted message';
             }

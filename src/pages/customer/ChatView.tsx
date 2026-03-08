@@ -14,12 +14,10 @@ import { useReactions } from '@/hooks/useReactions';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { ArrowLeft, Send, Loader2, Lock, Coins, ImagePlus } from 'lucide-react';
+import { ArrowLeft, Send, Loader2, Lock, Coins } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { ChatCoinTransfer } from '@/components/customer/ChatCoinTransfer';
-import { hybridEncrypt, hybridDecrypt, MAX_IMAGE_BYTES } from '@/lib/e2ee-hybrid';
-import { toast } from 'sonner';
 
 export default function ChatView() {
   const { conversationId } = useParams<{ conversationId: string }>();
@@ -29,9 +27,7 @@ export default function ChatView() {
   const sendMessage = useSendMessage();
   const [text, setText] = useState('');
   const [showCoinTransfer, setShowCoinTransfer] = useState(false);
-  const [sendingImage, setSendingImage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const imageInputRef = useRef<HTMLInputElement>(null);
   const { data: wallet } = useWallet();
   const { isOtherTyping, sendTyping } = useTypingIndicator(conversationId || '');
 
@@ -112,47 +108,6 @@ export default function ChatView() {
 
   const handleToggleReaction = (messageId: string, emoji: string) => {
     toggleReaction.mutate({ messageId, emoji });
-  };
-
-  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !recipientPublicKey || !senderPublicKey || !conversationId) return;
-    // Reset file input
-    e.target.value = '';
-
-    if (file.size > MAX_IMAGE_BYTES) {
-      toast.error('Image too large. Max 3 MB.');
-      return;
-    }
-    if (!file.type.startsWith('image/')) {
-      toast.error('Only image files are supported.');
-      return;
-    }
-
-    setSendingImage(true);
-    try {
-      // Read file as data URL for display, then encrypt the whole data URL string
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-
-      // The plaintext is a prefixed data URL so MessageBubble can render it
-      const plaintext = `__IMAGE__${dataUrl}`;
-
-      await sendMessage.mutateAsync({
-        conversationId,
-        recipientPublicKey,
-        senderPublicKey,
-        plaintext,
-      });
-    } catch {
-      toast.error('Failed to send image');
-    } finally {
-      setSendingImage(false);
-    }
   };
 
   return (
@@ -261,13 +216,6 @@ export default function ChatView() {
           </div>
         ) : (
           <div className="flex items-center gap-2 px-3 py-2.5 border-t border-border bg-card/80 backdrop-blur-lg safe-area-bottom shrink-0">
-            <input
-              ref={imageInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleImageSelect}
-            />
             <Button
               variant="ghost"
               size="icon"
@@ -276,20 +224,6 @@ export default function ChatView() {
               title="Send coins"
             >
               <Coins className="w-5 h-5 text-primary" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="flex-shrink-0 h-9 w-9 rounded-xl"
-              onClick={() => imageInputRef.current?.click()}
-              disabled={sendingImage}
-              title="Send encrypted photo"
-            >
-              {sendingImage ? (
-                <Loader2 className="w-5 h-5 animate-spin text-primary" />
-              ) : (
-                <ImagePlus className="w-5 h-5 text-primary" />
-              )}
             </Button>
             <Textarea
               placeholder="Type a message..."
