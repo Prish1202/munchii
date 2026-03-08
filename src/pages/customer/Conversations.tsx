@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 export default function Conversations() {
   const { data: conversations, isLoading } = useConversations();
   useMarkDelivered(conversations);
+  const { onlineIds } = usePresence();
   const startConversation = useStartConversation();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
