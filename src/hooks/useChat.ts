@@ -170,6 +170,7 @@ export function useConversations() {
 
   // Real-time updates on new conversations
   const { play: playMsgSound } = useMessageNotificationSound();
+  const { preferences: notifPrefs } = useNotificationPreferences();
   // Track current path to avoid sound when user is viewing the chat
   const pathRef = useRef(window.location.pathname);
   useEffect(() => {
