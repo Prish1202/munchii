@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { E2EEKeySetup } from '@/components/customer/E2EEKeySetup';
 import { useAuth } from '@/contexts/AuthContext';
-import { useMessages, useSendMessage, useRecipientPublicKey } from '@/hooks/useChat';
+import { useMessages, useSendMessage, useRecipientPublicKey, usePublicKey } from '@/hooks/useChat';
 import { useWallet } from '@/hooks/useWallet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
