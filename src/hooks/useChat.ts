@@ -168,7 +168,7 @@ export function useConversations() {
 
   // Real-time updates on new conversations
   const handleChange = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ['conversations', user?.id] });
+    queryClient.refetchQueries({ queryKey: ['conversations', user?.id] });
   }, [queryClient, user?.id]);
 
   useRealtimeSync({
