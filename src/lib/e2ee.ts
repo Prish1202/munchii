@@ -56,26 +56,9 @@ async function loadPrivateKey(userId: string): Promise<CryptoKey | null> {
 
     const userReq = store.get(getKeyId(userId));
     userReq.onsuccess = async () => {
-      if (userReq.result) {
-        const key = await importPrivateKeyFromJwk(userReq.result as JsonWebKey);
-        return resolve(key);
-      }
-
-      // Legacy fallback for previously stored single-device key.
-      const legacyReq = store.get(LEGACY_KEY_ID);
-      legacyReq.onsuccess = async () => {
-        if (!legacyReq.result) return resolve(null);
-
-        const key = await importPrivateKeyFromJwk(legacyReq.result as JsonWebKey);
-        if (!key) return resolve(null);
-
-        // Migrate legacy key to user-scoped key for future logins.
-        const migrateTx = db.transaction(STORE_NAME, 'readwrite');
-        migrateTx.objectStore(STORE_NAME).put(legacyReq.result, getKeyId(userId));
-        migrateTx.oncomplete = () => resolve(key);
-        migrateTx.onerror = () => resolve(key);
-      };
-      legacyReq.onerror = () => reject(legacyReq.error);
+      if (!userReq.result) return resolve(null);
+      const key = await importPrivateKeyFromJwk(userReq.result as JsonWebKey);
+      resolve(key);
     };
 
     userReq.onerror = () => reject(userReq.error);
