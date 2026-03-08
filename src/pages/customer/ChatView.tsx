@@ -4,11 +4,14 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { E2EEKeySetup } from '@/components/customer/E2EEKeySetup';
 import { MessageBubble } from '@/components/customer/MessageBubble';
 import { TypingIndicator } from '@/components/customer/TypingIndicator';
+import { OnlineIndicator } from '@/components/customer/OnlineIndicator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMessages, useSendMessage, useRecipientPublicKey, usePublicKey } from '@/hooks/useChat';
 import { useWallet } from '@/hooks/useWallet';
 import { useTypingIndicator } from '@/hooks/useTypingIndicator';
 import { useMessageStatus } from '@/hooks/useMessageStatus';
+import { usePresence } from '@/hooks/usePresence';
+import { useReactions } from '@/hooks/useReactions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -61,10 +64,15 @@ export default function ChatView() {
   const { data: recipientPublicKey } = useRecipientPublicKey(otherUserId);
   const { data: senderPublicKey } = usePublicKey();
 
-  // Message status: mark as delivered + read
+  // Presence
+  const { isOnline } = usePresence(otherUserId || undefined);
+
+  // Reactions
+  const { reactions, toggleReaction } = useReactions(conversationId || '');
+
+  // Message status: mark as read
   const { markAsRead } = useMessageStatus(conversationId || '', messages);
 
-  // Mark as read when chat is open and messages change
   useEffect(() => {
     markAsRead();
   }, [markAsRead]);
@@ -98,6 +106,10 @@ export default function ChatView() {
     sendTyping();
   };
 
+  const handleToggleReaction = (messageId: string, emoji: string) => {
+    toggleReaction.mutate({ messageId, emoji });
+  };
+
   return (
     <DashboardLayout>
       <E2EEKeySetup>
@@ -107,15 +119,22 @@ export default function ChatView() {
           <Link to="/customer/messages" className="text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <Avatar className="w-9 h-9">
-            <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
-              {otherProfile?.name?.charAt(0)?.toUpperCase() || '?'}
-            </AvatarFallback>
-          </Avatar>
+          <div className="relative">
+            <Avatar className="w-9 h-9">
+              <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                {otherProfile?.name?.charAt(0)?.toUpperCase() || '?'}
+              </AvatarFallback>
+            </Avatar>
+            <span className="absolute -bottom-0.5 -right-0.5">
+              <OnlineIndicator isOnline={isOnline} size="sm" />
+            </span>
+          </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-sm truncate">{otherProfile?.name || 'Loading...'}</p>
             {isOtherTyping ? (
               <p className="text-xs text-primary animate-pulse">typing...</p>
+            ) : isOnline ? (
+              <p className="text-xs text-emerald-500">online</p>
             ) : otherProfile?.username ? (
               <p className="text-xs text-muted-foreground">@{otherProfile.username}</p>
             ) : null}
@@ -141,11 +160,15 @@ export default function ChatView() {
             messages.map((msg) => (
               <MessageBubble
                 key={msg.id}
+                messageId={msg.id}
                 isOwn={msg.sender_id === user?.id}
                 text={msg.decrypted || '🔒'}
                 time={msg.created_at}
                 deliveredAt={(msg as any).delivered_at}
                 readAt={(msg as any).read_at}
+                reactions={reactions.filter((r) => r.message_id === msg.id)}
+                currentUserId={user?.id || ''}
+                onToggleReaction={handleToggleReaction}
               />
             ))
           )}
