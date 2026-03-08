@@ -106,7 +106,7 @@ export function NotificationBell() {
         {notifications && notifications.length > 0 && (
           <div className="border-t border-border p-2">
             <Link
-              to="/customer/notifications"
+              to={`${rolePrefix}/notifications`}
               className="block text-center text-xs font-medium text-primary hover:underline py-1"
             >
               View all notifications
