@@ -432,6 +432,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_private_key_backups: {
+        Row: {
+          created_at: string
+          encrypted_private_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          encrypted_private_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          encrypted_private_key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_public_keys: {
         Row: {
           created_at: string

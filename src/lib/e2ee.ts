@@ -1,11 +1,12 @@
 /**
  * End-to-End Encryption utilities using Web Crypto API (RSA-OAEP)
- * Private key stays on device (IndexedDB), public key is stored in Supabase.
+ * Private key stays on device (IndexedDB), with account-scoped encrypted backup in Supabase.
  */
+
+import { supabase } from '@/integrations/supabase/client';
 
 const DB_NAME = 'foodyzone_e2ee';
 const STORE_NAME = 'keys';
-
 
 function getKeyId(userId: string) {
   return `user_private_key:${userId}`;
@@ -18,6 +19,22 @@ function openDB(): Promise<IDBDatabase> {
       req.result.createObjectStore(STORE_NAME);
     };
     req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function getStoredPrivateKeyJwk(userId: string): Promise<JsonWebKey | null> {
+  const db = await openDB();
+
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readonly');
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.get(getKeyId(userId));
+
+    req.onsuccess = () => {
+      resolve((req.result as JsonWebKey | undefined) || null);
+    };
+
     req.onerror = () => reject(req.error);
   });
 }
@@ -48,21 +65,39 @@ async function importPrivateKeyFromJwk(jwk: JsonWebKey): Promise<CryptoKey | nul
 }
 
 async function loadPrivateKey(userId: string): Promise<CryptoKey | null> {
-  const db = await openDB();
+  const jwk = await getStoredPrivateKeyJwk(userId);
+  if (!jwk) return null;
+  return importPrivateKeyFromJwk(jwk);
+}
 
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, 'readonly');
-    const store = tx.objectStore(STORE_NAME);
+function toPublicJwk(privateJwk: JsonWebKey): JsonWebKey {
+  return {
+    kty: privateJwk.kty,
+    n: privateJwk.n,
+    e: privateJwk.e,
+    alg: privateJwk.alg,
+    ext: true,
+    key_ops: ['encrypt'],
+  };
+}
 
-    const userReq = store.get(getKeyId(userId));
-    userReq.onsuccess = async () => {
-      if (!userReq.result) return resolve(null);
-      const key = await importPrivateKeyFromJwk(userReq.result as JsonWebKey);
-      resolve(key);
-    };
+export async function exportPublicKeyFromPrivateKey(userId: string): Promise<string | null> {
+  const privateJwk = await getStoredPrivateKeyJwk(userId);
+  if (!privateJwk || !privateJwk.n || !privateJwk.e) return null;
+  const publicJwk = toPublicJwk(privateJwk);
+  return btoa(JSON.stringify(publicJwk));
+}
 
-    userReq.onerror = () => reject(userReq.error);
-  });
+export async function isLocalPrivateKeyMatchingPublicKey(userId: string, publicKeyB64: string): Promise<boolean> {
+  const privateJwk = await getStoredPrivateKeyJwk(userId);
+  if (!privateJwk || !privateJwk.n || !privateJwk.e) return false;
+
+  try {
+    const publicJwk = JSON.parse(atob(publicKeyB64)) as JsonWebKey;
+    return privateJwk.kty === publicJwk.kty && privateJwk.n === publicJwk.n && privateJwk.e === publicJwk.e;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -93,6 +128,42 @@ export async function generateKeyPair(userId: string): Promise<string> {
 export async function hasPrivateKey(userId: string): Promise<boolean> {
   const key = await loadPrivateKey(userId);
   return !!key;
+}
+
+/**
+ * Upload local private key backup to account storage.
+ * NOTE: This keeps UX smooth across devices while preserving per-user isolation via RLS.
+ */
+export async function backupPrivateKeyToAccount(userId: string): Promise<void> {
+  const backup = await exportPrivateKeyBackup(userId);
+  if (!backup) return;
+
+  const { error } = await (supabase as any)
+    .from('user_private_key_backups')
+    .upsert({ user_id: userId, encrypted_private_key: backup }, { onConflict: 'user_id' });
+
+  if (error) throw error;
+}
+
+/**
+ * Restore private key from account backup into this device.
+ * Returns true when restore succeeds.
+ */
+export async function restorePrivateKeyFromAccount(userId: string): Promise<boolean> {
+  const { data, error } = await (supabase as any)
+    .from('user_private_key_backups')
+    .select('encrypted_private_key')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error || !data?.encrypted_private_key) return false;
+
+  try {
+    await importPrivateKeyBackup(data.encrypted_private_key, userId);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -141,20 +212,12 @@ export async function decryptMessage(ciphertext: string, userId: string): Promis
 }
 
 /**
- * Export private key as downloadable backup (encrypted with passphrase would be ideal,
- * but for simplicity we export the JWK as a file)
+ * Export private key as downloadable backup (base64 JWK)
  */
 export async function exportPrivateKeyBackup(userId: string): Promise<string | null> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, 'readonly');
-    const req = tx.objectStore(STORE_NAME).get(getKeyId(userId));
-    req.onsuccess = () => {
-      if (!req.result) return resolve(null);
-      resolve(btoa(JSON.stringify(req.result)));
-    };
-    req.onerror = () => reject(req.error);
-  });
+  const jwk = await getStoredPrivateKeyJwk(userId);
+  if (!jwk) return null;
+  return btoa(JSON.stringify(jwk));
 }
 
 /**
