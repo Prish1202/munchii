@@ -179,6 +179,15 @@ export function useConversations() {
     enabled: !!user?.id,
   });
 
+  // Real-time updates on any message change (for unread counts + last message)
+  useRealtimeSync({
+    channelName: `conversations-messages-${user?.id}`,
+    table: 'messages',
+    onInsert: handleChange,
+    onUpdate: handleChange,
+    enabled: !!user?.id,
+  });
+
   return query;
 }
 

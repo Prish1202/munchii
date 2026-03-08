@@ -55,17 +55,27 @@ export function useReactions(conversationId: string) {
     mutationFn: async ({ messageId, emoji }: { messageId: string; emoji: string }) => {
       if (!user?.id) throw new Error('Not authenticated');
 
-      // Check if reaction exists
+      // Check if user already has ANY reaction on this message
       const { data: existing } = await supabase
         .from('message_reactions')
-        .select('id')
+        .select('id, emoji')
         .eq('message_id', messageId)
         .eq('user_id', user.id)
-        .eq('emoji', emoji)
         .maybeSingle();
 
       if (existing) {
-        await supabase.from('message_reactions').delete().eq('id', existing.id);
+        // If same emoji, remove it (toggle off)
+        if (existing.emoji === emoji) {
+          await supabase.from('message_reactions').delete().eq('id', existing.id);
+        } else {
+          // Different emoji: remove old, add new (swap)
+          await supabase.from('message_reactions').delete().eq('id', existing.id);
+          await supabase.from('message_reactions').insert({
+            message_id: messageId,
+            user_id: user.id,
+            emoji,
+          });
+        }
       } else {
         await supabase.from('message_reactions').insert({
           message_id: messageId,
