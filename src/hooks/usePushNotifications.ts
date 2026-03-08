@@ -25,7 +25,7 @@ export function usePushNotifications() {
       return () => clearTimeout(timer);
     }
     permissionRef.current = Notification.permission;
-  }, [user?.id]);
+  }, [user?.id, preferences.push_notifications]);
 
   const showNotification = useCallback((title: string, body: string, link?: string) => {
     if (typeof Notification === 'undefined') return;
