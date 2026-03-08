@@ -32,6 +32,7 @@ export interface Message {
   encrypted_for_sender?: string | null;
   delivered_at?: string | null;
   read_at?: string | null;
+  reply_to_id?: string | null;
   created_at: string;
   decrypted?: string;
 }
