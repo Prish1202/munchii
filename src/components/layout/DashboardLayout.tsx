@@ -64,12 +64,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, logout } = useAuth();
   const { totalItems } = useCart();
   const { data: wallet } = useWallet();
+  const { data: conversations } = useConversations();
   const location = useLocation();
 
   if (!user) return null;
 
   const navItems = NAV_ITEMS[user.role];
   const isCustomer = user.role === 'customer';
+  const totalUnread = conversations?.reduce((sum, c) => sum + (c.unread_count || 0), 0) || 0;
 
   return (
     <div className="min-h-screen bg-background relative">
