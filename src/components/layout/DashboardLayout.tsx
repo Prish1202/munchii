@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { UserRole } from '@/types/auth';
 import { NotificationBell } from '@/components/NotificationBell';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 interface NavItem {
   label: string;
