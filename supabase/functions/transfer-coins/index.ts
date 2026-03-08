@@ -77,7 +77,7 @@ serve(async (req) => {
       .maybeSingle();
 
     if (recipErr || !recipient) return json({ error: "User not found" }, 404);
-    if (recipient.id === sender.id) return json({ error: "Cannot transfer to yourself" }, 400);
+    if (recipient.id === senderId) return json({ error: "Cannot transfer to yourself" }, 400);
 
     // Atomic transfer using the DB function
     const { error: transferErr } = await adminClient.rpc("transfer_coins", {
