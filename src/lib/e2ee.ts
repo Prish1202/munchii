@@ -150,7 +150,7 @@ export async function backupPrivateKeyToAccount(userId: string): Promise<void> {
  * Returns true when restore succeeds.
  */
 export async function restorePrivateKeyFromAccount(userId: string): Promise<boolean> {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('user_private_key_backups')
     .select('encrypted_private_key')
     .eq('user_id', userId)
