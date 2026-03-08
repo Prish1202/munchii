@@ -55,6 +55,7 @@ export default function Checkout() {
         })),
         totalAmount: grandTotal,
         paymentMethod: payment,
+        pickupTime: pickupTime ? new Date(pickupTime).toISOString() : undefined,
       });
       if (coinDiscount > 0) {
         await redeemCoins.mutateAsync({ coins: coinDiscount, orderId: order.id });
