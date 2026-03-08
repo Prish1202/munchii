@@ -102,10 +102,11 @@ export function useRestaurantOrders() {
     if (newStatus === 'completed') {
       const amount = Number(payload.new.total_amount || 0);
       const platformFee = 5;
-      const commission = Math.round((amount - platformFee) * 0.10 * 100) / 100;
-      const credited = Math.round((amount - platformFee - commission) * 100) / 100;
+      const itemTotal = Math.max(amount - platformFee, 0);
+      const commission = Math.round(itemTotal * 0.10 * 100) / 100;
+      const credited = Math.round((itemTotal - commission) * 100) / 100;
       toast.success(`💰 Order completed! ₹${credited} credited`, {
-        description: `After 10% platform commission (₹${commission})`,
+        description: `After 10% commission (₹${commission})`,
       });
     } else if (newStatus === 'cancelled') {
       toast.error('❌ Order was cancelled');
