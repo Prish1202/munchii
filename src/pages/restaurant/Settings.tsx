@@ -194,6 +194,24 @@ export default function RestaurantSettings() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Notifications */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Bell className="w-5 h-5" />
+              Notifications
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Link to="/restaurant/notifications">
+              <Button variant="outline" className="w-full justify-between">
+                View & manage notifications
+                <ArrowLeft className="w-4 h-4 rotate-180" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );
