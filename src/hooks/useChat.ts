@@ -127,7 +127,7 @@ export function useConversations() {
               const ciphertext = isMine && lastMsg.encrypted_for_sender
                 ? lastMsg.encrypted_for_sender
                 : lastMsg.encrypted_message;
-              conv.last_message = await decryptMessage(ciphertext);
+              conv.last_message = await decryptMessage(ciphertext, user!.id);
             } catch {
               conv.last_message = '🔒 Encrypted message';
             }
