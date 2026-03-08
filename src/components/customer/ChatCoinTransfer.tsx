@@ -12,6 +12,7 @@ interface ChatCoinTransferProps {
   recipientUsername: string | null;
   availableCoins: number;
   onClose: () => void;
+  onTransferSuccess?: (coins: number) => void;
 }
 
 export function ChatCoinTransfer({
@@ -20,6 +21,7 @@ export function ChatCoinTransfer({
   recipientUsername,
   availableCoins,
   onClose,
+  onTransferSuccess,
 }: ChatCoinTransferProps) {
   const [coins, setCoins] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -45,6 +47,7 @@ export function ChatCoinTransfer({
         toast.error(result.error);
       } else {
         toast.success(`Sent ${coinsNum} coins to ${recipientName}!`);
+        onTransferSuccess?.(coinsNum);
         setCoins('');
         onClose();
         queryClient.invalidateQueries({ queryKey: ['wallet'] });

@@ -181,6 +181,22 @@ export default function ChatView() {
               recipientUsername={otherProfile.username}
               availableCoins={wallet?.total_coins || 0}
               onClose={() => setShowCoinTransfer(false)}
+              onTransferSuccess={async (coins) => {
+                if (!recipientPublicKey || !senderPublicKey || !conversationId) return;
+                const funMessages = [
+                  `✨ Sent ${coins} coins! Treat yourself 🎁`,
+                  `💸 ${coins} coins just flew your way! 🚀`,
+                  `🪙 Here's ${coins} coins for you! Enjoy 🎉`,
+                  `💰 ${coins} coins incoming! Spend wisely 😄`,
+                ];
+                const msg = funMessages[Math.floor(Math.random() * funMessages.length)];
+                await sendMessage.mutateAsync({
+                  conversationId,
+                  recipientPublicKey,
+                  senderPublicKey,
+                  plaintext: `__COIN_TRANSFER__${coins}__${msg}`,
+                });
+              }}
             />
           </div>
         )}
