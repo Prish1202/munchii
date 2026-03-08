@@ -3,8 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRealtimeSync } from './useRealtimeSync';
 import { encryptMessage, decryptMessage } from '@/lib/e2ee';
+import { useMessageNotificationSound } from './useNotificationSound';
 import { toast } from 'sonner';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 
 export interface Conversation {
   id: string;
