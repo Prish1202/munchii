@@ -194,7 +194,7 @@ export function useConversations() {
     const convId = payload?.new?.conversation_id;
     if (senderId && senderId !== user?.id) {
       const onChatPage = pathRef.current.includes(`/chat/${convId}`);
-      if (!onChatPage) {
+      if (!onChatPage && notifPrefs.message_notifications && notifPrefs.sound_enabled) {
         playMsgSound();
       }
     }

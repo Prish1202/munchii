@@ -66,9 +66,20 @@ export function usePushNotifications() {
         },
         (payload: any) => {
           const n = payload.new;
-          if (n) {
-            showNotification(n.title || 'FoodyZone', n.message || '', n.link || undefined);
-          }
+          if (!n) return;
+          // Respect per-type preferences
+          const typeMap: Record<string, string> = {
+            order: 'order_notifications',
+            social: 'social_notifications',
+            earning: 'earning_notifications',
+            info: 'order_notifications',
+            error: 'order_notifications',
+          };
+          const prefKey = typeMap[n.type] || 'order_notifications';
+          if (!(preferences as any)[prefKey]) return;
+          if (!preferences.push_notifications) return;
+
+          showNotification(n.title || 'FoodyZone', n.message || '', n.link || undefined);
         }
       )
       .subscribe();
