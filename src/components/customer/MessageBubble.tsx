@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Check, CheckCheck, SmilePlus, Coins, Reply } from 'lucide-react';
 import { EmojiReactionPicker, ReactionBadges } from './EmojiReactions';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface MessageBubbleProps {
   isOwn: boolean;
@@ -104,17 +105,88 @@ export function MessageBubble({
 }: MessageBubbleProps) {
   const [showPicker, setShowPicker] = useState(false);
   const longPress = useLongPress(() => setShowPicker(true));
+  const isMobile = useIsMobile();
+
+  // Swipe-to-reply state
+  const swipeRef = useRef<{ startX: number; startY: number; swiping: boolean }>({ startX: 0, startY: 0, swiping: false });
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const swipeThreshold = 60;
 
   const coinTransfer = parseCoinTransfer(text);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    longPress.onTouchStart();
+    swipeRef.current = { startX: e.touches[0].clientX, startY: e.touches[0].clientY, swiping: false };
+    setSwipeOffset(0);
+  }, [longPress]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    const dx = e.touches[0].clientX - swipeRef.current.startX;
+    const dy = e.touches[0].clientY - swipeRef.current.startY;
+
+    // If vertical movement is dominant, cancel swipe
+    if (!swipeRef.current.swiping && Math.abs(dy) > Math.abs(dx)) {
+      longPress.onTouchMove();
+      return;
+    }
+
+    // Only allow swiping in the reply direction (right for own messages shown on right, left for others)
+    const swipeDir = isOwn ? -1 : 1; // own: swipe left, other: swipe right
+    const progress = dx * swipeDir;
+
+    if (progress > 10) {
+      swipeRef.current.swiping = true;
+      longPress.onTouchMove(); // cancel long press
+      const clamped = Math.min(progress, swipeThreshold + 20);
+      setSwipeOffset(clamped * swipeDir);
+    }
+  }, [isOwn, longPress, swipeThreshold]);
+
+  const handleTouchEnd = useCallback(() => {
+    longPress.onTouchEnd();
+    if (swipeRef.current.swiping && Math.abs(swipeOffset) >= swipeThreshold && onReply) {
+      onReply(messageId, text);
+      if (navigator.vibrate) navigator.vibrate(15);
+    }
+    setSwipeOffset(0);
+    swipeRef.current.swiping = false;
+  }, [swipeOffset, swipeThreshold, onReply, messageId, text, longPress]);
+
   if (coinTransfer) {
     return <CoinTransferBubble coins={coinTransfer.coins} message={coinTransfer.message} time={time} isOwn={isOwn} deliveredAt={deliveredAt} readAt={readAt} />;
   }
 
+  const swipeActive = isMobile && swipeOffset !== 0;
+  const replyIconOpacity = Math.min(Math.abs(swipeOffset) / swipeThreshold, 1);
+
   return (
-    <div className={cn('flex group', isOwn ? 'justify-end' : 'justify-start')}>
-      <div className="relative max-w-[75%]">
+    <div className={cn('flex group relative overflow-hidden', isOwn ? 'justify-end' : 'justify-start')}>
+      {/* Reply icon indicator */}
+      {isMobile && (
         <div
-          {...{ onTouchStart: longPress.onTouchStart, onTouchEnd: longPress.onTouchEnd, onTouchMove: longPress.onTouchMove }}
+          className={cn(
+            'absolute top-1/2 -translate-y-1/2 flex items-center justify-center transition-opacity',
+            isOwn ? 'left-2' : 'right-2'
+          )}
+          style={{ opacity: replyIconOpacity }}
+        >
+          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+            <Reply className="w-4 h-4 text-primary" />
+          </div>
+        </div>
+      )}
+
+      <div
+        className="relative max-w-[75%]"
+        style={{
+          transform: swipeActive ? `translateX(${swipeOffset}px)` : undefined,
+          transition: swipeActive ? 'none' : 'transform 0.2s ease-out',
+        }}
+      >
+        <div
+          onTouchStart={isMobile ? handleTouchStart : undefined}
+          onTouchMove={isMobile ? handleTouchMove : undefined}
+          onTouchEnd={isMobile ? handleTouchEnd : undefined}
           className={cn(
             'px-3.5 py-2.5 rounded-2xl text-sm select-none',
             isOwn
@@ -153,7 +225,7 @@ export function MessageBubble({
           onToggle={(emoji) => onToggleReaction(messageId, emoji)}
         />
 
-        {/* Action buttons */}
+        {/* Desktop action buttons */}
         <div className={cn(
           'absolute -bottom-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity flex gap-0.5',
           'hidden md:flex',
@@ -175,8 +247,6 @@ export function MessageBubble({
             <SmilePlus className="w-3.5 h-3.5 text-muted-foreground" />
           </button>
         </div>
-
-        {/* Mobile: swipe reply hint via long press menu could be added later */}
 
         {showPicker && (
           <div className={cn(
