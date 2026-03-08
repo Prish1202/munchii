@@ -1,10 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { OrderStatus } from '@/hooks/useOrders';
 import { useRealtimeSync } from './useRealtimeSync';
+import { useOrderRingSound } from './useNotificationSound';
 
 export interface RestaurantOrder {
   id: string;
@@ -91,6 +92,29 @@ export function useRestaurantOrders() {
     },
     enabled: !!restaurant?.id,
   });
+
+  // Ringing sound for pending orders
+  const { playRing, stop: stopRing } = useOrderRingSound();
+  const prevPendingCountRef = useRef(0);
+
+  // Start/stop ringing based on pending orders
+  useEffect(() => {
+    const pendingOrders = ordersQuery.data?.filter(o => o.status === 'placed') || [];
+    const pendingCount = pendingOrders.length;
+
+    if (pendingCount > 0) {
+      playRing();
+    } else {
+      stopRing();
+    }
+
+    // Play ring on NEW incoming order (count increased)
+    if (pendingCount > prevPendingCountRef.current && prevPendingCountRef.current >= 0) {
+      playRing();
+    }
+
+    prevPendingCountRef.current = pendingCount;
+  }, [ordersQuery.data, playRing, stopRing]);
 
   const handleNewOrder = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['restaurant-orders', restaurant?.id] });

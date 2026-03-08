@@ -3,8 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRealtimeSync } from './useRealtimeSync';
 import { encryptMessage, decryptMessage } from '@/lib/e2ee';
+import { useMessageNotificationSound } from './useNotificationSound';
 import { toast } from 'sonner';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 
 export interface Conversation {
   id: string;
@@ -167,9 +168,35 @@ export function useConversations() {
   });
 
   // Real-time updates on new conversations
+  const { play: playMsgSound } = useMessageNotificationSound();
+  // Track current path to avoid sound when user is viewing the chat
+  const pathRef = useRef(window.location.pathname);
+  useEffect(() => {
+    const update = () => { pathRef.current = window.location.pathname; };
+    window.addEventListener('popstate', update);
+    const observer = new MutationObserver(update);
+    observer.observe(document.querySelector('head') || document.body, { childList: true, subtree: true });
+    // Also poll for SPA route changes
+    const interval = setInterval(update, 500);
+    return () => { window.removeEventListener('popstate', update); observer.disconnect(); clearInterval(interval); };
+  }, []);
+
   const handleChange = useCallback(() => {
     queryClient.refetchQueries({ queryKey: ['conversations', user?.id] });
   }, [queryClient, user?.id]);
+
+  const handleNewMessage = useCallback((payload: any) => {
+    queryClient.refetchQueries({ queryKey: ['conversations', user?.id] });
+    // Play sound if the message is from someone else and user is NOT on that chat page
+    const senderId = payload?.new?.sender_id;
+    const convId = payload?.new?.conversation_id;
+    if (senderId && senderId !== user?.id) {
+      const onChatPage = pathRef.current.includes(`/chat/${convId}`);
+      if (!onChatPage) {
+        playMsgSound();
+      }
+    }
+  }, [queryClient, user?.id, playMsgSound]);
 
   useRealtimeSync({
     channelName: `conversations-${user?.id}`,
@@ -183,7 +210,7 @@ export function useConversations() {
   useRealtimeSync({
     channelName: `conversations-messages-${user?.id}`,
     table: 'messages',
-    onInsert: handleChange,
+    onInsert: handleNewMessage,
     onUpdate: handleChange,
     enabled: !!user?.id,
   });
