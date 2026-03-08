@@ -132,6 +132,7 @@ function OrderCard({ order, onUpdateStatus, isUpdating, compact = false }: { ord
   // Restaurant sees item amount (excluding ₹5 platform fee)
   const platformFee = 5;
   const itemTotal = Math.max(Number(order.total_amount) - platformFee, 0);
+  const orderItems = order.order_items?.map(item => `${item.quantity}x ${item.menu_item?.name || 'Item'}`).join(', ') || 'No items';
 
   const pickupTimeLabel = order.pickup_time
     ? format(new Date(order.pickup_time), 'PPp')
