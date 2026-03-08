@@ -3,15 +3,14 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useCart } from '@/contexts/CartContext';
-import { ArrowLeft, Minus, Plus, Trash2, ShoppingCart, Store } from 'lucide-react';
+import { ArrowLeft, Minus, Plus, Trash2, ShoppingCart, Store, Coins } from 'lucide-react';
 
 export default function Cart() {
   const { items, restaurantId, restaurantName, updateQuantity, removeItem, clearCart, totalAmount } = useCart();
 
-  const deliveryFee = 40;
-  const platformFee = 10;
-  const tax = Math.round(totalAmount * 0.05 * 100) / 100;
-  const grandTotal = totalAmount + deliveryFee + platformFee + tax;
+  const platformFee = 5;
+  const grandTotal = totalAmount + platformFee;
+  const estimatedPoints = Math.round(totalAmount * 0.03);
 
   if (items.length === 0) {
     return (
@@ -98,15 +97,26 @@ export default function Cart() {
         <div className="bg-card rounded-2xl border border-border p-4 space-y-2.5 text-sm">
           <h3 className="font-display font-semibold text-base">Bill Details</h3>
           <div className="flex justify-between"><span className="text-muted-foreground">Item Total</span><span>₹{totalAmount.toFixed(0)}</span></div>
-          <div className="flex justify-between"><span className="text-muted-foreground">Delivery Fee</span><span>₹{deliveryFee}</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Platform Fee</span><span>₹{platformFee}</span></div>
-          <div className="flex justify-between"><span className="text-muted-foreground">Taxes (5%)</span><span>₹{tax.toFixed(0)}</span></div>
           <Separator />
           <div className="flex justify-between font-bold text-lg">
             <span>Grand Total</span>
             <span className="text-primary">₹{grandTotal.toFixed(0)}</span>
           </div>
         </div>
+
+        {/* Points preview */}
+        {estimatedPoints > 0 && (
+          <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <Coins className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-primary">Earn {estimatedPoints} points on this order!</p>
+              <p className="text-xs text-muted-foreground">3% of item price credited on order completion</p>
+            </div>
+          </div>
+        )}
 
         {/* Checkout button */}
         <div className="fixed bottom-16 md:bottom-4 left-0 right-0 p-4 md:left-64 z-40 bg-background/80 backdrop-blur-sm">

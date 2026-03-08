@@ -31,13 +31,13 @@ export default function Checkout() {
   const [isPlacing, setIsPlacing] = useState(false);
   const [useCoins, setUseCoins] = useState(false);
 
-  const platformFee = 10;
-  const tax = Math.round(totalAmount * 0.05 * 100) / 100;
-  const subtotalWithFees = totalAmount + platformFee + tax;
+  const platformFee = 5;
+  const subtotalWithFees = totalAmount + platformFee;
   const availableCoins = wallet?.total_coins || 0;
   const maxCoinDiscount = Math.min(availableCoins, Math.floor(subtotalWithFees * 0.5)); // max 50% discount
   const coinDiscount = useCoins ? maxCoinDiscount : 0;
   const grandTotal = subtotalWithFees - coinDiscount;
+  const estimatedPoints = Math.round(totalAmount * 0.03);
 
   const canPlace = phone.trim().length >= 10 && items.length > 0;
 
