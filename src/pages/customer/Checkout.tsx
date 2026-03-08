@@ -7,7 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCreateOrder } from '@/hooks/useOrders';
-import { ArrowLeft, Phone, CreditCard, Banknote, Wallet, Loader2, Coins } from 'lucide-react';
+import { ArrowLeft, Phone, CreditCard, Banknote, Wallet, Loader2, Coins, Clock3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useWallet, useRedeemCoins } from '@/hooks/useWallet';
 
@@ -28,6 +28,7 @@ export default function Checkout() {
 
   const [phone, setPhone] = useState(user?.phone || '');
   const [payment, setPayment] = useState('cod');
+  const [pickupTime, setPickupTime] = useState('');
   const [isPlacing, setIsPlacing] = useState(false);
   const [useCoins, setUseCoins] = useState(false);
 

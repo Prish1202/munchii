@@ -32,9 +32,9 @@ serve(async (req) => {
     });
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsErr } = await anonClient.auth.getUser(token);
-    if (claimsErr || !claimsData?.user) return json({ error: "Invalid token" }, 401);
-    const sender = claimsData.user;
+    const { data: claimsData, error: claimsErr } = await anonClient.auth.getClaims(token);
+    const senderId = claimsData?.claims?.sub;
+    if (claimsErr || !senderId) return json({ error: "Invalid token" }, 401);
 
     const { username, coins } = await req.json();
 
@@ -42,7 +42,7 @@ serve(async (req) => {
     if (!username || typeof username !== "string" || username.trim().length === 0) {
       return json({ error: "Username is required" }, 400);
     }
-    const cleanUsername = username.trim().toLowerCase();
+    const cleanUsername = username.trim().replace(/^@+/, "").toLowerCase();
 
     if (typeof coins !== "number" || !Number.isFinite(coins) || coins < 10) {
       return json({ error: "Minimum transfer is 10 coins" }, 400);

@@ -113,6 +113,7 @@ interface CreateOrderInput {
   }[];
   totalAmount: number;
   paymentMethod: string;
+  pickupTime?: string;
 }
 
 export function useCreateOrder() {

@@ -11,7 +11,7 @@ import { OrderStatus } from '@/hooks/useOrders';
 import { 
   ArrowLeft, Check, X, ChefHat, Package, Clock, User, ShoppingBag, Banknote, CreditCard, Wallet
 } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; nextStatus?: OrderStatus; nextLabel?: string }> = {
   placed: { label: 'New', color: 'bg-blue-500', nextStatus: 'accepted', nextLabel: 'Accept' },
