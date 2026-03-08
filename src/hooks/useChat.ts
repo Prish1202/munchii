@@ -49,12 +49,19 @@ export function usePublicKey() {
     enabled: !!user?.id,
   });
 
+  const queryClient = useQueryClient();
+
   const upsertKey = useMutation({
     mutationFn: async (publicKey: string) => {
       const { error } = await supabase
         .from('user_public_keys')
         .upsert({ user_id: user!.id, public_key: publicKey }, { onConflict: 'user_id' });
       if (error) throw error;
+      return publicKey;
+    },
+    onSuccess: (publicKey) => {
+      // Immediately update the cache so encryption uses the correct new key
+      queryClient.setQueryData(['public-key', user!.id], publicKey);
     },
   });
 
