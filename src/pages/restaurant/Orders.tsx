@@ -245,5 +245,6 @@ function OrderCard({ order, onUpdateStatus, isUpdating, compact = false }: { ord
         )}
       </CardContent>
     </Card>
+    </Link>
   );
 }

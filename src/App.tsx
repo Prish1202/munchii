@@ -93,6 +93,7 @@ const App = () => (
               {/* Restaurant Routes */}
               <Route path="/restaurant" element={<ProtectedRoute allowedRoles={['restaurant']}><RestaurantDashboard /></ProtectedRoute>} />
               <Route path="/restaurant/orders" element={<ProtectedRoute allowedRoles={['restaurant']}><RestaurantOrders /></ProtectedRoute>} />
+              <Route path="/restaurant/orders/:orderId" element={<ProtectedRoute allowedRoles={['restaurant']}><RestaurantOrderDetail /></ProtectedRoute>} />
               <Route path="/restaurant/menu" element={<ProtectedRoute allowedRoles={['restaurant']}><MenuManagement /></ProtectedRoute>} />
               <Route path="/restaurant/settings" element={<ProtectedRoute allowedRoles={['restaurant']}><RestaurantSettings /></ProtectedRoute>} />
               <Route path="/restaurant/notifications" element={<ProtectedRoute allowedRoles={['restaurant']}><RestaurantNotifications /></ProtectedRoute>} />
