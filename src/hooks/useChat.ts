@@ -32,6 +32,7 @@ export interface Message {
   encrypted_for_sender?: string | null;
   delivered_at?: string | null;
   read_at?: string | null;
+  reply_to_id?: string | null;
   created_at: string;
   decrypted?: string;
 }
@@ -290,13 +291,14 @@ export function useSendMessage() {
       recipientPublicKey,
       senderPublicKey,
       plaintext,
+      replyToId,
     }: {
       conversationId: string;
       recipientPublicKey: string;
       senderPublicKey: string;
       plaintext: string;
+      replyToId?: string | null;
     }) => {
-      // Encrypt for recipient and sender separately so both can decrypt
       const [encryptedForRecipient, encryptedForSender] = await Promise.all([
         encryptMessage(plaintext, recipientPublicKey),
         encryptMessage(plaintext, senderPublicKey),
@@ -306,7 +308,8 @@ export function useSendMessage() {
         sender_id: user!.id,
         encrypted_message: encryptedForRecipient,
         encrypted_for_sender: encryptedForSender,
-      });
+        reply_to_id: replyToId || null,
+      } as any);
       if (error) throw error;
     },
     onSuccess: (_, vars) => {

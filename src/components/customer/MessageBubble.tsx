@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { Check, CheckCheck, SmilePlus, Coins } from 'lucide-react';
+import { Check, CheckCheck, SmilePlus, Coins, Reply } from 'lucide-react';
 import { EmojiReactionPicker, ReactionBadges } from './EmojiReactions';
 
 interface MessageBubbleProps {
@@ -13,6 +13,9 @@ interface MessageBubbleProps {
   reactions: Array<{ emoji: string; user_id: string; id: string }>;
   currentUserId: string;
   onToggleReaction: (messageId: string, emoji: string) => void;
+  onReply?: (messageId: string, text: string) => void;
+  replyToText?: string | null;
+  replyToIsOwn?: boolean;
 }
 
 function useLongPress(callback: () => void, ms = 500) {
@@ -80,9 +83,24 @@ function CoinTransferBubble({ coins, message, time, isOwn, deliveredAt, readAt }
   );
 }
 
+function ReplyQuote({ text, isOwn }: { text: string; isOwn: boolean }) {
+  const truncated = text.length > 80 ? text.slice(0, 80) + '…' : text;
+  return (
+    <div className={cn(
+      'px-3 py-1.5 mb-1 rounded-lg border-l-2 text-xs',
+      isOwn
+        ? 'bg-primary-foreground/10 border-primary-foreground/40 text-primary-foreground/70'
+        : 'bg-muted/60 border-primary/40 text-muted-foreground'
+    )}>
+      <p className="truncate">{truncated}</p>
+    </div>
+  );
+}
+
 export function MessageBubble({
   isOwn, text, time, messageId, deliveredAt, readAt,
-  reactions, currentUserId, onToggleReaction,
+  reactions, currentUserId, onToggleReaction, onReply,
+  replyToText, replyToIsOwn,
 }: MessageBubbleProps) {
   const [showPicker, setShowPicker] = useState(false);
   const longPress = useLongPress(() => setShowPicker(true));
@@ -104,6 +122,9 @@ export function MessageBubble({
               : 'bg-secondary text-secondary-foreground rounded-bl-md'
           )}
         >
+          {replyToText && (
+            <ReplyQuote text={replyToText} isOwn={isOwn} />
+          )}
           <p className="whitespace-pre-wrap break-words">{text}</p>
           <div className={cn('flex items-center gap-1 mt-1', isOwn ? 'justify-end' : '')}>
             <span className={cn(
@@ -132,17 +153,30 @@ export function MessageBubble({
           onToggle={(emoji) => onToggleReaction(messageId, emoji)}
         />
 
-        <button
-          onClick={() => setShowPicker(!showPicker)}
-          className={cn(
-            'absolute -bottom-1 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity',
-            'bg-popover border border-border rounded-full p-1 shadow-sm hover:bg-accent',
-            'hidden md:block',
-            isOwn ? '-left-7' : '-right-7'
+        {/* Action buttons */}
+        <div className={cn(
+          'absolute -bottom-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity flex gap-0.5',
+          'hidden md:flex',
+          isOwn ? '-left-14' : '-right-14'
+        )}>
+          {onReply && (
+            <button
+              onClick={() => onReply(messageId, text)}
+              className="bg-popover border border-border rounded-full p-1 shadow-sm hover:bg-accent"
+              title="Reply"
+            >
+              <Reply className="w-3.5 h-3.5 text-muted-foreground" />
+            </button>
           )}
-        >
-          <SmilePlus className="w-3.5 h-3.5 text-muted-foreground" />
-        </button>
+          <button
+            onClick={() => setShowPicker(!showPicker)}
+            className="bg-popover border border-border rounded-full p-1 shadow-sm hover:bg-accent"
+          >
+            <SmilePlus className="w-3.5 h-3.5 text-muted-foreground" />
+          </button>
+        </div>
+
+        {/* Mobile: swipe reply hint via long press menu could be added later */}
 
         {showPicker && (
           <div className={cn(
