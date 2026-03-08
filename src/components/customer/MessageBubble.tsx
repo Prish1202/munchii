@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { Check, CheckCheck, SmilePlus, Coins } from 'lucide-react';
+import { Check, CheckCheck, SmilePlus, Coins, ImageIcon } from 'lucide-react';
 import { EmojiReactionPicker, ReactionBadges } from './EmojiReactions';
 
 interface MessageBubbleProps {
@@ -44,6 +44,54 @@ function parseCoinTransfer(text: string) {
   const match = text.match(/^__COIN_TRANSFER__(\d+)__(.+)$/);
   if (match) return { coins: parseInt(match[1], 10), message: match[2] };
   return null;
+}
+
+function parseImageMessage(text: string) {
+  if (!text.startsWith('__IMAGE__')) return null;
+  return text.slice('__IMAGE__'.length);
+}
+
+function ImageBubble({ dataUrl, time, isOwn, deliveredAt, readAt }: { dataUrl: string; time: string; isOwn: boolean; deliveredAt?: string | null; readAt?: string | null }) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div className={cn('flex', isOwn ? 'justify-end' : 'justify-start')}>
+      <div className="max-w-[75%] min-w-[140px]">
+        <div className="relative overflow-hidden rounded-2xl border border-border bg-card">
+          <img
+            src={dataUrl}
+            alt="Shared photo"
+            className="w-full max-h-[280px] object-cover cursor-pointer"
+            onClick={() => setExpanded(true)}
+          />
+          <div className="flex items-center justify-end gap-1 px-2 py-1 bg-gradient-to-t from-black/40 to-transparent absolute bottom-0 inset-x-0">
+            <span className="text-[10px] text-white/80">
+              {new Date(time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </span>
+            {isOwn && (
+              <span className={cn('flex-shrink-0', readAt ? 'text-blue-400' : 'text-white/50')}>
+                {readAt ? (
+                  <CheckCheck className="w-3.5 h-3.5" />
+                ) : deliveredAt ? (
+                  <CheckCheck className="w-3.5 h-3.5" />
+                ) : (
+                  <Check className="w-3.5 h-3.5" />
+                )}
+              </span>
+            )}
+          </div>
+        </div>
+        {/* Fullscreen lightbox */}
+        {expanded && (
+          <div
+            className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4"
+            onClick={() => setExpanded(false)}
+          >
+            <img src={dataUrl} alt="Shared photo" className="max-w-full max-h-full object-contain rounded-lg" />
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function CoinTransferBubble({ coins, message, time, isOwn, deliveredAt, readAt }: { coins: number; message: string; time: string; isOwn: boolean; deliveredAt?: string | null; readAt?: string | null }) {
@@ -90,6 +138,11 @@ export function MessageBubble({
   const coinTransfer = parseCoinTransfer(text);
   if (coinTransfer) {
     return <CoinTransferBubble coins={coinTransfer.coins} message={coinTransfer.message} time={time} isOwn={isOwn} deliveredAt={deliveredAt} readAt={readAt} />;
+  }
+
+  const imageData = parseImageMessage(text);
+  if (imageData) {
+    return <ImageBubble dataUrl={imageData} time={time} isOwn={isOwn} deliveredAt={deliveredAt} readAt={readAt} />;
   }
 
   return (
