@@ -29,7 +29,9 @@ export default function ChatView() {
   const sendMessage = useSendMessage();
   const [text, setText] = useState('');
   const [showCoinTransfer, setShowCoinTransfer] = useState(false);
+  const [sendingImage, setSendingImage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const { data: wallet } = useWallet();
   const { isOtherTyping, sendTyping } = useTypingIndicator(conversationId || '');
 
