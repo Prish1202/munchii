@@ -12,6 +12,7 @@ export interface RestaurantOrder {
   restaurant_id: string;
   status: OrderStatus;
   total_amount: number;
+  payment_method: string;
   created_at: string;
   updated_at: string;
   customer?: {
