@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { E2EEKeySetup } from '@/components/customer/E2EEKeySetup';
 import { useAuth } from '@/contexts/AuthContext';
-import { useMessages, useSendMessage, useRecipientPublicKey } from '@/hooks/useChat';
+import { useMessages, useSendMessage, useRecipientPublicKey, usePublicKey } from '@/hooks/useChat';
 import { useWallet } from '@/hooks/useWallet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -56,6 +56,7 @@ export default function ChatView() {
   });
 
   const { data: recipientPublicKey } = useRecipientPublicKey(otherUserId);
+  const { data: senderPublicKey } = usePublicKey();
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -63,12 +64,13 @@ export default function ChatView() {
   }, [messages]);
 
   const handleSend = async () => {
-    if (!text.trim() || !recipientPublicKey || !conversationId) return;
+    if (!text.trim() || !recipientPublicKey || !senderPublicKey || !conversationId) return;
     const msgText = text.trim();
     setText('');
     await sendMessage.mutateAsync({
       conversationId,
       recipientPublicKey,
+      senderPublicKey,
       plaintext: msgText,
     });
   };

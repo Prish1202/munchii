@@ -27,6 +27,7 @@ export interface Message {
   conversation_id: string;
   sender_id: string;
   encrypted_message: string;
+  encrypted_for_sender?: string | null;
   created_at: string;
   decrypted?: string;
 }
@@ -113,7 +114,7 @@ export function useConversations() {
         for (const conv of conversations) {
           const { data: lastMsg } = await supabase
             .from('messages')
-            .select('encrypted_message, created_at')
+            .select('encrypted_message, encrypted_for_sender, sender_id, created_at')
             .eq('conversation_id', conv.id)
             .order('created_at', { ascending: false })
             .limit(1)
@@ -122,7 +123,11 @@ export function useConversations() {
           if (lastMsg) {
             conv.last_message_at = lastMsg.created_at;
             try {
-              conv.last_message = await decryptMessage(lastMsg.encrypted_message);
+              const isMine = lastMsg.sender_id === user!.id;
+              const ciphertext = isMine && lastMsg.encrypted_for_sender
+                ? lastMsg.encrypted_for_sender
+                : lastMsg.encrypted_message;
+              conv.last_message = await decryptMessage(ciphertext);
             } catch {
               conv.last_message = '🔒 Encrypted message';
             }
@@ -182,14 +187,19 @@ export function useMessages(conversationId: string) {
     async function decrypt() {
       if (!query.data) return;
       const results: Message[] = [];
-      for (const msg of query.data) {
-        try {
-          const decrypted = await decryptMessage(msg.encrypted_message);
-          results.push({ ...msg, decrypted });
-        } catch {
-          results.push({ ...msg, decrypted: '🔒 Cannot decrypt' });
+        for (const msg of query.data) {
+          try {
+            // For own messages, decrypt the sender copy; for received, decrypt the recipient copy
+            const isMine = msg.sender_id === user?.id;
+            const ciphertext = isMine && msg.encrypted_for_sender
+              ? msg.encrypted_for_sender
+              : msg.encrypted_message;
+            const decrypted = await decryptMessage(ciphertext);
+            results.push({ ...msg, decrypted });
+          } catch {
+            results.push({ ...msg, decrypted: '🔒 Cannot decrypt' });
+          }
         }
-      }
       setDecryptedMessages(results);
     }
     decrypt();
@@ -220,17 +230,24 @@ export function useSendMessage() {
     mutationFn: async ({
       conversationId,
       recipientPublicKey,
+      senderPublicKey,
       plaintext,
     }: {
       conversationId: string;
       recipientPublicKey: string;
+      senderPublicKey: string;
       plaintext: string;
     }) => {
-      const encrypted = await encryptMessage(plaintext, recipientPublicKey);
+      // Encrypt for recipient and sender separately so both can decrypt
+      const [encryptedForRecipient, encryptedForSender] = await Promise.all([
+        encryptMessage(plaintext, recipientPublicKey),
+        encryptMessage(plaintext, senderPublicKey),
+      ]);
       const { error } = await supabase.from('messages').insert({
         conversation_id: conversationId,
         sender_id: user!.id,
-        encrypted_message: encrypted,
+        encrypted_message: encryptedForRecipient,
+        encrypted_for_sender: encryptedForSender,
       });
       if (error) throw error;
     },
