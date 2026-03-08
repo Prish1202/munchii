@@ -1,7 +1,7 @@
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useNotifications, useMarkNotificationRead, useMarkAllRead, Notification } from '@/hooks/useNotifications';
 import { Link } from 'react-router-dom';
-import { Bell, CheckCheck, ShoppingBag, UserPlus, AlertCircle, TrendingUp, Loader2 } from 'lucide-react';
+import { Bell, CheckCheck, ShoppingBag, UserPlus, AlertCircle, TrendingUp, Loader2, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
