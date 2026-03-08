@@ -40,6 +40,8 @@ import RestaurantDashboard from "./pages/restaurant/Dashboard";
 import RestaurantOrders from "./pages/restaurant/Orders";
 import MenuManagement from "./pages/restaurant/MenuManagement";
 import RestaurantSettings from "./pages/restaurant/Settings";
+import RestaurantNotifications from "./pages/restaurant/Notifications";
+import RestaurantNotificationSettings from "./pages/restaurant/NotificationSettings";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -92,6 +94,8 @@ const App = () => (
               <Route path="/restaurant/orders" element={<ProtectedRoute allowedRoles={['restaurant']}><RestaurantOrders /></ProtectedRoute>} />
               <Route path="/restaurant/menu" element={<ProtectedRoute allowedRoles={['restaurant']}><MenuManagement /></ProtectedRoute>} />
               <Route path="/restaurant/settings" element={<ProtectedRoute allowedRoles={['restaurant']}><RestaurantSettings /></ProtectedRoute>} />
+              <Route path="/restaurant/notifications" element={<ProtectedRoute allowedRoles={['restaurant']}><RestaurantNotifications /></ProtectedRoute>} />
+              <Route path="/restaurant/notification-settings" element={<ProtectedRoute allowedRoles={['restaurant']}><RestaurantNotificationSettings /></ProtectedRoute>} />
               <Route path="/restaurant/*" element={<ProtectedRoute allowedRoles={['restaurant']}><RestaurantDashboard /></ProtectedRoute>} />
 
               {/* Admin Routes */}

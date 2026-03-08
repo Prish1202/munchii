@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Bell, CheckCheck, ShoppingBag, UserPlus, AlertCircle, TrendingUp, Settings } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -56,6 +57,8 @@ function NotificationItem({ notification }: { notification: Notification }) {
 export function NotificationBell() {
   const { data: notifications, unreadCount } = useNotifications();
   const markAll = useMarkAllRead();
+  const { user } = useAuth();
+  const rolePrefix = user?.role === 'restaurant' ? '/restaurant' : '/customer';
 
   return (
     <Popover>
@@ -73,7 +76,7 @@ export function NotificationBell() {
         <div className="flex items-center justify-between p-3 border-b border-border">
           <div className="flex items-center gap-2">
             <h3 className="font-display font-bold text-sm">Notifications</h3>
-            <Link to="/customer/notification-settings" className="p-1 rounded-md hover:bg-muted transition-colors">
+            <Link to={`${rolePrefix}/notification-settings`} className="p-1 rounded-md hover:bg-muted transition-colors">
               <Settings className="w-3.5 h-3.5 text-muted-foreground" />
             </Link>
           </div>
@@ -103,7 +106,7 @@ export function NotificationBell() {
         {notifications && notifications.length > 0 && (
           <div className="border-t border-border p-2">
             <Link
-              to="/customer/notifications"
+              to={`${rolePrefix}/notifications`}
               className="block text-center text-xs font-medium text-primary hover:underline py-1"
             >
               View all notifications
