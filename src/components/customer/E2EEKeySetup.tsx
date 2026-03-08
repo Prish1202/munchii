@@ -59,7 +59,7 @@ export function E2EEKeySetup({ children }: E2EEKeySetupProps) {
     const handleRegenerate = async () => {
       setStatus('generating');
       try {
-        const pubKey = await generateKeyPair();
+        const pubKey = await generateKeyPair(user.id);
         await upsertKey.mutateAsync(pubKey);
         setStatus('ready');
       } catch (err) {
