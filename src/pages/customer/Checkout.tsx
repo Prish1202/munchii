@@ -134,6 +134,20 @@ export default function Checkout() {
           </div>
         </section>
 
+        {/* Pickup time */}
+        <section className="bg-card rounded-2xl border border-border p-4 space-y-3">
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            <Clock3 className="w-4 h-4 text-primary" />
+            Pickup Time (Optional)
+          </div>
+          <Input
+            type="datetime-local"
+            value={pickupTime}
+            onChange={(e) => setPickupTime(e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground">Set when you'll arrive at the restaurant for pickup.</p>
+        </section>
+
         {/* Coins Discount */}
         {availableCoins > 0 && (
           <section className="bg-card rounded-2xl border border-border p-4">
