@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { toast } from 'sonner';
@@ -26,24 +26,20 @@ export function useRealtimeSync({
 }: RealtimeSyncOptions) {
   const channelRef = useRef<RealtimeChannel | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [connectionAttempts, setConnectionAttempts] = useState(0);
-  const maxRetries = 5;
-  const retryDelay = 3000;
+  // Store callbacks in refs to avoid re-subscribing on every render
+  const callbacksRef = useRef({ onInsert, onUpdate, onDelete, onAny });
+  callbacksRef.current = { onInsert, onUpdate, onDelete, onAny };
 
-  const connect = useCallback(() => {
+  useEffect(() => {
     if (!enabled) return;
 
-    // Clean up existing channel
+    // Clean up any existing channel
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
     }
 
-    const channel = supabase.channel(channelName, {
-      config: {
-        presence: { key: '' },
-        broadcast: { self: true },
-      },
-    });
+    const channel = supabase.channel(channelName);
 
     channel
       .on(
@@ -55,90 +51,41 @@ export function useRealtimeSync({
           ...(filter && { filter }),
         },
         (payload) => {
-          console.log(`[${channelName}] Realtime event:`, payload.eventType, payload);
-          
-          onAny?.(payload);
-
+          const cbs = callbacksRef.current;
+          cbs.onAny?.(payload);
           switch (payload.eventType) {
             case 'INSERT':
-              onInsert?.(payload);
+              cbs.onInsert?.(payload);
               break;
             case 'UPDATE':
-              onUpdate?.(payload);
+              cbs.onUpdate?.(payload);
               break;
             case 'DELETE':
-              onDelete?.(payload);
+              cbs.onDelete?.(payload);
               break;
           }
         }
       )
-      .subscribe((status, err) => {
-        console.log(`[${channelName}] Subscription status:`, status);
-        
+      .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           setIsConnected(true);
-          setConnectionAttempts(0);
-        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          setIsConnected(false);
-          console.error(`[${channelName}] Channel error:`, err);
-          
-          // Retry connection with exponential backoff
-          if (connectionAttempts < maxRetries) {
-            const delay = retryDelay * Math.pow(2, connectionAttempts);
-            console.log(`[${channelName}] Retrying in ${delay}ms (attempt ${connectionAttempts + 1}/${maxRetries})`);
-            
-            setTimeout(() => {
-              setConnectionAttempts(prev => prev + 1);
-              connect();
-            }, delay);
-          } else {
-            toast.error('Lost connection to server. Please refresh the page.');
-          }
         } else if (status === 'CLOSED') {
           setIsConnected(false);
         }
       });
 
     channelRef.current = channel;
-  }, [channelName, table, filter, onInsert, onUpdate, onDelete, onAny, enabled, connectionAttempts]);
-
-  // Handle online/offline events
-  useEffect(() => {
-    const handleOnline = () => {
-      console.log(`[${channelName}] Browser came online, reconnecting...`);
-      toast.info('Reconnecting...');
-      setConnectionAttempts(0);
-      connect();
-    };
-
-    const handleOffline = () => {
-      console.log(`[${channelName}] Browser went offline`);
-      setIsConnected(false);
-      toast.warning('Connection lost. Will reconnect when online.');
-    };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, [channelName, connect]);
-
-  // Initial connection
-  useEffect(() => {
-    connect();
 
     return () => {
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
+      setIsConnected(false);
     };
-  }, [connect]);
+  }, [channelName, table, filter, enabled]);
 
-  return { isConnected, reconnect: connect };
+  return { isConnected };
 }
 
 // Convenience hook for order status updates with notifications
