@@ -76,7 +76,7 @@ export function NotificationBell() {
         <div className="flex items-center justify-between p-3 border-b border-border">
           <div className="flex items-center gap-2">
             <h3 className="font-display font-bold text-sm">Notifications</h3>
-            <Link to="/customer/notification-settings" className="p-1 rounded-md hover:bg-muted transition-colors">
+            <Link to={`${rolePrefix}/notification-settings`} className="p-1 rounded-md hover:bg-muted transition-colors">
               <Settings className="w-3.5 h-3.5 text-muted-foreground" />
             </Link>
           </div>
