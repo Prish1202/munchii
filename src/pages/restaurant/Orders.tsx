@@ -31,6 +31,7 @@ export default function RestaurantOrders() {
   const activeOrders = orders?.filter(o => ['accepted', 'preparing', 'ready_for_pickup'].includes(o.status)) || [];
   const completedOrders = orders?.filter(o => ['picked_up', 'completed', 'cancelled'].includes(o.status)) || [];
 
+
   if (!restaurant) {
     return (
       <DashboardLayout>

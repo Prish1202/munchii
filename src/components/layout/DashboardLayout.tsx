@@ -36,7 +36,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
   customer: [
     { label: 'Home', href: '/customer', icon: <Home className="w-5 h-5" /> },
     { label: 'Explore', href: '/customer/explore', icon: <Search className="w-5 h-5" /> },
-    { label: 'Coins', href: '/customer/coins', icon: <Coins className="w-5 h-5" /> },
+    { label: 'Orders', href: '/customer/orders', icon: <ClipboardList className="w-5 h-5" /> },
     { label: 'Chat', href: '/customer/messages', icon: <MessageSquare className="w-5 h-5" /> },
     { label: 'Profile', href: '/customer/profile', icon: <User className="w-5 h-5" /> },
   ],
