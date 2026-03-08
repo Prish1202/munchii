@@ -272,6 +272,7 @@ export type Database = {
           customer_id: string | null
           id: string
           payment_method: string
+          pickup_time: string | null
           restaurant_id: string | null
           status: Database["public"]["Enums"]["order_status"]
           total_amount: number
@@ -282,6 +283,7 @@ export type Database = {
           customer_id?: string | null
           id?: string
           payment_method?: string
+          pickup_time?: string | null
           restaurant_id?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           total_amount: number
@@ -292,6 +294,7 @@ export type Database = {
           customer_id?: string | null
           id?: string
           payment_method?: string
+          pickup_time?: string | null
           restaurant_id?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           total_amount?: number
