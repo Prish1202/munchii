@@ -5,7 +5,11 @@
 
 const DB_NAME = 'foodyzone_e2ee';
 const STORE_NAME = 'keys';
-const KEY_ID = 'user_private_key';
+
+
+function getKeyId(userId: string) {
+  return `user_private_key:${userId}`;
+}
 
 function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -18,38 +22,46 @@ function openDB(): Promise<IDBDatabase> {
   });
 }
 
-async function storePrivateKey(key: CryptoKey): Promise<void> {
+async function storePrivateKey(key: CryptoKey, userId: string): Promise<void> {
   const db = await openDB();
   const exported = await crypto.subtle.exportKey('jwk', key);
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, 'readwrite');
-    tx.objectStore(STORE_NAME).put(exported, KEY_ID);
+    tx.objectStore(STORE_NAME).put(exported, getKeyId(userId));
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
   });
 }
 
-async function loadPrivateKey(): Promise<CryptoKey | null> {
+async function importPrivateKeyFromJwk(jwk: JsonWebKey): Promise<CryptoKey | null> {
+  try {
+    return await crypto.subtle.importKey(
+      'jwk',
+      jwk,
+      { name: 'RSA-OAEP', hash: 'SHA-256' },
+      false,
+      ['decrypt']
+    );
+  } catch {
+    return null;
+  }
+}
+
+async function loadPrivateKey(userId: string): Promise<CryptoKey | null> {
   const db = await openDB();
+
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, 'readonly');
-    const req = tx.objectStore(STORE_NAME).get(KEY_ID);
-    req.onsuccess = async () => {
-      if (!req.result) return resolve(null);
-      try {
-        const key = await crypto.subtle.importKey(
-          'jwk',
-          req.result,
-          { name: 'RSA-OAEP', hash: 'SHA-256' },
-          false,
-          ['decrypt']
-        );
-        resolve(key);
-      } catch {
-        resolve(null);
-      }
+    const store = tx.objectStore(STORE_NAME);
+
+    const userReq = store.get(getKeyId(userId));
+    userReq.onsuccess = async () => {
+      if (!userReq.result) return resolve(null);
+      const key = await importPrivateKeyFromJwk(userReq.result as JsonWebKey);
+      resolve(key);
     };
-    req.onerror = () => reject(req.error);
+
+    userReq.onerror = () => reject(userReq.error);
   });
 }
 
@@ -57,7 +69,7 @@ async function loadPrivateKey(): Promise<CryptoKey | null> {
  * Generate a new RSA-OAEP keypair. Stores private key in IndexedDB.
  * Returns the public key as a base64 JWK string (to store in Supabase).
  */
-export async function generateKeyPair(): Promise<string> {
+export async function generateKeyPair(userId: string): Promise<string> {
   const keyPair = await crypto.subtle.generateKey(
     {
       name: 'RSA-OAEP',
@@ -69,17 +81,17 @@ export async function generateKeyPair(): Promise<string> {
     ['encrypt', 'decrypt']
   );
 
-  await storePrivateKey(keyPair.privateKey);
+  await storePrivateKey(keyPair.privateKey, userId);
 
   const publicJwk = await crypto.subtle.exportKey('jwk', keyPair.publicKey);
   return btoa(JSON.stringify(publicJwk));
 }
 
 /**
- * Check if private key exists on this device
+ * Check if private key exists on this device for the current user.
  */
-export async function hasPrivateKey(): Promise<boolean> {
-  const key = await loadPrivateKey();
+export async function hasPrivateKey(userId: string): Promise<boolean> {
+  const key = await loadPrivateKey(userId);
   return !!key;
 }
 
@@ -113,10 +125,10 @@ export async function encryptMessage(plaintext: string, recipientPublicKeyB64: s
 }
 
 /**
- * Decrypt a message using the user's local private key
+ * Decrypt a message using the current user's local private key
  */
-export async function decryptMessage(ciphertext: string): Promise<string> {
-  const privateKey = await loadPrivateKey();
+export async function decryptMessage(ciphertext: string, userId: string): Promise<string> {
+  const privateKey = await loadPrivateKey(userId);
   if (!privateKey) throw new Error('Private key not found on this device');
 
   const encryptedBytes = Uint8Array.from(atob(ciphertext), c => c.charCodeAt(0));
@@ -132,11 +144,11 @@ export async function decryptMessage(ciphertext: string): Promise<string> {
  * Export private key as downloadable backup (encrypted with passphrase would be ideal,
  * but for simplicity we export the JWK as a file)
  */
-export async function exportPrivateKeyBackup(): Promise<string | null> {
+export async function exportPrivateKeyBackup(userId: string): Promise<string | null> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, 'readonly');
-    const req = tx.objectStore(STORE_NAME).get(KEY_ID);
+    const req = tx.objectStore(STORE_NAME).get(getKeyId(userId));
     req.onsuccess = () => {
       if (!req.result) return resolve(null);
       resolve(btoa(JSON.stringify(req.result)));
@@ -148,7 +160,7 @@ export async function exportPrivateKeyBackup(): Promise<string | null> {
 /**
  * Import a private key backup
  */
-export async function importPrivateKeyBackup(backupB64: string): Promise<void> {
+export async function importPrivateKeyBackup(backupB64: string, userId: string): Promise<void> {
   const jwk = JSON.parse(atob(backupB64));
   const key = await crypto.subtle.importKey(
     'jwk',
@@ -157,5 +169,5 @@ export async function importPrivateKeyBackup(backupB64: string): Promise<void> {
     true,
     ['decrypt']
   );
-  await storePrivateKey(key);
+  await storePrivateKey(key, userId);
 }

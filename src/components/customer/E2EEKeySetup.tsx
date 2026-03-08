@@ -22,7 +22,7 @@ export function E2EEKeySetup({ children }: E2EEKeySetupProps) {
     async function check() {
       if (loadingKey || !user) return;
 
-      const hasLocal = await hasPrivateKey();
+      const hasLocal = await hasPrivateKey(user.id);
 
       if (existingPublicKey && hasLocal) {
         setStatus('ready');
@@ -33,7 +33,7 @@ export function E2EEKeySetup({ children }: E2EEKeySetupProps) {
         // No key pair exists, generate one
         setStatus('generating');
         try {
-          const pubKey = await generateKeyPair();
+          const pubKey = await generateKeyPair(user.id);
           await upsertKey.mutateAsync(pubKey);
           setStatus('ready');
         } catch (err) {
@@ -59,7 +59,7 @@ export function E2EEKeySetup({ children }: E2EEKeySetupProps) {
     const handleRegenerate = async () => {
       setStatus('generating');
       try {
-        const pubKey = await generateKeyPair();
+        const pubKey = await generateKeyPair(user.id);
         await upsertKey.mutateAsync(pubKey);
         setStatus('ready');
       } catch (err) {

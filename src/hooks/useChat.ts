@@ -127,7 +127,7 @@ export function useConversations() {
               const ciphertext = isMine && lastMsg.encrypted_for_sender
                 ? lastMsg.encrypted_for_sender
                 : lastMsg.encrypted_message;
-              conv.last_message = await decryptMessage(ciphertext);
+              conv.last_message = await decryptMessage(ciphertext, user!.id);
             } catch {
               conv.last_message = '🔒 Encrypted message';
             }
@@ -185,16 +185,16 @@ export function useMessages(conversationId: string) {
   // Decrypt messages when data changes
   useEffect(() => {
     async function decrypt() {
-      if (!query.data) return;
+      if (!query.data || !user?.id) return;
       const results: Message[] = [];
         for (const msg of query.data) {
           try {
             // For own messages, decrypt the sender copy; for received, decrypt the recipient copy
-            const isMine = msg.sender_id === user?.id;
+            const isMine = msg.sender_id === user.id;
             const ciphertext = isMine && msg.encrypted_for_sender
               ? msg.encrypted_for_sender
               : msg.encrypted_message;
-            const decrypted = await decryptMessage(ciphertext);
+            const decrypted = await decryptMessage(ciphertext, user.id);
             results.push({ ...msg, decrypted });
           } catch {
             results.push({ ...msg, decrypted: '🔒 Cannot decrypt' });
@@ -203,7 +203,7 @@ export function useMessages(conversationId: string) {
       setDecryptedMessages(results);
     }
     decrypt();
-  }, [query.data]);
+  }, [query.data, user?.id]);
 
   // Real-time new messages
   const handleNewMessage = useCallback(() => {
