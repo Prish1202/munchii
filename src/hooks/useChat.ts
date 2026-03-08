@@ -27,6 +27,7 @@ export interface Message {
   conversation_id: string;
   sender_id: string;
   encrypted_message: string;
+  encrypted_for_sender?: string | null;
   created_at: string;
   decrypted?: string;
 }
