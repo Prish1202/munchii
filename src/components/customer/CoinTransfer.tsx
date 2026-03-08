@@ -87,18 +87,28 @@ export function CoinTransfer({ availableCoins, prefillUsername }: CoinTransferPr
       if (!session) throw new Error('Not authenticated');
 
       const res = await supabase.functions.invoke('transfer-coins', {
-        body: { username: username.trim(), coins: coinsNum },
+        body: { username: normalizedUsername, coins: coinsNum },
       });
 
       if (res.error) {
-        throw new Error(res.error.message || 'Transfer failed');
+        let message = res.error.message || 'Transfer failed';
+        const context = (res.error as any).context;
+        if (context?.json) {
+          try {
+            const parsed = await context.json();
+            message = parsed?.error || message;
+          } catch {
+            // ignore parse errors
+          }
+        }
+        throw new Error(message);
       }
 
       const result = res.data;
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success(`🎁 ${coins} points sent to @${username}!`);
+        toast.success(`🎁 ${coins} points sent to @${normalizedUsername}!`);
         setUsername('');
         setCoins('');
         setExpanded(false);
