@@ -61,7 +61,7 @@ serve(async (req) => {
     const { count: recentTransfers } = await adminClient
       .from("coin_transactions")
       .select("*", { count: "exact", head: true })
-      .eq("user_id", sender.id)
+      .eq("user_id", senderId)
       .eq("type", "transfer")
       .gte("created_at", oneHourAgo);
 
