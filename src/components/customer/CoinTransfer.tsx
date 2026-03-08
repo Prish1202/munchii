@@ -32,8 +32,9 @@ export function CoinTransfer({ availableCoins, prefillUsername }: CoinTransferPr
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   const coinsNum = parseInt(coins, 10);
+  const normalizedUsername = username.trim().replace(/^@+/, '').toLowerCase();
   const isValid =
-    username.trim().length > 0 &&
+    normalizedUsername.length > 0 &&
     !isNaN(coinsNum) &&
     coinsNum >= 10 &&
     coinsNum <= availableCoins;
@@ -41,7 +42,7 @@ export function CoinTransfer({ availableCoins, prefillUsername }: CoinTransferPr
   // Search usernames as user types
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    const q = username.trim();
+    const q = username.trim().replace(/^@+/, '').toLowerCase();
     if (q.length < 2) {
       setSuggestions([]);
       setShowSuggestions(false);
