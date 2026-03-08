@@ -106,7 +106,7 @@ export default function ChatView() {
 
   return (
     <E2EEKeySetup>
-      <div className="fixed inset-0 z-50 flex flex-col bg-background overflow-hidden">
+      <div className="fixed inset-0 z-50 flex flex-col bg-background overflow-hidden overflow-hidden">
         {/* Chat header */}
         <header className="flex items-center gap-3 px-3 py-2.5 border-b border-border bg-card/80 backdrop-blur-lg safe-area-top shrink-0">
           <button
@@ -142,7 +142,7 @@ export default function ChatView() {
         </header>
 
         {/* Messages area */}
-        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-3 scrollbar-hide">
+        <div className="flex-1 overscroll-contain overflow-y-auto px-3 py-4 space-y-3 scrollbar-hide">
           {isLoading ? (
             <div className="flex justify-center py-8">
               <Loader2 className="w-5 h-5 animate-spin text-primary" />

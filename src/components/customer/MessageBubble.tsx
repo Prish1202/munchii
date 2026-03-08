@@ -47,13 +47,15 @@ function parseCoinTransfer(text: string) {
 }
 
 function CoinTransferBubble({ coins, message, time, isOwn }: { coins: number; message: string; time: string; isOwn: boolean }) {
+  const label = isOwn ? 'Sent' : 'Received';
   return (
     <div className={cn('flex', isOwn ? 'justify-end' : 'justify-start')}>
-      <div className="max-w-[75%]">
+      <div className="max-w-[75%] min-w-[180px]">
         <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 via-primary/10 to-accent/10 p-4 text-center space-y-1.5">
           <div className="mx-auto w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center">
             <Coins className="w-5 h-5 text-primary" />
           </div>
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{label}</p>
           <p className="text-2xl font-bold text-primary">{coins} <span className="text-sm font-semibold">coins</span></p>
           <p className="text-xs text-foreground/80">{message}</p>
           <p className="text-[10px] mt-1 text-muted-foreground">
