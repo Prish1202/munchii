@@ -112,6 +112,7 @@ interface CreateOrderInput {
     price: number;
   }[];
   totalAmount: number;
+  paymentMethod: string;
 }
 
 export function useCreateOrder() {
