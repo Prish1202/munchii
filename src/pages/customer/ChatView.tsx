@@ -14,10 +14,12 @@ import { useReactions } from '@/hooks/useReactions';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { ArrowLeft, Send, Loader2, Lock, Coins } from 'lucide-react';
+import { ArrowLeft, Send, Loader2, Lock, Coins, ImagePlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { ChatCoinTransfer } from '@/components/customer/ChatCoinTransfer';
+import { hybridEncrypt, hybridDecrypt, MAX_IMAGE_BYTES } from '@/lib/e2ee-hybrid';
+import { toast } from 'sonner';
 
 export default function ChatView() {
   const { conversationId } = useParams<{ conversationId: string }>();
