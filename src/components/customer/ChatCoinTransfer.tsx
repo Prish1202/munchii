@@ -21,6 +21,7 @@ export function ChatCoinTransfer({
   recipientUsername,
   availableCoins,
   onClose,
+  onTransferSuccess,
 }: ChatCoinTransferProps) {
   const [coins, setCoins] = useState('');
   const [isSending, setIsSending] = useState(false);
