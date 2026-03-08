@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { E2EEKeySetup } from '@/components/customer/E2EEKeySetup';
 import { MessageBubble } from '@/components/customer/MessageBubble';
 import { TypingIndicator } from '@/components/customer/TypingIndicator';
@@ -23,6 +22,7 @@ import { ChatCoinTransfer } from '@/components/customer/ChatCoinTransfer';
 export default function ChatView() {
   const { conversationId } = useParams<{ conversationId: string }>();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { messages, isLoading } = useMessages(conversationId || '');
   const sendMessage = useSendMessage();
   const [text, setText] = useState('');
@@ -64,20 +64,14 @@ export default function ChatView() {
   const { data: recipientPublicKey } = useRecipientPublicKey(otherUserId);
   const { data: senderPublicKey } = usePublicKey();
 
-  // Presence
   const { isOnline } = usePresence(otherUserId || undefined);
-
-  // Reactions
   const { reactions, toggleReaction } = useReactions(conversationId || '');
-
-  // Message status: mark as read
   const { markAsRead } = useMessageStatus(conversationId || '', messages);
 
   useEffect(() => {
     markAsRead();
   }, [markAsRead]);
 
-  // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isOtherTyping]);
@@ -111,14 +105,16 @@ export default function ChatView() {
   };
 
   return (
-    <DashboardLayout>
-      <E2EEKeySetup>
-      <div className="max-w-lg mx-auto flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-6rem)]">
-        {/* Header */}
-        <div className="flex items-center gap-3 pb-3 border-b border-border">
-          <Link to="/customer/messages" className="text-muted-foreground hover:text-foreground">
+    <E2EEKeySetup>
+      <div className="fixed inset-0 z-50 flex flex-col bg-background">
+        {/* Chat header */}
+        <header className="flex items-center gap-3 px-3 py-2.5 border-b border-border bg-card/80 backdrop-blur-lg safe-area-top shrink-0">
+          <button
+            onClick={() => navigate('/customer/messages')}
+            className="p-1.5 -ml-1 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          >
             <ArrowLeft className="w-5 h-5" />
-          </Link>
+          </button>
           <div className="relative">
             <Avatar className="w-9 h-9">
               <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
@@ -134,19 +130,19 @@ export default function ChatView() {
             {isOtherTyping ? (
               <p className="text-xs text-primary animate-pulse">typing...</p>
             ) : isOnline ? (
-              <p className="text-xs text-emerald-500">online</p>
+              <p className="text-xs text-primary">online</p>
             ) : otherProfile?.username ? (
               <p className="text-xs text-muted-foreground">@{otherProfile.username}</p>
             ) : null}
           </div>
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1 text-[10px] text-muted-foreground/60">
             <Lock className="w-3 h-3" />
             E2EE
           </div>
-        </div>
+        </header>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto py-4 space-y-3 scrollbar-hide">
+        {/* Messages area */}
+        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-3 scrollbar-hide">
           {isLoading ? (
             <div className="flex justify-center py-8">
               <Loader2 className="w-5 h-5 animate-spin text-primary" />
@@ -178,28 +174,30 @@ export default function ChatView() {
 
         {/* Coin transfer inline */}
         {showCoinTransfer && otherProfile && (
-          <ChatCoinTransfer
-            recipientId={otherUserId}
-            recipientName={otherProfile.name}
-            recipientUsername={otherProfile.username}
-            availableCoins={wallet?.total_coins || 0}
-            onClose={() => setShowCoinTransfer(false)}
-          />
+          <div className="px-3 shrink-0">
+            <ChatCoinTransfer
+              recipientId={otherUserId}
+              recipientName={otherProfile.name}
+              recipientUsername={otherProfile.username}
+              availableCoins={wallet?.total_coins || 0}
+              onClose={() => setShowCoinTransfer(false)}
+            />
+          </div>
         )}
 
-        {/* Input */}
+        {/* Input footer */}
         {!recipientPublicKey && !isLoading ? (
-          <div className="py-3 text-center">
+          <div className="px-3 py-3 text-center border-t border-border bg-card/80 backdrop-blur-lg safe-area-bottom shrink-0">
             <p className="text-sm text-muted-foreground">
-              This user hasn't set up encryption yet. They need to open the chat feature first.
+              This user hasn't set up encryption yet.
             </p>
           </div>
         ) : (
-          <div className="flex items-center gap-2 pt-3 border-t border-border">
+          <div className="flex items-center gap-2 px-3 py-2.5 border-t border-border bg-card/80 backdrop-blur-lg safe-area-bottom shrink-0">
             <Button
               variant="ghost"
               size="icon"
-              className="flex-shrink-0"
+              className="flex-shrink-0 h-9 w-9 rounded-xl"
               onClick={() => setShowCoinTransfer(!showCoinTransfer)}
               title="Send coins"
             >
@@ -210,14 +208,14 @@ export default function ChatView() {
               value={text}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              className="flex-1"
+              className="flex-1 rounded-full bg-secondary border-0 focus-visible:ring-1"
               maxLength={2000}
             />
             <Button
               size="icon"
               onClick={handleSend}
               disabled={!text.trim() || sendMessage.isPending}
-              className="flex-shrink-0"
+              className="flex-shrink-0 h-9 w-9 rounded-full"
             >
               {sendMessage.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -228,7 +226,6 @@ export default function ChatView() {
           </div>
         )}
       </div>
-      </E2EEKeySetup>
-    </DashboardLayout>
+    </E2EEKeySetup>
   );
 }
