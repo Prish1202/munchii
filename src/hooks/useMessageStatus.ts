@@ -4,32 +4,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 
 /**
- * Marks messages as delivered/read for the current user in a conversation.
- * Only updates messages sent by the OTHER user (not own messages).
+ * Marks messages as READ for the current user in a specific conversation.
+ * Call this when the user opens/views a specific chat.
  */
 export function useMessageStatus(conversationId: string, messages: Array<{ id: string; sender_id: string; delivered_at?: string | null; read_at?: string | null }>) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-
-  // Mark undelivered messages as delivered when they appear
-  useEffect(() => {
-    if (!user?.id || !conversationId || !messages.length) return;
-
-    const undelivered = messages.filter(
-      (m) => m.sender_id !== user.id && !m.delivered_at
-    );
-
-    if (undelivered.length === 0) return;
-
-    const ids = undelivered.map((m) => m.id);
-    supabase
-      .from('messages')
-      .update({ delivered_at: new Date().toISOString() } as any)
-      .in('id', ids)
-      .then(() => {
-        queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
-      });
-  }, [messages, user?.id, conversationId, queryClient]);
 
   // Mark as read (call when chat is visible/focused)
   const markAsRead = useCallback(() => {
@@ -44,7 +24,7 @@ export function useMessageStatus(conversationId: string, messages: Array<{ id: s
     const ids = unread.map((m) => m.id);
     supabase
       .from('messages')
-      .update({ read_at: new Date().toISOString() } as any)
+      .update({ read_at: new Date().toISOString(), delivered_at: new Date().toISOString() } as any)
       .in('id', ids)
       .then(() => {
         queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
@@ -52,4 +32,35 @@ export function useMessageStatus(conversationId: string, messages: Array<{ id: s
   }, [messages, user?.id, conversationId, queryClient]);
 
   return { markAsRead };
+}
+
+/**
+ * Marks ALL undelivered messages across conversations as DELIVERED.
+ * Call this when the user opens the conversations/messages list page.
+ */
+export function useMarkDelivered(conversations: Array<{ id: string }> | undefined) {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!user?.id || !conversations?.length) return;
+
+    const convIds = conversations.map((c) => c.id);
+
+    // Find all undelivered messages sent by others in user's conversations
+    supabase
+      .from('messages')
+      .update({ delivered_at: new Date().toISOString() } as any)
+      .in('conversation_id', convIds)
+      .neq('sender_id', user.id)
+      .is('delivered_at', null)
+      .then(({ error }) => {
+        if (!error) {
+          // Invalidate to refresh status for senders
+          convIds.forEach((id) => {
+            queryClient.invalidateQueries({ queryKey: ['messages', id] });
+          });
+        }
+      });
+  }, [user?.id, conversations, queryClient]);
 }
