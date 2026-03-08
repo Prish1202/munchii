@@ -119,11 +119,16 @@ export default function Conversations() {
                   to={`/customer/chat/${conv.id}`}
                   className="flex items-center gap-3 bg-card rounded-xl border border-border p-3 hover:border-primary/30 transition-colors"
                 >
-                  <Avatar className="w-12 h-12">
-                    <AvatarFallback className="bg-primary/10 text-primary font-display font-semibold">
-                      {conv.other_user?.name?.charAt(0)?.toUpperCase() || '?'}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="relative">
+                    <Avatar className="w-12 h-12">
+                      <AvatarFallback className="bg-primary/10 text-primary font-display font-semibold">
+                        {conv.other_user?.name?.charAt(0)?.toUpperCase() || '?'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="absolute -bottom-0.5 -right-0.5">
+                      <OnlineIndicator isOnline={onlineIds.has(conv.other_user?.id || '')} size="md" />
+                    </span>
+                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-baseline">
                       <p className="font-semibold text-sm truncate">
