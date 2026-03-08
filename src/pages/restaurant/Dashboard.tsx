@@ -31,14 +31,24 @@ export default function RestaurantDashboard() {
     return orderDate === new Date().toDateString();
   }) || [];
 
+  const platformFee = 5;
   const todayRevenue = todayOrders
     .filter(o => o.status === 'completed')
-    .reduce((sum, o) => sum + Number(o.total_amount) * 0.9, 0);
+    .reduce((sum, o) => {
+      const itemTotal = Math.max(Number(o.total_amount) - platformFee, 0);
+      return sum + itemTotal * 0.9;
+    }, 0);
 
-  // Total earnings = 90% of all completed orders (10% platform fee)
-  const totalEarnings = completedOrders.reduce((sum, o) => sum + Number(o.total_amount) * 0.9, 0);
-  const totalPlatformFee = completedOrders.reduce((sum, o) => sum + Number(o.total_amount) * 0.1, 0);
-  const totalGross = completedOrders.reduce((sum, o) => sum + Number(o.total_amount), 0);
+  // Total earnings: item total (order - ₹5) minus 10% commission
+  const totalEarnings = completedOrders.reduce((sum, o) => {
+    const itemTotal = Math.max(Number(o.total_amount) - platformFee, 0);
+    return sum + itemTotal * 0.9;
+  }, 0);
+  const totalCommission = completedOrders.reduce((sum, o) => {
+    const itemTotal = Math.max(Number(o.total_amount) - platformFee, 0);
+    return sum + itemTotal * 0.1;
+  }, 0);
+  const totalItemValue = completedOrders.reduce((sum, o) => sum + Math.max(Number(o.total_amount) - platformFee, 0), 0);
 
   if (loadingRestaurant) {
     return (
