@@ -122,6 +122,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <nav className="space-y-0.5">
             {navItems.map((item) => {
               const isActive = location.pathname === item.href;
+              const badge = item.label === 'Chat' && totalUnread > 0 ? totalUnread : 0;
               return (
                 <Link
                   key={item.href + item.label}
@@ -135,6 +136,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 >
                   {item.icon}
                   {item.label}
+                  {badge > 0 && (
+                    <Badge className="ml-auto h-5 min-w-5 px-1.5 flex items-center justify-center text-[10px] gradient-primary border-0">
+                      {badge > 99 ? '99+' : badge}
+                    </Badge>
+                  )}
                 </Link>
               );
             })}
