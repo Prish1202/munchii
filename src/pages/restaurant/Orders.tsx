@@ -168,7 +168,7 @@ function OrderCard({ order, onUpdateStatus, isUpdating, compact = false }: { ord
         </div>
 
         {!compact && (
-          <>
+          <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
             {order.customer && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
                 <User className="w-4 h-4" />
