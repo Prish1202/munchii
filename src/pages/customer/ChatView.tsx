@@ -130,7 +130,7 @@ export default function ChatView() {
             {isOtherTyping ? (
               <p className="text-xs text-primary animate-pulse">typing...</p>
             ) : isOnline ? (
-              <p className="text-xs text-emerald-500">online</p>
+              <p className="text-xs text-primary">online</p>
             ) : otherProfile?.username ? (
               <p className="text-xs text-muted-foreground">@{otherProfile.username}</p>
             ) : null}
