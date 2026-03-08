@@ -226,17 +226,24 @@ export function useSendMessage() {
     mutationFn: async ({
       conversationId,
       recipientPublicKey,
+      senderPublicKey,
       plaintext,
     }: {
       conversationId: string;
       recipientPublicKey: string;
+      senderPublicKey: string;
       plaintext: string;
     }) => {
-      const encrypted = await encryptMessage(plaintext, recipientPublicKey);
+      // Encrypt for recipient and sender separately so both can decrypt
+      const [encryptedForRecipient, encryptedForSender] = await Promise.all([
+        encryptMessage(plaintext, recipientPublicKey),
+        encryptMessage(plaintext, senderPublicKey),
+      ]);
       const { error } = await supabase.from('messages').insert({
         conversation_id: conversationId,
         sender_id: user!.id,
-        encrypted_message: encrypted,
+        encrypted_message: encryptedForRecipient,
+        encrypted_for_sender: encryptedForSender,
       });
       if (error) throw error;
     },
