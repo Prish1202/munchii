@@ -56,6 +56,7 @@ export default function ChatView() {
   });
 
   const { data: recipientPublicKey } = useRecipientPublicKey(otherUserId);
+  const { data: senderPublicKey } = usePublicKey();
 
   // Scroll to bottom on new messages
   useEffect(() => {
