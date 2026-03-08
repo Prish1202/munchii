@@ -105,14 +105,53 @@ export function MessageBubble({
 }: MessageBubbleProps) {
   const [showPicker, setShowPicker] = useState(false);
   const longPress = useLongPress(() => setShowPicker(true));
+  const isMobile = useIsMobile();
+
+  // Swipe-to-reply state
+  const swipeRef = useRef<{ startX: number; startY: number; swiping: boolean }>({ startX: 0, startY: 0, swiping: false });
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const swipeThreshold = 60;
 
   const coinTransfer = parseCoinTransfer(text);
-  if (coinTransfer) {
-    return <CoinTransferBubble coins={coinTransfer.coins} message={coinTransfer.message} time={time} isOwn={isOwn} deliveredAt={deliveredAt} readAt={readAt} />;
-  }
 
-  return (
-    <div className={cn('flex group', isOwn ? 'justify-end' : 'justify-start')}>
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    longPress.onTouchStart();
+    swipeRef.current = { startX: e.touches[0].clientX, startY: e.touches[0].clientY, swiping: false };
+    setSwipeOffset(0);
+  }, [longPress]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    const dx = e.touches[0].clientX - swipeRef.current.startX;
+    const dy = e.touches[0].clientY - swipeRef.current.startY;
+
+    // If vertical movement is dominant, cancel swipe
+    if (!swipeRef.current.swiping && Math.abs(dy) > Math.abs(dx)) {
+      longPress.onTouchMove();
+      return;
+    }
+
+    // Only allow swiping in the reply direction (right for own messages shown on right, left for others)
+    const swipeDir = isOwn ? -1 : 1; // own: swipe left, other: swipe right
+    const progress = dx * swipeDir;
+
+    if (progress > 10) {
+      swipeRef.current.swiping = true;
+      longPress.onTouchMove(); // cancel long press
+      const clamped = Math.min(progress, swipeThreshold + 20);
+      setSwipeOffset(clamped * swipeDir);
+    }
+  }, [isOwn, longPress, swipeThreshold]);
+
+  const handleTouchEnd = useCallback(() => {
+    longPress.onTouchEnd();
+    if (swipeRef.current.swiping && Math.abs(swipeOffset) >= swipeThreshold && onReply) {
+      onReply(messageId, text);
+      // Haptic feedback if available
+      if (navigator.vibrate) navigator.vibrate(15);
+    }
+    setSwipeOffset(0);
+    swipeRef.current.swiping = false;
+  }, [swipeOffset, swipeThreshold, onReply, messageId, text, longPress]);
       <div className="relative max-w-[75%]">
         <div
           {...{ onTouchStart: longPress.onTouchStart, onTouchEnd: longPress.onTouchEnd, onTouchMove: longPress.onTouchMove }}
