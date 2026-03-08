@@ -210,7 +210,7 @@ export default function OrderTracking() {
           <h3 className="font-display font-semibold text-sm mb-1">Order Details</h3>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Order ID</span>
-            <span className="font-mono text-xs">{order.id}</span>
+            <span className="font-mono text-xs">#{order.id.slice(-6).toUpperCase()}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Placed at</span>
