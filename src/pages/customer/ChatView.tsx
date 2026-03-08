@@ -219,13 +219,14 @@ export default function ChatView() {
             >
               <Coins className="w-5 h-5 text-primary" />
             </Button>
-            <Input
+            <Textarea
               placeholder="Type a message..."
               value={text}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              className="flex-1 rounded-full bg-secondary border-0 focus-visible:ring-1"
+              className="flex-1 rounded-2xl bg-secondary border-0 focus-visible:ring-1 resize-none min-h-[38px] max-h-[120px] py-2 px-3.5 text-sm"
               maxLength={2000}
+              rows={1}
             />
             <Button
               size="icon"
