@@ -24,7 +24,7 @@ const FEATURES = [
   {
     icon: Coins,
     title: 'Reward Points',
-    description: 'Earn 4% points on every order. Use them on your next meal — 1 point = ₹1.',
+    description: 'Earn 3% points on every order. Use them on your next meal — 1 point = ₹1.',
     gradient: 'gradient-coin',
   },
   {
@@ -51,7 +51,7 @@ const TRUST_POINTS = [
 const STATS = [
   { value: '10K+', label: 'Students' },
   { value: '₹0', label: 'Delivery Fee' },
-  { value: '4%', label: 'Points Back' },
+  { value: '3%', label: 'Points Back' },
   { value: '4.9', label: 'Rating', icon: Star },
 ];
 
