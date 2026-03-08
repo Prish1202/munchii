@@ -139,7 +139,8 @@ function OrderCard({ order, onUpdateStatus, isUpdating, compact = false }: { ord
     : null;
 
   return (
-    <Card className={isNew ? 'border-amber-500 shadow-lg' : ''}>
+    <Link to={`/restaurant/orders/${order.id}`}>
+    <Card className={`${isNew ? 'border-amber-500 shadow-lg' : ''} hover:shadow-md transition-shadow cursor-pointer`}>
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-4 mb-3">
           <div>
