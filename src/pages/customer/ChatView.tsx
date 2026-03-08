@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { E2EEKeySetup } from '@/components/customer/E2EEKeySetup';
 import { MessageBubble } from '@/components/customer/MessageBubble';
 import { TypingIndicator } from '@/components/customer/TypingIndicator';
@@ -14,7 +14,7 @@ import { useReactions } from '@/hooks/useReactions';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { ArrowLeft, Send, Loader2, Lock, Coins } from 'lucide-react';
+import { ArrowLeft, Send, Loader2, Lock, Coins, X, Reply } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { ChatCoinTransfer } from '@/components/customer/ChatCoinTransfer';
@@ -27,7 +27,9 @@ export default function ChatView() {
   const sendMessage = useSendMessage();
   const [text, setText] = useState('');
   const [showCoinTransfer, setShowCoinTransfer] = useState(false);
+  const [replyTo, setReplyTo] = useState<{ id: string; text: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { data: wallet } = useWallet();
   const { isOtherTyping, sendTyping } = useTypingIndicator(conversationId || '');
 
@@ -68,6 +70,15 @@ export default function ChatView() {
   const { reactions, toggleReaction } = useReactions(conversationId || '');
   const { markAsRead } = useMessageStatus(conversationId || '', messages);
 
+  // Build a map of message id -> decrypted text for reply quotes
+  const messageMap = useMemo(() => {
+    const map = new Map<string, { text: string; senderId: string }>();
+    for (const msg of messages) {
+      map.set(msg.id, { text: msg.decrypted || '🔒', senderId: msg.sender_id });
+    }
+    return map;
+  }, [messages]);
+
   useEffect(() => {
     markAsRead();
   }, [markAsRead]);
@@ -79,12 +90,19 @@ export default function ChatView() {
   const handleSend = async () => {
     if (!text.trim() || !recipientPublicKey || !senderPublicKey || !conversationId) return;
     const msgText = text.trim();
+    const replyToId = replyTo?.id || null;
     setText('');
+    setReplyTo(null);
+    // Reset textarea height
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
     await sendMessage.mutateAsync({
       conversationId,
       recipientPublicKey,
       senderPublicKey,
       plaintext: msgText,
+      replyToId,
     });
   };
 
@@ -95,12 +113,9 @@ export default function ChatView() {
     }
   };
 
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.target.value);
     sendTyping();
-    // Auto-resize
     const ta = e.target;
     ta.style.height = 'auto';
     ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
@@ -110,9 +125,14 @@ export default function ChatView() {
     toggleReaction.mutate({ messageId, emoji });
   };
 
+  const handleReply = (messageId: string, messageText: string) => {
+    setReplyTo({ id: messageId, text: messageText });
+    textareaRef.current?.focus();
+  };
+
   return (
     <E2EEKeySetup>
-      <div className="fixed inset-0 z-50 flex flex-col bg-background overflow-hidden overflow-hidden">
+      <div className="fixed inset-0 z-50 flex flex-col bg-background overflow-hidden">
         {/* Chat header */}
         <header className="flex items-center gap-3 px-3 py-2.5 border-b border-border bg-card/80 backdrop-blur-lg safe-area-top shrink-0">
           <button
@@ -159,20 +179,26 @@ export default function ChatView() {
               <p className="text-sm text-muted-foreground">Send your first encrypted message</p>
             </div>
           ) : (
-            messages.map((msg) => (
-              <MessageBubble
-                key={msg.id}
-                messageId={msg.id}
-                isOwn={msg.sender_id === user?.id}
-                text={msg.decrypted || '🔒'}
-                time={msg.created_at}
-                deliveredAt={(msg as any).delivered_at}
-                readAt={(msg as any).read_at}
-                reactions={reactions.filter((r) => r.message_id === msg.id)}
-                currentUserId={user?.id || ''}
-                onToggleReaction={handleToggleReaction}
-              />
-            ))
+            messages.map((msg) => {
+              const replyToData = (msg as any).reply_to_id ? messageMap.get((msg as any).reply_to_id) : null;
+              return (
+                <MessageBubble
+                  key={msg.id}
+                  messageId={msg.id}
+                  isOwn={msg.sender_id === user?.id}
+                  text={msg.decrypted || '🔒'}
+                  time={msg.created_at}
+                  deliveredAt={msg.delivered_at}
+                  readAt={msg.read_at}
+                  reactions={reactions.filter((r) => r.message_id === msg.id)}
+                  currentUserId={user?.id || ''}
+                  onToggleReaction={handleToggleReaction}
+                  onReply={handleReply}
+                  replyToText={replyToData?.text || null}
+                  replyToIsOwn={replyToData ? replyToData.senderId === user?.id : undefined}
+                />
+              );
+            })
           )}
           {isOtherTyping && <TypingIndicator />}
           <div ref={messagesEndRef} />
@@ -207,6 +233,23 @@ export default function ChatView() {
           </div>
         )}
 
+        {/* Reply preview bar */}
+        {replyTo && (
+          <div className="flex items-center gap-2 px-3 py-2 border-t border-border bg-secondary/50 shrink-0">
+            <Reply className="w-4 h-4 text-primary shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] font-medium text-primary">Reply</p>
+              <p className="text-xs text-muted-foreground truncate">{replyTo.text}</p>
+            </div>
+            <button
+              onClick={() => setReplyTo(null)}
+              className="p-1 rounded-full hover:bg-secondary transition-colors"
+            >
+              <X className="w-4 h-4 text-muted-foreground" />
+            </button>
+          </div>
+        )}
+
         {/* Input footer */}
         {!recipientPublicKey && !isLoading ? (
           <div className="px-3 py-3 text-center border-t border-border bg-card/80 backdrop-blur-lg safe-area-bottom shrink-0">
@@ -226,6 +269,7 @@ export default function ChatView() {
               <Coins className="w-5 h-5 text-primary" />
             </Button>
             <Textarea
+              ref={textareaRef}
               placeholder="Type a message..."
               value={text}
               onChange={handleInputChange}
