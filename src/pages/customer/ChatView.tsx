@@ -2,16 +2,19 @@ import { useState, useRef, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { E2EEKeySetup } from '@/components/customer/E2EEKeySetup';
+import { MessageBubble } from '@/components/customer/MessageBubble';
+import { TypingIndicator } from '@/components/customer/TypingIndicator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMessages, useSendMessage, useRecipientPublicKey, usePublicKey } from '@/hooks/useChat';
 import { useWallet } from '@/hooks/useWallet';
+import { useTypingIndicator } from '@/hooks/useTypingIndicator';
+import { useMessageStatus } from '@/hooks/useMessageStatus';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ArrowLeft, Send, Loader2, Lock, Coins } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { ChatCoinTransfer } from '@/components/customer/ChatCoinTransfer';
 
 export default function ChatView() {
@@ -23,8 +26,8 @@ export default function ChatView() {
   const [showCoinTransfer, setShowCoinTransfer] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { data: wallet } = useWallet();
+  const { isOtherTyping, sendTyping } = useTypingIndicator(conversationId || '');
 
-  // Get conversation details to find the other user
   const { data: conversation } = useQuery({
     queryKey: ['conversation-detail', conversationId],
     queryFn: async () => {
@@ -58,10 +61,18 @@ export default function ChatView() {
   const { data: recipientPublicKey } = useRecipientPublicKey(otherUserId);
   const { data: senderPublicKey } = usePublicKey();
 
+  // Message status: mark as delivered + read
+  const { markAsRead } = useMessageStatus(conversationId || '', messages);
+
+  // Mark as read when chat is open and messages change
+  useEffect(() => {
+    markAsRead();
+  }, [markAsRead]);
+
   // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, isOtherTyping]);
 
   const handleSend = async () => {
     if (!text.trim() || !recipientPublicKey || !senderPublicKey || !conversationId) return;
@@ -82,6 +93,11 @@ export default function ChatView() {
     }
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setText(e.target.value);
+    sendTyping();
+  };
+
   return (
     <DashboardLayout>
       <E2EEKeySetup>
@@ -98,9 +114,11 @@ export default function ChatView() {
           </Avatar>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-sm truncate">{otherProfile?.name || 'Loading...'}</p>
-            {otherProfile?.username && (
+            {isOtherTyping ? (
+              <p className="text-xs text-primary animate-pulse">typing...</p>
+            ) : otherProfile?.username ? (
               <p className="text-xs text-muted-foreground">@{otherProfile.username}</p>
-            )}
+            ) : null}
           </div>
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <Lock className="w-3 h-3" />
@@ -120,30 +138,18 @@ export default function ChatView() {
               <p className="text-sm text-muted-foreground">Send your first encrypted message</p>
             </div>
           ) : (
-            messages.map((msg) => {
-              const isOwn = msg.sender_id === user?.id;
-              return (
-                <div key={msg.id} className={cn('flex', isOwn ? 'justify-end' : 'justify-start')}>
-                  <div
-                    className={cn(
-                      'max-w-[75%] px-3.5 py-2.5 rounded-2xl text-sm',
-                      isOwn
-                        ? 'bg-primary text-primary-foreground rounded-br-md'
-                        : 'bg-secondary text-secondary-foreground rounded-bl-md'
-                    )}
-                  >
-                    <p className="whitespace-pre-wrap break-words">{msg.decrypted || '🔒'}</p>
-                    <p className={cn(
-                      'text-[10px] mt-1',
-                      isOwn ? 'text-primary-foreground/60' : 'text-muted-foreground'
-                    )}>
-                      {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                  </div>
-                </div>
-              );
-            })
+            messages.map((msg) => (
+              <MessageBubble
+                key={msg.id}
+                isOwn={msg.sender_id === user?.id}
+                text={msg.decrypted || '🔒'}
+                time={msg.created_at}
+                deliveredAt={(msg as any).delivered_at}
+                readAt={(msg as any).read_at}
+              />
+            ))
           )}
+          {isOtherTyping && <TypingIndicator />}
           <div ref={messagesEndRef} />
         </div>
 
@@ -179,7 +185,7 @@ export default function ChatView() {
             <Input
               placeholder="Type a message..."
               value={text}
-              onChange={(e) => setText(e.target.value)}
+              onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               className="flex-1"
               maxLength={2000}

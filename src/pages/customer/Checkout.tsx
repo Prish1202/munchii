@@ -140,12 +140,34 @@ export default function Checkout() {
             <Clock3 className="w-4 h-4 text-primary" />
             Pickup Time (Optional)
           </div>
+          <div className="flex gap-2 flex-wrap">
+            {[15, 30, 45, 60].map((mins) => {
+              const target = new Date(Date.now() + mins * 60000);
+              const value = target.toISOString().slice(0, 16);
+              const isSelected = pickupTime === value;
+              return (
+                <button
+                  key={mins}
+                  onClick={() => setPickupTime(isSelected ? '' : value)}
+                  className={cn(
+                    'px-3 py-2 rounded-xl border text-sm font-medium transition-colors',
+                    isSelected
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-border hover:border-muted-foreground/30 text-muted-foreground'
+                  )}
+                >
+                  +{mins} min
+                </button>
+              );
+            })}
+          </div>
           <Input
             type="datetime-local"
             value={pickupTime}
             onChange={(e) => setPickupTime(e.target.value)}
+            className="mt-1"
           />
-          <p className="text-xs text-muted-foreground">Set when you'll arrive at the restaurant for pickup.</p>
+          <p className="text-xs text-muted-foreground">Pick a quick option or set a custom time.</p>
         </section>
 
         {/* Coins Discount */}
