@@ -33,7 +33,7 @@ export function E2EEKeySetup({ children }: E2EEKeySetupProps) {
         // No key pair exists, generate one
         setStatus('generating');
         try {
-          const pubKey = await generateKeyPair();
+          const pubKey = await generateKeyPair(user.id);
           await upsertKey.mutateAsync(pubKey);
           setStatus('ready');
         } catch (err) {
