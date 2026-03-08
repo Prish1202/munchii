@@ -1,10 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { OrderStatus } from '@/hooks/useOrders';
 import { useRealtimeSync } from './useRealtimeSync';
+import { useOrderRingSound } from './useNotificationSound';
 
 export interface RestaurantOrder {
   id: string;
