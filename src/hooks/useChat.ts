@@ -114,7 +114,7 @@ export function useConversations() {
         for (const conv of conversations) {
           const { data: lastMsg } = await supabase
             .from('messages')
-            .select('encrypted_message, created_at')
+            .select('encrypted_message, encrypted_for_sender, sender_id, created_at')
             .eq('conversation_id', conv.id)
             .order('created_at', { ascending: false })
             .limit(1)
@@ -123,7 +123,11 @@ export function useConversations() {
           if (lastMsg) {
             conv.last_message_at = lastMsg.created_at;
             try {
-              conv.last_message = await decryptMessage(lastMsg.encrypted_message);
+              const isMine = lastMsg.sender_id === user!.id;
+              const ciphertext = isMine && lastMsg.encrypted_for_sender
+                ? lastMsg.encrypted_for_sender
+                : lastMsg.encrypted_message;
+              conv.last_message = await decryptMessage(ciphertext);
             } catch {
               conv.last_message = '🔒 Encrypted message';
             }
