@@ -183,14 +183,19 @@ export function useMessages(conversationId: string) {
     async function decrypt() {
       if (!query.data) return;
       const results: Message[] = [];
-      for (const msg of query.data) {
-        try {
-          const decrypted = await decryptMessage(msg.encrypted_message);
-          results.push({ ...msg, decrypted });
-        } catch {
-          results.push({ ...msg, decrypted: '🔒 Cannot decrypt' });
+        for (const msg of query.data) {
+          try {
+            // For own messages, decrypt the sender copy; for received, decrypt the recipient copy
+            const isMine = msg.sender_id === user?.id;
+            const ciphertext = isMine && msg.encrypted_for_sender
+              ? msg.encrypted_for_sender
+              : msg.encrypted_message;
+            const decrypted = await decryptMessage(ciphertext);
+            results.push({ ...msg, decrypted });
+          } catch {
+            results.push({ ...msg, decrypted: '🔒 Cannot decrypt' });
+          }
         }
-      }
       setDecryptedMessages(results);
     }
     decrypt();
