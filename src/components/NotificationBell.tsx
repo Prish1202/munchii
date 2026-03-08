@@ -89,12 +89,22 @@ export function NotificationBell() {
             </div>
           ) : (
             <div className="p-1.5 space-y-0.5">
-              {notifications.map(n => (
+              {notifications.slice(0, 10).map(n => (
                 <NotificationItem key={n.id} notification={n} />
               ))}
             </div>
           )}
         </ScrollArea>
+        {notifications && notifications.length > 0 && (
+          <div className="border-t border-border p-2">
+            <Link
+              to="/customer/notifications"
+              className="block text-center text-xs font-medium text-primary hover:underline py-1"
+            >
+              View all notifications
+            </Link>
+          </div>
+        )}
       </PopoverContent>
     </Popover>
   );

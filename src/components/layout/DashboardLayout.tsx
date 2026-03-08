@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { UserRole } from '@/types/auth';
 import { NotificationBell } from '@/components/NotificationBell';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 interface NavItem {
   label: string;
@@ -66,6 +67,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { data: wallet } = useWallet();
   const { data: conversations } = useConversations();
   const location = useLocation();
+  usePushNotifications();
 
   if (!user) return null;
 
