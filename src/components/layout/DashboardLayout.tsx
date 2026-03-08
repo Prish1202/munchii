@@ -24,6 +24,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { UserRole } from '@/types/auth';
+import { NotificationBell } from '@/components/NotificationBell';
 
 interface NavItem {
   label: string;
