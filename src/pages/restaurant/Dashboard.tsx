@@ -191,21 +191,21 @@ export default function RestaurantDashboard() {
           <CardContent>
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="p-4 rounded-xl bg-secondary">
-                <p className="text-sm text-muted-foreground">Total Order Value</p>
-                <p className="text-2xl font-display font-bold mt-1">₹{totalGross.toFixed(0)}</p>
+                <p className="text-sm text-muted-foreground">Total Item Value</p>
+                <p className="text-2xl font-display font-bold mt-1">₹{totalItemValue.toFixed(0)}</p>
                 <p className="text-xs text-muted-foreground mt-1">{completedOrders.length} completed orders</p>
               </div>
               <div className="p-4 rounded-xl bg-destructive/5 border border-destructive/10">
                 <div className="flex items-center gap-1">
                   <Percent className="w-3.5 h-3.5 text-destructive" />
-                  <p className="text-sm text-destructive">Platform Fee (10%)</p>
+                  <p className="text-sm text-destructive">Commission (10%)</p>
                 </div>
-                <p className="text-2xl font-display font-bold mt-1 text-destructive">-₹{totalPlatformFee.toFixed(0)}</p>
+                <p className="text-2xl font-display font-bold mt-1 text-destructive">-₹{totalCommission.toFixed(0)}</p>
               </div>
               <div className="p-4 rounded-xl gradient-primary text-primary-foreground">
                 <p className="text-sm opacity-90">Your Net Earnings</p>
                 <p className="text-2xl font-display font-bold mt-1">₹{totalEarnings.toFixed(0)}</p>
-                <p className="text-xs opacity-80 mt-1">90% of completed orders</p>
+                <p className="text-xs opacity-80 mt-1">After 10% commission</p>
               </div>
             </div>
           </CardContent>
