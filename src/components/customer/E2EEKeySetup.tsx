@@ -22,7 +22,7 @@ export function E2EEKeySetup({ children }: E2EEKeySetupProps) {
     async function check() {
       if (loadingKey || !user) return;
 
-      const hasLocal = await hasPrivateKey();
+      const hasLocal = await hasPrivateKey(user.id);
 
       if (existingPublicKey && hasLocal) {
         setStatus('ready');
