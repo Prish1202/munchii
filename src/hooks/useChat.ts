@@ -119,15 +119,25 @@ export function useConversations() {
           conv.other_user = profileMap.get(otherId) as any;
         }
 
-        // Get last message for each conversation
+        // Get last message + unread count for each conversation
         for (const conv of conversations) {
-          const { data: lastMsg } = await supabase
-            .from('messages')
-            .select('encrypted_message, encrypted_for_sender, sender_id, created_at')
-            .eq('conversation_id', conv.id)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
+          const [{ data: lastMsg }, { count }] = await Promise.all([
+            supabase
+              .from('messages')
+              .select('encrypted_message, encrypted_for_sender, sender_id, created_at')
+              .eq('conversation_id', conv.id)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle(),
+            supabase
+              .from('messages')
+              .select('*', { count: 'exact', head: true })
+              .eq('conversation_id', conv.id)
+              .neq('sender_id', user!.id)
+              .is('read_at', null),
+          ]);
+
+          conv.unread_count = count || 0;
 
           if (lastMsg) {
             conv.last_message_at = lastMsg.created_at;
