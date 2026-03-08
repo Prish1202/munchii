@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { cn } from '@/lib/utils';
 import { Link, useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { E2EEKeySetup } from '@/components/customer/E2EEKeySetup';
@@ -130,21 +131,28 @@ export default function Conversations() {
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-baseline">
-                      <p className="font-semibold text-sm truncate">
+                    <div className="flex justify-between items-center">
+                      <p className={cn('font-semibold text-sm truncate', conv.unread_count ? 'text-foreground' : '')}>
                         {conv.other_user?.name || 'User'}
                       </p>
-                      {conv.last_message_at && (
-                        <span className="text-xs text-muted-foreground ml-2 flex-shrink-0">
-                          {formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: true })}
-                        </span>
-                      )}
+                      <div className="flex items-center gap-2 ml-2 flex-shrink-0">
+                        {conv.last_message_at && (
+                          <span className="text-xs text-muted-foreground">
+                            {formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: true })}
+                          </span>
+                        )}
+                        {!!conv.unread_count && (
+                          <span className="inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold">
+                            {conv.unread_count > 99 ? '99+' : conv.unread_count}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     {conv.other_user?.username && (
                       <p className="text-xs text-muted-foreground">@{conv.other_user.username}</p>
                     )}
                     {conv.last_message && (
-                      <p className="text-xs text-muted-foreground truncate mt-0.5">
+                      <p className={cn('text-xs truncate mt-0.5', conv.unread_count ? 'text-foreground font-medium' : 'text-muted-foreground')}>
                         {conv.last_message.substring(0, 60)}
                       </p>
                     )}
