@@ -12,7 +12,7 @@ import { useMessageStatus } from '@/hooks/useMessageStatus';
 import { usePresence } from '@/hooks/usePresence';
 import { useReactions } from '@/hooks/useReactions';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ArrowLeft, Send, Loader2, Lock, Coins } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -95,9 +95,15 @@ export default function ChatView() {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.target.value);
     sendTyping();
+    // Auto-resize
+    const ta = e.target;
+    ta.style.height = 'auto';
+    ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
   };
 
   const handleToggleReaction = (messageId: string, emoji: string) => {
@@ -219,13 +225,14 @@ export default function ChatView() {
             >
               <Coins className="w-5 h-5 text-primary" />
             </Button>
-            <Input
+            <Textarea
               placeholder="Type a message..."
               value={text}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              className="flex-1 rounded-full bg-secondary border-0 focus-visible:ring-1"
+              className="flex-1 rounded-2xl bg-secondary border-0 focus-visible:ring-1 resize-none min-h-[38px] max-h-[120px] py-2 px-3.5 text-sm"
               maxLength={2000}
+              rows={1}
             />
             <Button
               size="icon"

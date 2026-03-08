@@ -46,7 +46,7 @@ function parseCoinTransfer(text: string) {
   return null;
 }
 
-function CoinTransferBubble({ coins, message, time, isOwn }: { coins: number; message: string; time: string; isOwn: boolean }) {
+function CoinTransferBubble({ coins, message, time, isOwn, deliveredAt, readAt }: { coins: number; message: string; time: string; isOwn: boolean; deliveredAt?: string | null; readAt?: string | null }) {
   const label = isOwn ? 'Sent' : 'Received';
   return (
     <div className={cn('flex', isOwn ? 'justify-end' : 'justify-start')}>
@@ -58,9 +58,22 @@ function CoinTransferBubble({ coins, message, time, isOwn }: { coins: number; me
           <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{label}</p>
           <p className="text-2xl font-bold text-primary">{coins} <span className="text-sm font-semibold">coins</span></p>
           <p className="text-xs text-foreground/80">{message}</p>
-          <p className="text-[10px] mt-1 text-muted-foreground">
-            {new Date(time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </p>
+          <div className="flex items-center justify-center gap-1 mt-1">
+            <span className="text-[10px] text-muted-foreground">
+              {new Date(time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </span>
+            {isOwn && (
+              <span className={cn('flex-shrink-0', readAt ? 'text-blue-400' : 'text-muted-foreground/50')}>
+                {readAt ? (
+                  <CheckCheck className="w-3.5 h-3.5" />
+                ) : deliveredAt ? (
+                  <CheckCheck className="w-3.5 h-3.5" />
+                ) : (
+                  <Check className="w-3.5 h-3.5" />
+                )}
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -76,7 +89,7 @@ export function MessageBubble({
 
   const coinTransfer = parseCoinTransfer(text);
   if (coinTransfer) {
-    return <CoinTransferBubble coins={coinTransfer.coins} message={coinTransfer.message} time={time} isOwn={isOwn} />;
+    return <CoinTransferBubble coins={coinTransfer.coins} message={coinTransfer.message} time={time} isOwn={isOwn} deliveredAt={deliveredAt} readAt={readAt} />;
   }
 
   return (
