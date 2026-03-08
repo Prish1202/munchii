@@ -140,6 +140,11 @@ export function MessageBubble({
     return <CoinTransferBubble coins={coinTransfer.coins} message={coinTransfer.message} time={time} isOwn={isOwn} deliveredAt={deliveredAt} readAt={readAt} />;
   }
 
+  const imageData = parseImageMessage(text);
+  if (imageData) {
+    return <ImageBubble dataUrl={imageData} time={time} isOwn={isOwn} deliveredAt={deliveredAt} readAt={readAt} />;
+  }
+
   return (
     <div className={cn('flex group', isOwn ? 'justify-end' : 'justify-start')}>
       <div className="relative max-w-[75%]">
