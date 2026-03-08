@@ -241,7 +241,7 @@ function OrderCard({ order, onUpdateStatus, isUpdating, compact = false }: { ord
                 ) : null}
               </div>
             )}
-          </>
+          </div>
         )}
       </CardContent>
     </Card>
