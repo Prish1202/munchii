@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useMyRestaurant, useCreateRestaurant } from '@/hooks/useMenuManagement';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Store, MapPin } from 'lucide-react';
+import { ArrowLeft, Store, MapPin, Bell } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
