@@ -47,6 +47,7 @@ export function ChatCoinTransfer({
         toast.error(result.error);
       } else {
         toast.success(`Sent ${coinsNum} coins to ${recipientName}!`);
+        onTransferSuccess?.(coinsNum);
         setCoins('');
         onClose();
         queryClient.invalidateQueries({ queryKey: ['wallet'] });
