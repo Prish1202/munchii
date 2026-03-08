@@ -12,7 +12,7 @@ import { useMessageStatus } from '@/hooks/useMessageStatus';
 import { usePresence } from '@/hooks/usePresence';
 import { useReactions } from '@/hooks/useReactions';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ArrowLeft, Send, Loader2, Lock, Coins } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
