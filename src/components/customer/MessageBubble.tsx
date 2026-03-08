@@ -142,6 +142,16 @@ export function MessageBubble({
     }
   }, [isOwn, longPress, swipeThreshold]);
 
+  const handleTouchEnd = useCallback(() => {
+    longPress.onTouchEnd();
+    if (swipeRef.current.swiping && Math.abs(swipeOffset) >= swipeThreshold && onReply) {
+      onReply(messageId, text);
+      if (navigator.vibrate) navigator.vibrate(15);
+    }
+    setSwipeOffset(0);
+    swipeRef.current.swiping = false;
+  }, [swipeOffset, swipeThreshold, onReply, messageId, text, longPress]);
+
   if (coinTransfer) {
     return <CoinTransferBubble coins={coinTransfer.coins} message={coinTransfer.message} time={time} isOwn={isOwn} deliveredAt={deliveredAt} readAt={readAt} />;
   }
