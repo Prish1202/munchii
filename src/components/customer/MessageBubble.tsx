@@ -89,7 +89,7 @@ export function MessageBubble({
 
   const coinTransfer = parseCoinTransfer(text);
   if (coinTransfer) {
-    return <CoinTransferBubble coins={coinTransfer.coins} message={coinTransfer.message} time={time} isOwn={isOwn} />;
+    return <CoinTransferBubble coins={coinTransfer.coins} message={coinTransfer.message} time={time} isOwn={isOwn} deliveredAt={deliveredAt} readAt={readAt} />;
   }
 
   return (
