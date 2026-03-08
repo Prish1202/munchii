@@ -175,9 +175,14 @@ function OrderCard({ order, onUpdateStatus, isUpdating, compact = false }: { ord
               </div>
             )}
 
+            {pickupTimeLabel && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+                <Clock className="w-4 h-4" />
+                <span>Customer pickup time: {pickupTimeLabel}</span>
+              </div>
+            )}
+
             <div className="bg-secondary/50 rounded-lg p-3 mb-4">
-              <p className="text-sm">{orderItems}</p>
-            </div>
 
             {/* COD Cash Collection for ready_for_pickup */}
             {isCOD && isReadyForPickup && onUpdateStatus && (

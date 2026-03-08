@@ -142,7 +142,7 @@ export function CoinTransfer({ availableCoins, prefillUsername }: CoinTransferPr
         <Input
           placeholder="Recipient's @username"
           value={username}
-          onChange={(e) => setUsername(e.target.value.replace(/\s/g, ''))}
+          onChange={(e) => setUsername(e.target.value.replace(/\s/g, '').replace(/^@+/, ''))}
           maxLength={50}
           onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
         />

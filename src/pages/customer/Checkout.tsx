@@ -186,6 +186,7 @@ export default function Checkout() {
           <div className="space-y-1.5 text-sm">
             <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>₹{totalAmount.toFixed(0)}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Platform Fee</span><span>₹{platformFee}</span></div>
+            {pickupTime && <div className="flex justify-between"><span className="text-muted-foreground">Pickup Time</span><span>{new Date(pickupTime).toLocaleString()}</span></div>}
           </div>
           {coinDiscount > 0 && (
             <div className="flex justify-between text-green-600">

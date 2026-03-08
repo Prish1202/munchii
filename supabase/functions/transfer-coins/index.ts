@@ -96,7 +96,7 @@ serve(async (req) => {
 
     // Log transactions for both users
     await adminClient.from("coin_transactions").insert([
-      { user_id: sender.id, coins, type: "transfer" },
+      { user_id: senderId, coins, type: "transfer" },
       { user_id: recipient.id, coins, type: "earn" },
     ]);
 
