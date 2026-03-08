@@ -64,12 +64,13 @@ export default function ChatView() {
   }, [messages]);
 
   const handleSend = async () => {
-    if (!text.trim() || !recipientPublicKey || !conversationId) return;
+    if (!text.trim() || !recipientPublicKey || !senderPublicKey || !conversationId) return;
     const msgText = text.trim();
     setText('');
     await sendMessage.mutateAsync({
       conversationId,
       recipientPublicKey,
+      senderPublicKey,
       plaintext: msgText,
     });
   };
