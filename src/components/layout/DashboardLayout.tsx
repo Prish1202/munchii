@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import { useWallet } from '@/hooks/useWallet';
+import { useConversations } from '@/hooks/useChat';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -63,12 +64,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, logout } = useAuth();
   const { totalItems } = useCart();
   const { data: wallet } = useWallet();
+  const { data: conversations } = useConversations();
   const location = useLocation();
 
   if (!user) return null;
 
   const navItems = NAV_ITEMS[user.role];
   const isCustomer = user.role === 'customer';
+  const totalUnread = conversations?.reduce((sum, c) => sum + (c.unread_count || 0), 0) || 0;
 
   return (
     <div className="min-h-screen bg-background relative">
@@ -119,6 +122,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <nav className="space-y-0.5">
             {navItems.map((item) => {
               const isActive = location.pathname === item.href;
+              const badge = item.label === 'Chat' && totalUnread > 0 ? totalUnread : 0;
               return (
                 <Link
                   key={item.href + item.label}
@@ -132,6 +136,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 >
                   {item.icon}
                   {item.label}
+                  {badge > 0 && (
+                    <Badge className="ml-auto h-5 min-w-5 px-1.5 flex items-center justify-center text-[10px] gradient-primary border-0">
+                      {badge > 99 ? '99+' : badge}
+                    </Badge>
+                  )}
                 </Link>
               );
             })}
@@ -151,6 +160,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <div className="flex justify-around py-1.5 px-2">
           {navItems.map((item) => {
             const isActive = location.pathname === item.href;
+            const badge = item.label === 'Chat' && totalUnread > 0 ? totalUnread : 0;
             return (
               <Link
                 key={item.href + item.label}
@@ -163,10 +173,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 )}
               >
                 <div className={cn(
-                  "p-1 rounded-xl transition-all",
+                  "p-1 rounded-xl transition-all relative",
                   isActive && "bg-primary/10"
                 )}>
                   {item.icon}
+                  {badge > 0 && (
+                    <Badge className="absolute -top-1 -right-2 h-4 min-w-4 px-1 flex items-center justify-center text-[9px] gradient-primary border-0">
+                      {badge > 99 ? '99+' : badge}
+                    </Badge>
+                  )}
                 </div>
                 <span>{item.label}</span>
               </Link>
