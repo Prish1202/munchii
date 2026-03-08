@@ -38,6 +38,7 @@ import { UsernameSetup } from "./components/customer/UsernameSetup";
 // Restaurant Pages
 import RestaurantDashboard from "./pages/restaurant/Dashboard";
 import RestaurantOrders from "./pages/restaurant/Orders";
+import RestaurantOrderDetail from "./pages/restaurant/OrderDetail";
 import MenuManagement from "./pages/restaurant/MenuManagement";
 import RestaurantSettings from "./pages/restaurant/Settings";
 import RestaurantNotifications from "./pages/restaurant/Notifications";
