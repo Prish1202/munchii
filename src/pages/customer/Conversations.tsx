@@ -5,6 +5,8 @@ import { E2EEKeySetup } from '@/components/customer/E2EEKeySetup';
 import { useConversations, useStartConversation } from '@/hooks/useChat';
 import { useMarkDelivered } from '@/hooks/useMessageStatus';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { OnlineIndicator } from '@/components/customer/OnlineIndicator';
+import { usePresence } from '@/hooks/usePresence';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { MessageSquare, Loader2, Search, UserPlus } from 'lucide-react';
