@@ -33,6 +33,7 @@ import FollowersList from "./pages/customer/FollowersList";
 import Conversations from "./pages/customer/Conversations";
 import ChatView from "./pages/customer/ChatView";
 import CustomerNotifications from "./pages/customer/Notifications";
+import NotificationSettings from "./pages/customer/NotificationSettings";
 import { UsernameSetup } from "./components/customer/UsernameSetup";
 // Restaurant Pages
 import RestaurantDashboard from "./pages/restaurant/Dashboard";
@@ -83,6 +84,7 @@ const App = () => (
               <Route path="/customer/messages" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><Conversations /></UsernameSetup></ProtectedRoute>} />
               <Route path="/customer/chat/:conversationId" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><ChatView /></UsernameSetup></ProtectedRoute>} />
               <Route path="/customer/notifications" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><CustomerNotifications /></UsernameSetup></ProtectedRoute>} />
+              <Route path="/customer/notification-settings" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><NotificationSettings /></UsernameSetup></ProtectedRoute>} />
               <Route path="/customer/*" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><CustomerDashboard /></UsernameSetup></ProtectedRoute>} />
 
               {/* Restaurant Routes */}

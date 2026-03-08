@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRealtimeSync } from './useRealtimeSync';
 import { encryptMessage, decryptMessage } from '@/lib/e2ee';
 import { useMessageNotificationSound } from './useNotificationSound';
+import { useNotificationPreferences } from './useNotificationPreferences';
 import { toast } from 'sonner';
 import { useEffect, useState, useCallback, useRef } from 'react';
 
@@ -169,6 +170,7 @@ export function useConversations() {
 
   // Real-time updates on new conversations
   const { play: playMsgSound } = useMessageNotificationSound();
+  const { preferences: notifPrefs } = useNotificationPreferences();
   // Track current path to avoid sound when user is viewing the chat
   const pathRef = useRef(window.location.pathname);
   useEffect(() => {
@@ -192,7 +194,7 @@ export function useConversations() {
     const convId = payload?.new?.conversation_id;
     if (senderId && senderId !== user?.id) {
       const onChatPage = pathRef.current.includes(`/chat/${convId}`);
-      if (!onChatPage) {
+      if (!onChatPage && notifPrefs.message_notifications && notifPrefs.sound_enabled) {
         playMsgSound();
       }
     }

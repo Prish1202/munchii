@@ -1,6 +1,7 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useNotificationPreferences } from './useNotificationPreferences';
 
 /**
  * Requests browser notification permission and shows native push notifications
@@ -8,11 +9,12 @@ import { supabase } from '@/integrations/supabase/client';
  */
 export function usePushNotifications() {
   const { user } = useAuth();
+  const { preferences } = useNotificationPreferences();
   const permissionRef = useRef(typeof Notification !== 'undefined' ? Notification.permission : 'denied');
 
   // Request permission on mount
   useEffect(() => {
-    if (typeof Notification === 'undefined' || !user?.id) return;
+    if (typeof Notification === 'undefined' || !user?.id || !preferences.push_notifications) return;
     if (Notification.permission === 'default') {
       // Small delay so it doesn't fire immediately on page load
       const timer = setTimeout(() => {
@@ -23,7 +25,7 @@ export function usePushNotifications() {
       return () => clearTimeout(timer);
     }
     permissionRef.current = Notification.permission;
-  }, [user?.id]);
+  }, [user?.id, preferences.push_notifications]);
 
   const showNotification = useCallback((title: string, body: string, link?: string) => {
     if (typeof Notification === 'undefined') return;
@@ -64,9 +66,20 @@ export function usePushNotifications() {
         },
         (payload: any) => {
           const n = payload.new;
-          if (n) {
-            showNotification(n.title || 'FoodyZone', n.message || '', n.link || undefined);
-          }
+          if (!n) return;
+          // Respect per-type preferences
+          const typeMap: Record<string, string> = {
+            order: 'order_notifications',
+            social: 'social_notifications',
+            earning: 'earning_notifications',
+            info: 'order_notifications',
+            error: 'order_notifications',
+          };
+          const prefKey = typeMap[n.type] || 'order_notifications';
+          if (!(preferences as any)[prefKey]) return;
+          if (!preferences.push_notifications) return;
+
+          showNotification(n.title || 'FoodyZone', n.message || '', n.link || undefined);
         }
       )
       .subscribe();

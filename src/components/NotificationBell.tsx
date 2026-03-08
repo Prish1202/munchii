@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Bell, CheckCheck, ShoppingBag, UserPlus, AlertCircle, TrendingUp } from 'lucide-react';
+import { Bell, CheckCheck, ShoppingBag, UserPlus, AlertCircle, TrendingUp, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -71,7 +71,12 @@ export function NotificationBell() {
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 p-0 rounded-2xl" sideOffset={8}>
         <div className="flex items-center justify-between p-3 border-b border-border">
-          <h3 className="font-display font-bold text-sm">Notifications</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="font-display font-bold text-sm">Notifications</h3>
+            <Link to="/customer/notification-settings" className="p-1 rounded-md hover:bg-muted transition-colors">
+              <Settings className="w-3.5 h-3.5 text-muted-foreground" />
+            </Link>
+          </div>
           {unreadCount > 0 && (
             <button
               onClick={() => markAll.mutate()}

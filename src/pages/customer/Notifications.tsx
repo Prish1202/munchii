@@ -1,7 +1,7 @@
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useNotifications, useMarkNotificationRead, useMarkAllRead, Notification } from '@/hooks/useNotifications';
 import { Link } from 'react-router-dom';
-import { Bell, CheckCheck, ShoppingBag, UserPlus, AlertCircle, TrendingUp, Loader2 } from 'lucide-react';
+import { Bell, CheckCheck, ShoppingBag, UserPlus, AlertCircle, TrendingUp, Loader2, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -61,7 +61,12 @@ export default function Notifications() {
     <DashboardLayout>
       <div className="max-w-lg mx-auto pb-28 md:pb-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h1 className="font-display font-bold text-2xl">Notifications</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display font-bold text-2xl">Notifications</h1>
+            <Link to="/customer/notification-settings" className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+              <Settings className="w-4.5 h-4.5 text-muted-foreground" />
+            </Link>
+          </div>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
