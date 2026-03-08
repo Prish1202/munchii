@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,7 +9,7 @@ import { useRestaurantOrders, useUpdateOrderStatus, RestaurantOrder } from '@/ho
 import { useMyRestaurant } from '@/hooks/useMenuManagement';
 import { OrderStatus } from '@/hooks/useOrders';
 import { 
-  ArrowLeft, Check, X, ChefHat, Package, Clock, User, ShoppingBag
+  ArrowLeft, Check, X, ChefHat, Package, Clock, User, ShoppingBag, Banknote, CreditCard, Wallet
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -22,6 +23,12 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; nextStatus?:
   cancelled: { label: 'Cancelled', color: 'bg-red-500' },
 };
 
+const PAYMENT_LABELS: Record<string, { label: string; icon: typeof Banknote }> = {
+  cod: { label: 'Cash on Pickup', icon: Banknote },
+  upi: { label: 'UPI', icon: Wallet },
+  card: { label: 'Card', icon: CreditCard },
+};
+
 export default function RestaurantOrders() {
   const { data: restaurant } = useMyRestaurant();
   const { data: orders, isLoading } = useRestaurantOrders();
@@ -30,7 +37,6 @@ export default function RestaurantOrders() {
   const pendingOrders = orders?.filter(o => o.status === 'placed') || [];
   const activeOrders = orders?.filter(o => ['accepted', 'preparing', 'ready_for_pickup'].includes(o.status)) || [];
   const completedOrders = orders?.filter(o => ['picked_up', 'completed', 'cancelled'].includes(o.status)) || [];
-
 
   if (!restaurant) {
     return (
@@ -116,6 +122,16 @@ export default function RestaurantOrders() {
 function OrderCard({ order, onUpdateStatus, isUpdating, compact = false }: { order: RestaurantOrder; onUpdateStatus?: (status: OrderStatus) => void; isUpdating?: boolean; compact?: boolean }) {
   const config = STATUS_CONFIG[order.status];
   const isNew = order.status === 'placed';
+  const isCOD = (order as any).payment_method === 'cod';
+  const isReadyForPickup = order.status === 'ready_for_pickup';
+  const [cashCollected, setCashCollected] = useState(false);
+
+  const paymentInfo = PAYMENT_LABELS[(order as any).payment_method || 'cod'] || PAYMENT_LABELS.cod;
+  const PaymentIcon = paymentInfo.icon;
+
+  // Restaurant sees item amount (excluding ₹5 platform fee)
+  const platformFee = 5;
+  const itemTotal = Math.max(Number(order.total_amount) - platformFee, 0);
 
   const orderItems = order.order_items?.map(item => 
     `${item.quantity}x ${item.menu_item?.name || 'Item'}`
@@ -136,8 +152,17 @@ function OrderCard({ order, onUpdateStatus, isUpdating, compact = false }: { ord
             </p>
           </div>
           <div className="text-right">
-            <p className="font-semibold text-lg text-primary">₹{Number(order.total_amount).toFixed(2)}</p>
+            <p className="font-semibold text-lg text-primary">₹{itemTotal.toFixed(0)}</p>
+            <p className="text-xs text-muted-foreground">Item total</p>
           </div>
+        </div>
+
+        {/* Payment Method Badge */}
+        <div className="flex items-center gap-2 mb-3">
+          <Badge variant="outline" className="flex items-center gap-1.5">
+            <PaymentIcon className="w-3.5 h-3.5" />
+            {paymentInfo.label}
+          </Badge>
         </div>
 
         {!compact && (
@@ -154,22 +179,54 @@ function OrderCard({ order, onUpdateStatus, isUpdating, compact = false }: { ord
               <p className="text-sm">{orderItems}</p>
             </div>
 
+            {/* COD Cash Collection for ready_for_pickup */}
+            {isCOD && isReadyForPickup && onUpdateStatus && (
+              <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-4 mb-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Banknote className="w-5 h-5 text-amber-600" />
+                  <span className="font-semibold text-amber-800 dark:text-amber-300">Collect Cash: ₹{Number(order.total_amount).toFixed(0)}</span>
+                </div>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Collect ₹{Number(order.total_amount).toFixed(0)} from customer (includes ₹{platformFee} platform fee). Your earning: ₹{itemTotal.toFixed(0)}
+                </p>
+                {!cashCollected ? (
+                  <Button
+                    className="w-full bg-amber-600 hover:bg-amber-700 text-white"
+                    onClick={() => setCashCollected(true)}
+                    disabled={isUpdating}
+                  >
+                    <Banknote className="w-4 h-4 mr-2" />
+                    Cash Collected
+                  </Button>
+                ) : (
+                  <Button
+                    className="w-full bg-green-600 hover:bg-green-700 text-white"
+                    onClick={() => onUpdateStatus('picked_up')}
+                    disabled={isUpdating}
+                  >
+                    <Package className="w-4 h-4 mr-2" />
+                    Complete Order (Picked Up)
+                  </Button>
+                )}
+              </div>
+            )}
+
             {onUpdateStatus && (
               <div className="flex gap-2">
                 {isNew ? (
                   <>
-                    <Button variant="outline" className="flex-1 border-red-500 text-red-500 hover:bg-red-50" onClick={() => onUpdateStatus('cancelled')} disabled={isUpdating}>
+                    <Button variant="outline" className="flex-1 border-destructive text-destructive hover:bg-destructive/10" onClick={() => onUpdateStatus('cancelled')} disabled={isUpdating}>
                       <X className="w-4 h-4 mr-2" />Reject
                     </Button>
                     <Button className="flex-1 bg-green-600 hover:bg-green-700" onClick={() => onUpdateStatus('accepted')} disabled={isUpdating}>
                       <Check className="w-4 h-4 mr-2" />Accept
                     </Button>
                   </>
-                ) : config.nextStatus ? (
+                ) : (isCOD && isReadyForPickup) ? null : config.nextStatus ? (
                   <Button className="w-full bg-restaurant hover:bg-restaurant/90" onClick={() => onUpdateStatus(config.nextStatus!)} disabled={isUpdating}>
                     {order.status === 'accepted' && <ChefHat className="w-4 h-4 mr-2" />}
                     {order.status === 'preparing' && <ShoppingBag className="w-4 h-4 mr-2" />}
-                    {order.status === 'ready_for_pickup' && <Package className="w-4 h-4 mr-2" />}
+                    {!isCOD && order.status === 'ready_for_pickup' && <Package className="w-4 h-4 mr-2" />}
                     {config.nextLabel}
                   </Button>
                 ) : null}
