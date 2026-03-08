@@ -13,6 +13,7 @@ export interface RestaurantOrder {
   status: OrderStatus;
   total_amount: number;
   payment_method: string;
+  pickup_time: string | null;
   created_at: string;
   updated_at: string;
   customer?: {

@@ -7,7 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCreateOrder } from '@/hooks/useOrders';
-import { ArrowLeft, Phone, CreditCard, Banknote, Wallet, Loader2, Coins } from 'lucide-react';
+import { ArrowLeft, Phone, CreditCard, Banknote, Wallet, Loader2, Coins, Clock3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useWallet, useRedeemCoins } from '@/hooks/useWallet';
 
@@ -28,6 +28,7 @@ export default function Checkout() {
 
   const [phone, setPhone] = useState(user?.phone || '');
   const [payment, setPayment] = useState('cod');
+  const [pickupTime, setPickupTime] = useState('');
   const [isPlacing, setIsPlacing] = useState(false);
   const [useCoins, setUseCoins] = useState(false);
 
@@ -54,6 +55,7 @@ export default function Checkout() {
         })),
         totalAmount: grandTotal,
         paymentMethod: payment,
+        pickupTime: pickupTime ? new Date(pickupTime).toISOString() : undefined,
       });
       if (coinDiscount > 0) {
         await redeemCoins.mutateAsync({ coins: coinDiscount, orderId: order.id });
@@ -132,6 +134,20 @@ export default function Checkout() {
           </div>
         </section>
 
+        {/* Pickup time */}
+        <section className="bg-card rounded-2xl border border-border p-4 space-y-3">
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            <Clock3 className="w-4 h-4 text-primary" />
+            Pickup Time (Optional)
+          </div>
+          <Input
+            type="datetime-local"
+            value={pickupTime}
+            onChange={(e) => setPickupTime(e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground">Set when you'll arrive at the restaurant for pickup.</p>
+        </section>
+
         {/* Coins Discount */}
         {availableCoins > 0 && (
           <section className="bg-card rounded-2xl border border-border p-4">
@@ -170,6 +186,7 @@ export default function Checkout() {
           <div className="space-y-1.5 text-sm">
             <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>₹{totalAmount.toFixed(0)}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Platform Fee</span><span>₹{platformFee}</span></div>
+            {pickupTime && <div className="flex justify-between"><span className="text-muted-foreground">Pickup Time</span><span>{new Date(pickupTime).toLocaleString()}</span></div>}
           </div>
           {coinDiscount > 0 && (
             <div className="flex justify-between text-green-600">

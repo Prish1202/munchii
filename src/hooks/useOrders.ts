@@ -113,6 +113,7 @@ interface CreateOrderInput {
   }[];
   totalAmount: number;
   paymentMethod: string;
+  pickupTime?: string;
 }
 
 export function useCreateOrder() {
@@ -120,7 +121,7 @@ export function useCreateOrder() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ restaurantId, items, totalAmount, paymentMethod }: CreateOrderInput) => {
+    mutationFn: async ({ restaurantId, items, totalAmount, paymentMethod, pickupTime }: CreateOrderInput) => {
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
@@ -129,6 +130,7 @@ export function useCreateOrder() {
           total_amount: totalAmount,
           status: 'placed',
           payment_method: paymentMethod,
+          pickup_time: pickupTime ?? null,
         } as any)
         .select()
         .single();

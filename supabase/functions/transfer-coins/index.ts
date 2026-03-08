@@ -32,9 +32,9 @@ serve(async (req) => {
     });
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsErr } = await anonClient.auth.getUser(token);
-    if (claimsErr || !claimsData?.user) return json({ error: "Invalid token" }, 401);
-    const sender = claimsData.user;
+    const { data: claimsData, error: claimsErr } = await anonClient.auth.getClaims(token);
+    const senderId = claimsData?.claims?.sub;
+    if (claimsErr || !senderId) return json({ error: "Invalid token" }, 401);
 
     const { username, coins } = await req.json();
 
@@ -42,7 +42,7 @@ serve(async (req) => {
     if (!username || typeof username !== "string" || username.trim().length === 0) {
       return json({ error: "Username is required" }, 400);
     }
-    const cleanUsername = username.trim().toLowerCase();
+    const cleanUsername = username.trim().replace(/^@+/, "").toLowerCase();
 
     if (typeof coins !== "number" || !Number.isFinite(coins) || coins < 10) {
       return json({ error: "Minimum transfer is 10 coins" }, 400);
@@ -61,7 +61,7 @@ serve(async (req) => {
     const { count: recentTransfers } = await adminClient
       .from("coin_transactions")
       .select("*", { count: "exact", head: true })
-      .eq("user_id", sender.id)
+      .eq("user_id", senderId)
       .eq("type", "transfer")
       .gte("created_at", oneHourAgo);
 
@@ -77,11 +77,11 @@ serve(async (req) => {
       .maybeSingle();
 
     if (recipErr || !recipient) return json({ error: "User not found" }, 404);
-    if (recipient.id === sender.id) return json({ error: "Cannot transfer to yourself" }, 400);
+    if (recipient.id === senderId) return json({ error: "Cannot transfer to yourself" }, 400);
 
     // Atomic transfer using the DB function
     const { error: transferErr } = await adminClient.rpc("transfer_coins", {
-      _sender_id: sender.id,
+      _sender_id: senderId,
       _recipient_id: recipient.id,
       _coins: coins,
     });
@@ -96,7 +96,7 @@ serve(async (req) => {
 
     // Log transactions for both users
     await adminClient.from("coin_transactions").insert([
-      { user_id: sender.id, coins, type: "transfer" },
+      { user_id: senderId, coins, type: "transfer" },
       { user_id: recipient.id, coins, type: "earn" },
     ]);
 

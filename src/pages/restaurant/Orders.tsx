@@ -11,7 +11,7 @@ import { OrderStatus } from '@/hooks/useOrders';
 import { 
   ArrowLeft, Check, X, ChefHat, Package, Clock, User, ShoppingBag, Banknote, CreditCard, Wallet
 } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; nextStatus?: OrderStatus; nextLabel?: string }> = {
   placed: { label: 'New', color: 'bg-blue-500', nextStatus: 'accepted', nextLabel: 'Accept' },
@@ -132,10 +132,11 @@ function OrderCard({ order, onUpdateStatus, isUpdating, compact = false }: { ord
   // Restaurant sees item amount (excluding ₹5 platform fee)
   const platformFee = 5;
   const itemTotal = Math.max(Number(order.total_amount) - platformFee, 0);
+  const orderItems = order.order_items?.map(item => `${item.quantity}x ${item.menu_item?.name || 'Item'}`).join(', ') || 'No items';
 
-  const orderItems = order.order_items?.map(item => 
-    `${item.quantity}x ${item.menu_item?.name || 'Item'}`
-  ).join(', ') || 'No items';
+  const pickupTimeLabel = order.pickup_time
+    ? format(new Date(order.pickup_time), 'PPp')
+    : null;
 
   return (
     <Card className={isNew ? 'border-amber-500 shadow-lg' : ''}>
@@ -172,6 +173,13 @@ function OrderCard({ order, onUpdateStatus, isUpdating, compact = false }: { ord
                 <User className="w-4 h-4" />
                 <span>{order.customer.name}</span>
                 {order.customer.phone && <span>• {order.customer.phone}</span>}
+              </div>
+            )}
+
+            {pickupTimeLabel && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+                <Clock className="w-4 h-4" />
+                <span>Customer pickup time: {pickupTimeLabel}</span>
               </div>
             )}
 

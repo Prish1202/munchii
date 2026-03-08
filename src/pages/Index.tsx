@@ -24,7 +24,7 @@ const FEATURES = [
   {
     icon: Coins,
     title: 'Reward Points',
-    description: 'Earn 4% points on every order. Use them on your next meal — 1 point = ₹1.',
+    description: 'Earn 3% points on every order. Use them on your next meal — 1 point = ₹1.',
     gradient: 'gradient-coin',
   },
   {
@@ -51,7 +51,7 @@ const TRUST_POINTS = [
 const STATS = [
   { value: '10K+', label: 'Students' },
   { value: '₹0', label: 'Delivery Fee' },
-  { value: '4%', label: 'Points Back' },
+  { value: '3%', label: 'Points Back' },
   { value: '4.9', label: 'Rating', icon: Star },
 ];
 
@@ -250,7 +250,7 @@ export default function Index() {
           <div className="grid md:grid-cols-3 gap-8 max-w-3xl mx-auto">
             {[
               { step: '01', title: 'Browse & Order', desc: 'Find your favorite campus food spots and place your order', emoji: '🍕' },
-              { step: '02', title: 'Pick Up & Collect', desc: 'Grab your food and collect 4% reward points', emoji: '🎯' },
+              { step: '02', title: 'Pick Up & Collect', desc: 'Grab your food and collect 3% reward points', emoji: '🎯' },
               { step: '03', title: 'Share & Connect', desc: 'Share points with friends. Chat with foodies. Repeat!', emoji: '💬' },
             ].map((item, i) => (
               <motion.div
