@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { Check, CheckCheck, SmilePlus } from 'lucide-react';
+import { Check, CheckCheck, SmilePlus, Coins } from 'lucide-react';
 import { EmojiReactionPicker, ReactionBadges } from './EmojiReactions';
 
 interface MessageBubbleProps {
@@ -40,13 +40,42 @@ function useLongPress(callback: () => void, ms = 500) {
   };
 }
 
+function parseCoinTransfer(text: string) {
+  const match = text.match(/^__COIN_TRANSFER__(\d+)__(.+)$/);
+  if (match) return { coins: parseInt(match[1], 10), message: match[2] };
+  return null;
+}
+
+function CoinTransferBubble({ coins, message, time, isOwn }: { coins: number; message: string; time: string; isOwn: boolean }) {
+  return (
+    <div className={cn('flex', isOwn ? 'justify-end' : 'justify-start')}>
+      <div className="max-w-[75%]">
+        <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 via-primary/10 to-accent/10 p-4 text-center space-y-1.5">
+          <div className="mx-auto w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center">
+            <Coins className="w-5 h-5 text-primary" />
+          </div>
+          <p className="text-2xl font-bold text-primary">{coins} <span className="text-sm font-semibold">coins</span></p>
+          <p className="text-xs text-foreground/80">{message}</p>
+          <p className="text-[10px] mt-1 text-muted-foreground">
+            {new Date(time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function MessageBubble({
   isOwn, text, time, messageId, deliveredAt, readAt,
   reactions, currentUserId, onToggleReaction,
 }: MessageBubbleProps) {
   const [showPicker, setShowPicker] = useState(false);
-
   const longPress = useLongPress(() => setShowPicker(true));
+
+  const coinTransfer = parseCoinTransfer(text);
+  if (coinTransfer) {
+    return <CoinTransferBubble coins={coinTransfer.coins} message={coinTransfer.message} time={time} isOwn={isOwn} />;
+  }
 
   return (
     <div className={cn('flex group', isOwn ? 'justify-end' : 'justify-start')}>
@@ -82,14 +111,12 @@ export function MessageBubble({
           </div>
         </div>
 
-        {/* Reaction badges */}
         <ReactionBadges
           reactions={reactions}
           currentUserId={currentUserId}
           onToggle={(emoji) => onToggleReaction(messageId, emoji)}
         />
 
-        {/* Hover trigger for desktop */}
         <button
           onClick={() => setShowPicker(!showPicker)}
           className={cn(
@@ -102,7 +129,6 @@ export function MessageBubble({
           <SmilePlus className="w-3.5 h-3.5 text-muted-foreground" />
         </button>
 
-        {/* Emoji picker */}
         {showPicker && (
           <div className={cn(
             'absolute z-50 bottom-full mb-1',
