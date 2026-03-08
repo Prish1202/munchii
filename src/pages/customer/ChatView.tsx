@@ -114,6 +114,47 @@ export default function ChatView() {
     toggleReaction.mutate({ messageId, emoji });
   };
 
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !recipientPublicKey || !senderPublicKey || !conversationId) return;
+    // Reset file input
+    e.target.value = '';
+
+    if (file.size > MAX_IMAGE_BYTES) {
+      toast.error('Image too large. Max 3 MB.');
+      return;
+    }
+    if (!file.type.startsWith('image/')) {
+      toast.error('Only image files are supported.');
+      return;
+    }
+
+    setSendingImage(true);
+    try {
+      // Read file as data URL for display, then encrypt the whole data URL string
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      // The plaintext is a prefixed data URL so MessageBubble can render it
+      const plaintext = `__IMAGE__${dataUrl}`;
+
+      await sendMessage.mutateAsync({
+        conversationId,
+        recipientPublicKey,
+        senderPublicKey,
+        plaintext,
+      });
+    } catch {
+      toast.error('Failed to send image');
+    } finally {
+      setSendingImage(false);
+    }
+  };
+
   return (
     <E2EEKeySetup>
       <div className="fixed inset-0 z-50 flex flex-col bg-background overflow-hidden overflow-hidden">
