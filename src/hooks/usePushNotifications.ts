@@ -9,6 +9,7 @@ import { useNotificationPreferences } from './useNotificationPreferences';
  */
 export function usePushNotifications() {
   const { user } = useAuth();
+  const { preferences } = useNotificationPreferences();
   const permissionRef = useRef(typeof Notification !== 'undefined' ? Notification.permission : 'denied');
 
   // Request permission on mount
