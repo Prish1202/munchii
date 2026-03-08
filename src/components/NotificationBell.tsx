@@ -57,6 +57,8 @@ function NotificationItem({ notification }: { notification: Notification }) {
 export function NotificationBell() {
   const { data: notifications, unreadCount } = useNotifications();
   const markAll = useMarkAllRead();
+  const { user } = useAuth();
+  const rolePrefix = user?.role === 'restaurant' ? '/restaurant' : '/customer';
 
   return (
     <Popover>
