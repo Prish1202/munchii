@@ -95,9 +95,15 @@ export default function ChatView() {
     }
   };
 
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.target.value);
     sendTyping();
+    // Auto-resize
+    const ta = e.target;
+    ta.style.height = 'auto';
+    ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
   };
 
   const handleToggleReaction = (messageId: string, emoji: string) => {
