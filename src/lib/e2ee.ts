@@ -5,7 +5,7 @@
 
 const DB_NAME = 'foodyzone_e2ee';
 const STORE_NAME = 'keys';
-const LEGACY_KEY_ID = 'user_private_key';
+
 
 function getKeyId(userId: string) {
   return `user_private_key:${userId}`;
