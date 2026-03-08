@@ -163,25 +163,31 @@ export type Database = {
         Row: {
           conversation_id: string
           created_at: string
+          delivered_at: string | null
           encrypted_for_sender: string | null
           encrypted_message: string
           id: string
+          read_at: string | null
           sender_id: string
         }
         Insert: {
           conversation_id: string
           created_at?: string
+          delivered_at?: string | null
           encrypted_for_sender?: string | null
           encrypted_message: string
           id?: string
+          read_at?: string | null
           sender_id: string
         }
         Update: {
           conversation_id?: string
           created_at?: string
+          delivered_at?: string | null
           encrypted_for_sender?: string | null
           encrypted_message?: string
           id?: string
+          read_at?: string | null
           sender_id?: string
         }
         Relationships: [
