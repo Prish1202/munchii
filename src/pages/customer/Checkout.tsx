@@ -53,6 +53,7 @@ export default function Checkout() {
           price: item.price,
         })),
         totalAmount: grandTotal,
+        paymentMethod: payment,
       });
       if (coinDiscount > 0) {
         await redeemCoins.mutateAsync({ coins: coinDiscount, orderId: order.id });
