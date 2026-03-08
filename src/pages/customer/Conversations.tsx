@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { E2EEKeySetup } from '@/components/customer/E2EEKeySetup';
 import { useConversations, useStartConversation } from '@/hooks/useChat';
+import { useMarkDelivered } from '@/hooks/useMessageStatus';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ import { toast } from 'sonner';
 
 export default function Conversations() {
   const { data: conversations, isLoading } = useConversations();
+  useMarkDelivered(conversations);
   const startConversation = useStartConversation();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');

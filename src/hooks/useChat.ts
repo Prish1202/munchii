@@ -225,6 +225,7 @@ export function useMessages(conversationId: string) {
     table: 'messages',
     filter: `conversation_id=eq.${conversationId}`,
     onInsert: handleNewMessage,
+    onUpdate: handleNewMessage,
     enabled: !!conversationId,
   });
 
