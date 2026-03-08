@@ -184,6 +184,8 @@ function OrderCard({ order, onUpdateStatus, isUpdating, compact = false }: { ord
             )}
 
             <div className="bg-secondary/50 rounded-lg p-3 mb-4">
+              <p className="text-sm">{orderItems}</p>
+            </div>
 
             {/* COD Cash Collection for ready_for_pickup */}
             {isCOD && isReadyForPickup && onUpdateStatus && (
