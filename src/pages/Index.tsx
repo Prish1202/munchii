@@ -250,7 +250,7 @@ export default function Index() {
           <div className="grid md:grid-cols-3 gap-8 max-w-3xl mx-auto">
             {[
               { step: '01', title: 'Browse & Order', desc: 'Find your favorite campus food spots and place your order', emoji: '🍕' },
-              { step: '02', title: 'Pick Up & Collect', desc: 'Grab your food and collect 4% reward points', emoji: '🎯' },
+              { step: '02', title: 'Pick Up & Collect', desc: 'Grab your food and collect 3% reward points', emoji: '🎯' },
               { step: '03', title: 'Share & Connect', desc: 'Share points with friends. Chat with foodies. Repeat!', emoji: '💬' },
             ].map((item, i) => (
               <motion.div
