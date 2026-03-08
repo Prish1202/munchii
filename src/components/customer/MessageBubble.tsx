@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { Check, CheckCheck, SmilePlus, Coins } from 'lucide-react';
+import { Check, CheckCheck, SmilePlus, Coins, ImageIcon } from 'lucide-react';
 import { EmojiReactionPicker, ReactionBadges } from './EmojiReactions';
 
 interface MessageBubbleProps {
