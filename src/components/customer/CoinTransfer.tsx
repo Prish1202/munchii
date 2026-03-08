@@ -44,7 +44,7 @@ export function CoinTransfer({ availableCoins, prefillUsername }: CoinTransferPr
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success(result.message || 'Coins sent!');
+        toast.success(`🎁 ${coins} points sent to @${username}!`);
         setUsername('');
         setCoins('');
         setExpanded(false);

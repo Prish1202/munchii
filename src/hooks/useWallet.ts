@@ -84,9 +84,10 @@ export function useRedeemCoins() {
 
       return { redeemed: coins };
     },
-    onSuccess: () => {
+    onSuccess: ({ redeemed }) => {
       queryClient.invalidateQueries({ queryKey: ['wallet'] });
       queryClient.invalidateQueries({ queryKey: ['coin-transactions'] });
+      toast.success(`🪙 ${redeemed} points redeemed on this order!`);
     },
     onError: (err: any) => {
       toast.error(err.message || 'Failed to redeem coins');

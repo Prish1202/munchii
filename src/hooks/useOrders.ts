@@ -33,13 +33,13 @@ export interface OrderItem {
 }
 
 const STATUS_MESSAGES: Record<OrderStatus, string> = {
-  placed: 'Order placed!',
-  accepted: 'Restaurant accepted your order!',
-  preparing: 'Your food is being prepared!',
-  ready_for_pickup: 'Your order is ready for pickup!',
-  picked_up: 'Your order has been picked up!',
-  completed: 'Your order is complete!',
-  cancelled: 'Order cancelled',
+  placed: '🛒 Order placed successfully!',
+  accepted: '✅ Restaurant accepted your order!',
+  preparing: '👨‍🍳 Your food is being prepared!',
+  ready_for_pickup: '📦 Your order is ready for pickup!',
+  picked_up: '🎉 Your order has been picked up!',
+  completed: '🏆 Order complete! Points have been credited to your wallet.',
+  cancelled: '❌ Order was cancelled',
 };
 
 export function useCustomerOrders() {

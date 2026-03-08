@@ -57,7 +57,7 @@ export function useToggleFollow() {
     onSuccess: (_, { targetUserId, isFollowing }) => {
       queryClient.invalidateQueries({ queryKey: ['is-following'] });
       queryClient.invalidateQueries({ queryKey: ['follower-counts'] });
-      toast.success(isFollowing ? 'Unfollowed' : 'Following!');
+      toast.success(isFollowing ? '👋 Unfollowed' : '🎉 You are now following this user!');
     },
     onError: () => toast.error('Action failed'),
   });

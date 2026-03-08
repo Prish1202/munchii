@@ -95,8 +95,20 @@ export function useRestaurantOrders() {
     toast.info('🔔 New order received!', { description: 'Check your incoming orders' });
   }, [queryClient, restaurant?.id]);
 
-  const handleOrderUpdate = useCallback(() => {
+  const handleOrderUpdate = useCallback((payload: any) => {
     queryClient.invalidateQueries({ queryKey: ['restaurant-orders', restaurant?.id] });
+    const newStatus = payload?.new?.status;
+    if (newStatus === 'completed') {
+      const amount = Number(payload.new.total_amount || 0);
+      const platformFee = 5;
+      const commission = Math.round((amount - platformFee) * 0.10 * 100) / 100;
+      const credited = Math.round((amount - platformFee - commission) * 100) / 100;
+      toast.success(`💰 Order completed! ₹${credited} credited`, {
+        description: `After 10% platform commission (₹${commission})`,
+      });
+    } else if (newStatus === 'cancelled') {
+      toast.error('❌ Order was cancelled');
+    }
   }, [queryClient, restaurant?.id]);
 
   const { isConnected } = useRealtimeSync({
