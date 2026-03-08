@@ -261,6 +261,13 @@ export default function ChatView() {
           </div>
         ) : (
           <div className="flex items-center gap-2 px-3 py-2.5 border-t border-border bg-card/80 backdrop-blur-lg safe-area-bottom shrink-0">
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageSelect}
+            />
             <Button
               variant="ghost"
               size="icon"
@@ -269,6 +276,20 @@ export default function ChatView() {
               title="Send coins"
             >
               <Coins className="w-5 h-5 text-primary" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="flex-shrink-0 h-9 w-9 rounded-xl"
+              onClick={() => imageInputRef.current?.click()}
+              disabled={sendingImage}
+              title="Send encrypted photo"
+            >
+              {sendingImage ? (
+                <Loader2 className="w-5 h-5 animate-spin text-primary" />
+              ) : (
+                <ImagePlus className="w-5 h-5 text-primary" />
+              )}
             </Button>
             <Textarea
               placeholder="Type a message..."
