@@ -24,6 +24,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { UserRole } from '@/types/auth';
+import { NotificationBell } from '@/components/NotificationBell';
 
 interface NavItem {
   label: string;
@@ -104,6 +105,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 </Button>
               </Link>
             )}
+            <NotificationBell />
             <Button variant="ghost" size="icon" onClick={logout} className="rounded-xl h-9 w-9">
               <LogOut className="w-4 h-4" />
             </Button>

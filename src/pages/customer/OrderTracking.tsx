@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { OrderProgressBar } from '@/components/customer/OrderProgressBar';
 
 const ORDER_STEPS: { status: OrderStatus; label: string; icon: React.ReactNode }[] = [
   { status: 'placed', label: 'Order Placed', icon: <Package className="w-4 h-4" /> },
@@ -134,6 +135,13 @@ export default function OrderTracking() {
             {formatDistanceToNow(new Date(order.created_at), { addSuffix: true })}
           </p>
         </div>
+
+        {!isCancelled && (
+          <div className="bg-card rounded-2xl border border-border p-5">
+            <h3 className="font-display font-semibold text-sm mb-4">Order Progress</h3>
+            <OrderProgressBar status={order.status} />
+          </div>
+        )}
 
         {!isCancelled && (
           <div className="bg-card rounded-2xl border border-border p-5">

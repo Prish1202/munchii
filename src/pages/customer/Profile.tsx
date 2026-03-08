@@ -115,13 +115,15 @@ export default function Profile() {
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3">
-          <motion.div className="bg-card rounded-2xl border border-border p-3.5 text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>
-            <div className="w-10 h-10 rounded-xl gradient-coin flex items-center justify-center mx-auto mb-2 shadow-md">
-              <Sparkles className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <p className="font-display font-bold text-lg">{wallet?.total_coins || 0}</p>
-            <p className="text-[11px] text-muted-foreground font-medium">Points</p>
-          </motion.div>
+          <Link to="/customer/coins">
+            <motion.div className="bg-card rounded-2xl border border-border p-3.5 text-center hover:border-coin/40 transition-colors" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>
+              <div className="w-10 h-10 rounded-xl gradient-coin flex items-center justify-center mx-auto mb-2 shadow-md">
+                <Sparkles className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <p className="font-display font-bold text-lg">{wallet?.total_coins || 0}</p>
+              <p className="text-[11px] text-muted-foreground font-medium">Points</p>
+            </motion.div>
+          </Link>
           <motion.div className="bg-card rounded-2xl border border-border p-3.5 text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}>
             <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center mx-auto mb-2 shadow-md">
               <ShoppingBag className="w-5 h-5 text-primary-foreground" />

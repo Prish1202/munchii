@@ -91,7 +91,7 @@ export default function CustomerDashboard() {
             </button>
           </div>
           {/* Coin balance card */}
-          <Link to="/customer/profile" className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-coin/10 border border-coin/20 hover:bg-coin/15 transition-colors">
+          <Link to="/customer/coins" className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-coin/10 border border-coin/20 hover:bg-coin/15 transition-colors">
             <div className="w-7 h-7 rounded-xl gradient-coin flex items-center justify-center">
               <Sparkles className="w-3.5 h-3.5 text-primary-foreground" />
             </div>
