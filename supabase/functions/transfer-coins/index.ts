@@ -81,7 +81,7 @@ serve(async (req) => {
 
     // Atomic transfer using the DB function
     const { error: transferErr } = await adminClient.rpc("transfer_coins", {
-      _sender_id: sender.id,
+      _sender_id: senderId,
       _recipient_id: recipient.id,
       _coins: coins,
     });
