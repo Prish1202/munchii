@@ -12,6 +12,7 @@ interface ChatCoinTransferProps {
   recipientUsername: string | null;
   availableCoins: number;
   onClose: () => void;
+  onTransferSuccess?: (coins: number) => void;
 }
 
 export function ChatCoinTransfer({
