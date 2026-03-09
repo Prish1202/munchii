@@ -1,21 +1,13 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { RestaurantCard } from '@/components/customer/RestaurantCard';
-import { RestaurantCardSkeleton } from '@/components/customer/RestaurantCardSkeleton';
-import { ComingSoon } from '@/components/customer/ComingSoon';
-import { useLocation } from '@/contexts/LocationContext';
-import { useRestaurants } from '@/hooks/useRestaurants';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import { useLeaderboard } from '@/hooks/useLeaderboard';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Search, Store, Users, MapPin, Loader2, User } from 'lucide-react';
+import { Search, Users, Loader2, User, Trophy, Coins, Crown } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { cn } from '@/lib/utils';
-
-type Tab = 'restaurants' | 'people';
 
 function useSearchProfiles(query: string) {
   return useQuery({
@@ -34,27 +26,25 @@ function useSearchProfiles(query: string) {
   });
 }
 
+const RANK_COLORS = [
+  'from-yellow-400 to-amber-500', // 1st - Gold
+  'from-slate-300 to-slate-400',   // 2nd - Silver
+  'from-amber-600 to-orange-700',  // 3rd - Bronze
+];
+
 export default function Explore() {
   const [search, setSearch] = useState('');
-  const [tab, setTab] = useState<Tab>('restaurants');
-  const { city, isDetecting } = useLocation();
-  const { data: restaurants, isLoading: loadingRestaurants } = useRestaurants(city);
-  const { data: profiles, isLoading: loadingProfiles } = useSearchProfiles(
-    tab === 'people' ? search : ''
-  );
-
-  const filteredRestaurants = restaurants?.filter(r =>
-    r.name.toLowerCase().includes(search.toLowerCase()) ||
-    r.address.toLowerCase().includes(search.toLowerCase())
-  );
+  const { data: profiles, isLoading: loadingProfiles } = useSearchProfiles(search);
+  const { data: leaderboard, isLoading: loadingLeaderboard } = useLeaderboard();
 
   return (
     <DashboardLayout>
-      <div className="space-y-5 pb-24 md:pb-6 max-w-3xl mx-auto">
+      <div className="space-y-6 pb-24 md:pb-6 max-w-3xl mx-auto">
+        {/* Header */}
         <div>
           <h1 className="font-display font-bold text-2xl">Explore</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Find restaurants & people on FoodyZone
+            Find people on FoodyZone
           </p>
         </div>
 
@@ -63,82 +53,17 @@ export default function Explore() {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-muted-foreground" />
           <input
             type="text"
-            placeholder={tab === 'people' ? 'Search by @username or name...' : 'Search restaurants...'}
+            placeholder="Search by @username or name..."
             className="w-full pl-12 pr-4 py-3 rounded-2xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all text-sm font-medium placeholder:text-muted-foreground/60"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-2">
-          <Button
-            variant={tab === 'restaurants' ? 'default' : 'outline'}
-            size="sm"
-            className="rounded-full gap-1.5"
-            onClick={() => { setTab('restaurants'); setSearch(''); }}
-          >
-            <Store className="w-3.5 h-3.5" /> Restaurants
-          </Button>
-          <Button
-            variant={tab === 'people' ? 'default' : 'outline'}
-            size="sm"
-            className="rounded-full gap-1.5"
-            onClick={() => { setTab('people'); setSearch(''); }}
-          >
-            <Users className="w-3.5 h-3.5" /> People
-          </Button>
-        </div>
-
-        {/* Content */}
-        {tab === 'restaurants' ? (
-          <>
-            {isDetecting ? (
-              <div className="flex flex-col items-center justify-center py-20 gap-3">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                <p className="text-sm text-muted-foreground">Detecting your location...</p>
-              </div>
-            ) : !loadingRestaurants && (!restaurants || restaurants.length === 0) && !search ? (
-              <ComingSoon />
-            ) : loadingRestaurants ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <RestaurantCardSkeleton key={i} />
-                ))}
-              </div>
-            ) : filteredRestaurants?.length === 0 ? (
-              <div className="text-center py-16">
-                <Store className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                <p className="font-display font-semibold">No restaurants found</p>
-                <p className="text-sm text-muted-foreground mt-1">Try a different search term</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {filteredRestaurants?.map((restaurant, i) => (
-                  <motion.div
-                    key={restaurant.id}
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.04, duration: 0.3 }}
-                  >
-                    <RestaurantCard restaurant={restaurant} />
-                  </motion.div>
-                ))}
-              </div>
-            )}
-          </>
-        ) : (
-          /* People tab */
+        {/* Search Results */}
+        {search.length >= 2 ? (
           <div className="space-y-2">
-            {search.length < 2 ? (
-              <div className="text-center py-16">
-                <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                <p className="font-display font-semibold">Search for people</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Type a @username or name to find friends
-                </p>
-              </div>
-            ) : loadingProfiles ? (
+            {loadingProfiles ? (
               <div className="flex items-center justify-center py-16">
                 <Loader2 className="w-6 h-6 animate-spin text-primary" />
               </div>
@@ -179,6 +104,85 @@ export default function Explore() {
                   </Link>
                 </motion.div>
               ))
+            )}
+          </div>
+        ) : (
+          /* Leaderboard */
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center">
+                <Trophy className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h2 className="font-display font-bold text-lg">Leaderboard</h2>
+                <p className="text-xs text-muted-foreground">Top earners on FoodyZone</p>
+              </div>
+            </div>
+
+            {loadingLeaderboard ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              </div>
+            ) : !leaderboard || leaderboard.length === 0 ? (
+              <div className="text-center py-12 bg-card rounded-2xl border border-border">
+                <Coins className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                <p className="font-display font-semibold">No rankings yet</p>
+                <p className="text-sm text-muted-foreground mt-1">Start earning coins to appear here!</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {leaderboard.map((entry, i) => (
+                  <motion.div
+                    key={entry.user_id}
+                    initial={{ opacity: 0, x: -15 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.06, duration: 0.3 }}
+                  >
+                    <Link
+                      to={`/customer/user/${entry.user_id}`}
+                      className={`flex items-center gap-3 p-3 rounded-2xl border transition-all hover:shadow-md ${
+                        i < 3
+                          ? 'bg-gradient-to-r from-card to-card border-yellow-400/30'
+                          : 'bg-card border-border'
+                      }`}
+                    >
+                      {/* Rank */}
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 font-display font-bold text-sm ${
+                        i < 3
+                          ? `bg-gradient-to-br ${RANK_COLORS[i]} text-white`
+                          : 'bg-muted text-muted-foreground'
+                      }`}>
+                        {i === 0 ? <Crown className="w-4 h-4" /> : `#${i + 1}`}
+                      </div>
+
+                      {/* Avatar */}
+                      <Avatar className={`w-10 h-10 ${i < 3 ? 'border-2 border-yellow-400/40' : 'border border-border'}`}>
+                        <AvatarFallback className={`font-display font-bold text-sm ${
+                          i < 3 ? 'bg-yellow-400/10 text-yellow-700' : 'bg-primary/10 text-primary'
+                        }`}>
+                          {entry.name.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-display font-bold text-sm truncate">{entry.name}</p>
+                        {entry.username && (
+                          <p className="text-xs text-muted-foreground">@{entry.username}</p>
+                        )}
+                      </div>
+
+                      {/* Coins */}
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <Coins className="w-4 h-4 text-yellow-500" />
+                        <span className="font-display font-bold text-sm text-foreground">
+                          {entry.total_coins}
+                        </span>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
             )}
           </div>
         )}
