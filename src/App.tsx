@@ -70,6 +70,8 @@ const App = () => (
               <Route path="/signup" element={<Signup />} />
               <Route path="/confirm-email" element={<ConfirmEmail />} />
               <Route path="/email-verified" element={<EmailVerified />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/auth" element={<Navigate to="/login" replace />} />
 
               {/* Customer Routes */}
