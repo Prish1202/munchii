@@ -10,6 +10,7 @@ import { useCreateOrder } from '@/hooks/useOrders';
 import { ArrowLeft, Phone, CreditCard, Banknote, Wallet, Loader2, Coins, Clock3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useWallet, useRedeemCoins } from '@/hooks/useWallet';
+import { format } from 'date-fns';
 
 const PAYMENT_METHODS = [
   { id: 'cod', label: 'Pay at Pickup', icon: Banknote },
