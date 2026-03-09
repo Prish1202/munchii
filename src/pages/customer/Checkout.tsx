@@ -10,6 +10,7 @@ import { useCreateOrder } from '@/hooks/useOrders';
 import { ArrowLeft, Phone, CreditCard, Banknote, Wallet, Loader2, Coins, Clock3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useWallet, useRedeemCoins } from '@/hooks/useWallet';
+import { format } from 'date-fns';
 
 const PAYMENT_METHODS = [
   { id: 'cod', label: 'Pay at Pickup', icon: Banknote },
@@ -134,7 +135,7 @@ export default function Checkout() {
           </div>
         </section>
 
-        {/* Pickup time */}
+         {/* Pickup time */}
         <section className="bg-card rounded-2xl border border-border p-4 space-y-3">
           <div className="flex items-center gap-2 text-sm font-semibold">
             <Clock3 className="w-4 h-4 text-primary" />
@@ -165,9 +166,10 @@ export default function Checkout() {
             type="datetime-local"
             value={pickupTime}
             onChange={(e) => setPickupTime(e.target.value)}
+            min={new Date(Date.now() + 5 * 60000).toISOString().slice(0, 16)}
             className="mt-1"
           />
-          <p className="text-xs text-muted-foreground">Pick a quick option or set a custom time.</p>
+          <p className="text-xs text-muted-foreground">Pick a quick option or set a custom time (minimum 5 minutes from now).</p>
         </section>
 
         {/* Coins Discount */}
@@ -208,7 +210,7 @@ export default function Checkout() {
           <div className="space-y-1.5 text-sm">
             <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>₹{totalAmount.toFixed(0)}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Platform Fee</span><span>₹{platformFee}</span></div>
-            {pickupTime && <div className="flex justify-between"><span className="text-muted-foreground">Pickup Time</span><span>{new Date(pickupTime).toLocaleString()}</span></div>}
+            {pickupTime && <div className="flex justify-between"><span className="text-muted-foreground">Pickup Time</span><span>{format(new Date(pickupTime), 'PPp')}</span></div>}
           </div>
           {coinDiscount > 0 && (
             <div className="flex justify-between text-green-600">

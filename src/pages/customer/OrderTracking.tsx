@@ -216,6 +216,12 @@ export default function OrderTracking() {
             <span className="text-muted-foreground">Placed at</span>
             <span>{format(new Date(order.created_at), 'PPp')}</span>
           </div>
+          {order.pickup_time && (
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Pickup Time</span>
+              <span className="font-medium text-primary">{format(new Date(order.pickup_time), 'PPp')}</span>
+            </div>
+          )}
           <div className="flex justify-between">
             <span className="text-muted-foreground">Type</span>
             <span>Pickup</span>
