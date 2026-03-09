@@ -134,7 +134,7 @@ export default function Checkout() {
           </div>
         </section>
 
-        {/* Pickup time */}
+         {/* Pickup time */}
         <section className="bg-card rounded-2xl border border-border p-4 space-y-3">
           <div className="flex items-center gap-2 text-sm font-semibold">
             <Clock3 className="w-4 h-4 text-primary" />
@@ -165,9 +165,10 @@ export default function Checkout() {
             type="datetime-local"
             value={pickupTime}
             onChange={(e) => setPickupTime(e.target.value)}
+            min={new Date(Date.now() + 5 * 60000).toISOString().slice(0, 16)}
             className="mt-1"
           />
-          <p className="text-xs text-muted-foreground">Pick a quick option or set a custom time.</p>
+          <p className="text-xs text-muted-foreground">Pick a quick option or set a custom time (minimum 5 minutes from now).</p>
         </section>
 
         {/* Coins Discount */}
