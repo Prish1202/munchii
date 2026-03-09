@@ -296,7 +296,7 @@ export default function Checkout() {
             )}
           </div>
           {coinDiscount > 0 && (
-            <div className="flex justify-between text-green-600">
+            <div className="flex justify-between text-primary">
               <span className="text-muted-foreground">Coin Discount</span>
               <span>-₹{coinDiscount}</span>
             </div>
