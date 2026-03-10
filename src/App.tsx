@@ -45,6 +45,8 @@ import MenuManagement from "./pages/restaurant/MenuManagement";
 import RestaurantSettings from "./pages/restaurant/Settings";
 import RestaurantNotifications from "./pages/restaurant/Notifications";
 import RestaurantNotificationSettings from "./pages/restaurant/NotificationSettings";
+import RestaurantOnboarding from "./pages/restaurant/Onboarding";
+import { OnboardingGuard } from "./components/restaurant/OnboardingGuard";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/Dashboard";
