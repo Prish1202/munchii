@@ -78,6 +78,67 @@ export function useUpdateOrderStatus() {
   });
 }
 
+export function useAdminRestaurants() {
+  return useQuery({
+    queryKey: ['admin', 'restaurants'],
+    queryFn: async () => {
+      const { data: restaurants, error } = await supabase
+        .from('restaurants')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+
+      // Fetch owner details and bank details for all restaurants
+      const ownerIds = restaurants.map(r => r.owner_id);
+      const restaurantIds = restaurants.map(r => r.id);
+
+      const { data: ownerDetails } = await supabase
+        .from('restaurant_owner_details' as any)
+        .select('*')
+        .in('user_id', ownerIds);
+
+      const { data: bankDetails } = await supabase
+        .from('restaurant_bank_details' as any)
+        .select('*')
+        .in('restaurant_id', restaurantIds);
+
+      return restaurants.map(r => ({
+        ...r,
+        verification_status: (r as any).verification_status || 'verified',
+        fssai_license: (r as any).fssai_license,
+        gst_number: (r as any).gst_number,
+        contact_phone: (r as any).contact_phone,
+        area: (r as any).area,
+        university_name: (r as any).university_name,
+        opening_hours: (r as any).opening_hours,
+        closing_hours: (r as any).closing_hours,
+        owner_details: (ownerDetails as any[])?.find((o: any) => o.user_id === r.owner_id) || null,
+        bank_details: (bankDetails as any[])?.find((b: any) => b.restaurant_id === r.id) || null,
+      }));
+    }
+  });
+}
+
+export function useVerifyRestaurant() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ restaurantId, status }: { restaurantId: string; status: 'verified' | 'rejected' }) => {
+      const updates: any = { verification_status: status };
+      if (status === 'verified') {
+        updates.is_active = true;
+      }
+      const { error } = await supabase
+        .from('restaurants')
+        .update(updates)
+        .eq('id', restaurantId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'restaurants'] });
+    }
+  });
+}
+
 export function useAdminAnalytics() {
   return useQuery({
     queryKey: ['admin', 'analytics'],

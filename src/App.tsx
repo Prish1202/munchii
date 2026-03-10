@@ -45,10 +45,13 @@ import MenuManagement from "./pages/restaurant/MenuManagement";
 import RestaurantSettings from "./pages/restaurant/Settings";
 import RestaurantNotifications from "./pages/restaurant/Notifications";
 import RestaurantNotificationSettings from "./pages/restaurant/NotificationSettings";
+import RestaurantOnboarding from "./pages/restaurant/Onboarding";
+import { OnboardingGuard } from "./components/restaurant/OnboardingGuard";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminUsers from "./pages/admin/Users";
+import AdminRestaurants from "./pages/admin/Restaurants";
 import AdminOrders from "./pages/admin/Orders";
 import AdminPayouts from "./pages/admin/Payouts";
 
@@ -95,18 +98,20 @@ const App = () => (
               <Route path="/customer/*" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><CustomerDashboard /></UsernameSetup></ProtectedRoute>} />
 
               {/* Restaurant Routes */}
-              <Route path="/restaurant" element={<ProtectedRoute allowedRoles={['restaurant']}><RestaurantDashboard /></ProtectedRoute>} />
-              <Route path="/restaurant/orders" element={<ProtectedRoute allowedRoles={['restaurant']}><RestaurantOrders /></ProtectedRoute>} />
-              <Route path="/restaurant/orders/:orderId" element={<ProtectedRoute allowedRoles={['restaurant']}><RestaurantOrderDetail /></ProtectedRoute>} />
-              <Route path="/restaurant/menu" element={<ProtectedRoute allowedRoles={['restaurant']}><MenuManagement /></ProtectedRoute>} />
-              <Route path="/restaurant/settings" element={<ProtectedRoute allowedRoles={['restaurant']}><RestaurantSettings /></ProtectedRoute>} />
+              <Route path="/restaurant/onboarding" element={<ProtectedRoute allowedRoles={['restaurant']}><RestaurantOnboarding /></ProtectedRoute>} />
+              <Route path="/restaurant" element={<ProtectedRoute allowedRoles={['restaurant']}><OnboardingGuard><RestaurantDashboard /></OnboardingGuard></ProtectedRoute>} />
+              <Route path="/restaurant/orders" element={<ProtectedRoute allowedRoles={['restaurant']}><OnboardingGuard><RestaurantOrders /></OnboardingGuard></ProtectedRoute>} />
+              <Route path="/restaurant/orders/:orderId" element={<ProtectedRoute allowedRoles={['restaurant']}><OnboardingGuard><RestaurantOrderDetail /></OnboardingGuard></ProtectedRoute>} />
+              <Route path="/restaurant/menu" element={<ProtectedRoute allowedRoles={['restaurant']}><OnboardingGuard><MenuManagement /></OnboardingGuard></ProtectedRoute>} />
+              <Route path="/restaurant/settings" element={<ProtectedRoute allowedRoles={['restaurant']}><OnboardingGuard><RestaurantSettings /></OnboardingGuard></ProtectedRoute>} />
               <Route path="/restaurant/notifications" element={<ProtectedRoute allowedRoles={['restaurant']}><RestaurantNotifications /></ProtectedRoute>} />
               <Route path="/restaurant/notification-settings" element={<ProtectedRoute allowedRoles={['restaurant']}><RestaurantNotificationSettings /></ProtectedRoute>} />
-              <Route path="/restaurant/*" element={<ProtectedRoute allowedRoles={['restaurant']}><RestaurantDashboard /></ProtectedRoute>} />
+              <Route path="/restaurant/*" element={<ProtectedRoute allowedRoles={['restaurant']}><OnboardingGuard><RestaurantDashboard /></OnboardingGuard></ProtectedRoute>} />
 
               {/* Admin Routes */}
               <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
               <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['admin']}><AdminUsers /></ProtectedRoute>} />
+              <Route path="/admin/restaurants" element={<ProtectedRoute allowedRoles={['admin']}><AdminRestaurants /></ProtectedRoute>} />
               <Route path="/admin/orders" element={<ProtectedRoute allowedRoles={['admin']}><AdminOrders /></ProtectedRoute>} />
               <Route path="/admin/payouts" element={<ProtectedRoute allowedRoles={['admin']}><AdminPayouts /></ProtectedRoute>} />
               <Route path="/admin/*" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />

@@ -468,36 +468,143 @@ export type Database = {
         }
         Relationships: []
       }
+      restaurant_bank_details: {
+        Row: {
+          account_holder_name: string | null
+          account_number: string | null
+          bank_name: string | null
+          created_at: string
+          id: string
+          ifsc_code: string | null
+          restaurant_id: string
+          updated_at: string
+          upi_id: string | null
+        }
+        Insert: {
+          account_holder_name?: string | null
+          account_number?: string | null
+          bank_name?: string | null
+          created_at?: string
+          id?: string
+          ifsc_code?: string | null
+          restaurant_id: string
+          updated_at?: string
+          upi_id?: string | null
+        }
+        Update: {
+          account_holder_name?: string | null
+          account_number?: string | null
+          bank_name?: string | null
+          created_at?: string
+          id?: string
+          ifsc_code?: string | null
+          restaurant_id?: string
+          updated_at?: string
+          upi_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_bank_details_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      restaurant_owner_details: {
+        Row: {
+          aadhaar_number: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          full_address: string | null
+          id: string
+          pan_number: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          aadhaar_number?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          full_address?: string | null
+          id?: string
+          pan_number?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          aadhaar_number?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          full_address?: string | null
+          id?: string
+          pan_number?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       restaurants: {
         Row: {
           address: string
+          area: string | null
           city: string | null
+          closing_hours: string | null
+          contact_phone: string | null
           created_at: string
+          fssai_license: string | null
+          gst_number: string | null
           id: string
           is_active: boolean
           name: string
+          opening_hours: string | null
           owner_id: string
+          photo_url: string | null
+          university_name: string | null
           updated_at: string
+          verification_status: string
         }
         Insert: {
           address: string
+          area?: string | null
           city?: string | null
+          closing_hours?: string | null
+          contact_phone?: string | null
           created_at?: string
+          fssai_license?: string | null
+          gst_number?: string | null
           id?: string
           is_active?: boolean
           name: string
+          opening_hours?: string | null
           owner_id: string
+          photo_url?: string | null
+          university_name?: string | null
           updated_at?: string
+          verification_status?: string
         }
         Update: {
           address?: string
+          area?: string | null
           city?: string | null
+          closing_hours?: string | null
+          contact_phone?: string | null
           created_at?: string
+          fssai_license?: string | null
+          gst_number?: string | null
           id?: string
           is_active?: boolean
           name?: string
+          opening_hours?: string | null
           owner_id?: string
+          photo_url?: string | null
+          university_name?: string | null
           updated_at?: string
+          verification_status?: string
         }
         Relationships: []
       }
