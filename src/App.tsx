@@ -51,6 +51,7 @@ import { OnboardingGuard } from "./components/restaurant/OnboardingGuard";
 // Admin Pages
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminUsers from "./pages/admin/Users";
+import AdminRestaurants from "./pages/admin/Restaurants";
 import AdminOrders from "./pages/admin/Orders";
 import AdminPayouts from "./pages/admin/Payouts";
 
