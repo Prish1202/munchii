@@ -54,7 +54,7 @@ export function useOwnerDetails() {
         .eq('user_id', user!.id)
         .maybeSingle();
       if (error) throw error;
-      return data as OwnerDetails | null;
+      return data as unknown as OwnerDetails | null;
     },
     enabled: !!user?.id,
   });
