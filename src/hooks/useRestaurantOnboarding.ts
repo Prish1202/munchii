@@ -175,7 +175,7 @@ export function useBankDetails(restaurantId: string | undefined) {
         .eq('restaurant_id', restaurantId!)
         .maybeSingle();
       if (error) throw error;
-      return data as BankDetails | null;
+      return data as unknown as BankDetails | null;
     },
     enabled: !!restaurantId,
   });
