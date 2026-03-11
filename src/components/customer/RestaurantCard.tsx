@@ -57,7 +57,7 @@ export function RestaurantCard({ restaurant }: RestaurantCardProps) {
           <div className="absolute bottom-3 right-3">
             <div className="flex items-center gap-1 bg-card/90 backdrop-blur-sm px-2 py-1 rounded-lg">
               <Coins className="w-3 h-3 text-coin" />
-              <span className="text-[10px] font-bold text-foreground">Earn 4%</span>
+              <span className="text-[10px] font-bold text-foreground">Earn 3%</span>
             </div>
           </div>
 
