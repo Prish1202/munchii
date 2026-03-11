@@ -16,29 +16,9 @@ export default function Profile() {
   const navigate = useNavigate();
   const { data: profile } = useProfile();
   const { data: wallet } = useWallet();
-  const { data: wallet } = useWallet();
   const { data: stats } = useUserStats();
   const { data: counts } = useFollowerCounts(user?.id || '');
   const { data: orders } = useCustomerOrders();
-
-  const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ campus: '', phone: '' });
-
-  const startEdit = () => {
-    setForm({
-      campus: profile?.campus || '',
-      phone: profile?.phone || '',
-    });
-    setEditing(true);
-  };
-
-  const saveEdit = () => {
-    updateProfile.mutate({
-      campus: form.campus || null,
-      phone: form.phone || null,
-    });
-    setEditing(false);
-  };
 
   const completedOrders = orders?.filter(o => o.status === 'completed').slice(0, 10) || [];
   const coinLevel = (wallet?.total_coins || 0) >= 500 ? 'Gold' : (wallet?.total_coins || 0) >= 100 ? 'Silver' : 'Bronze';
@@ -64,11 +44,9 @@ export default function Profile() {
                   {profile?.name?.charAt(0)?.toUpperCase() || '?'}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex gap-2 mb-1">
-                <Button variant="outline" size="sm" onClick={() => navigate('/customer/profile/settings')} className="rounded-xl">
-                  <Settings className="w-4 h-4 mr-1" /> Settings
-                </Button>
-              </div>
+              <Button variant="outline" size="sm" onClick={() => navigate('/customer/profile/settings')} className="rounded-xl mb-1">
+                <Settings className="w-4 h-4 mr-1" /> Settings
+              </Button>
             </div>
 
             <div className="mt-3">
@@ -79,8 +57,8 @@ export default function Profile() {
               {profile?.username && (
                 <p className="text-sm text-muted-foreground">@{profile.username}</p>
               )}
-              {(profile as any)?.bio && (
-                <p className="text-sm text-foreground/80 mt-1">{(profile as any).bio}</p>
+              {profile?.bio && (
+                <p className="text-sm text-foreground/80 mt-1">{profile.bio}</p>
               )}
               <div className="flex items-center gap-2 mt-1.5">
                 {profile?.campus && (
@@ -102,7 +80,6 @@ export default function Profile() {
                 </Link>
               </div>
             </div>
-
           </div>
         </motion.div>
 
