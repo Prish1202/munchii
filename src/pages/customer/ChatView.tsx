@@ -125,9 +125,12 @@ export default function ChatView() {
     ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
   };
 
-  const handleToggleReaction = (messageId: string, emoji: string) => {
+  const handleToggleReaction = useCallback((messageId: string, emoji: string) => {
     toggleReaction.mutate({ messageId, emoji });
-  };
+    // Trigger emoji burst animation
+    setBurstEmoji(emoji);
+    setBurstTrigger(prev => prev + 1);
+  }, [toggleReaction]);
 
   const handleReply = (messageId: string, messageText: string) => {
     setReplyTo({ id: messageId, text: messageText });
