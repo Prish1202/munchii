@@ -106,18 +106,6 @@ export default function Profile() {
               </div>
             </div>
 
-            {editing && (
-              <div className="mt-4 space-y-3">
-                <Separator />
-                <div className="space-y-2">
-                  <Input placeholder="Campus" value={form.campus} onChange={e => setForm(p => ({ ...p, campus: e.target.value }))} className="rounded-xl" />
-                  <Input placeholder="Phone" value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} className="rounded-xl" />
-                </div>
-                <Button onClick={saveEdit} className="w-full gradient-primary border-0 rounded-xl" disabled={updateProfile.isPending}>
-                  <Save className="w-4 h-4 mr-2" /> Save Changes
-                </Button>
-              </div>
-            )}
           </div>
         </motion.div>
 
