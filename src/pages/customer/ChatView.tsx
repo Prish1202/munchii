@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { E2EEKeySetup } from '@/components/customer/E2EEKeySetup';
 import { MessageBubble } from '@/components/customer/MessageBubble';
 import { TypingIndicator } from '@/components/customer/TypingIndicator';
+import { DateSeparator } from '@/components/customer/DateSeparator';
 import { OnlineIndicator } from '@/components/customer/OnlineIndicator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMessages, useSendMessage, useRecipientPublicKey, usePublicKey } from '@/hooks/useChat';
