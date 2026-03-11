@@ -160,7 +160,7 @@ export function MessageBubble({
   const replyIconOpacity = Math.min(Math.abs(swipeOffset) / swipeThreshold, 1);
 
   return (
-    <div className={cn('flex group relative overflow-hidden', isOwn ? 'justify-end' : 'justify-start')}>
+    <div className={cn('flex group relative', isOwn ? 'justify-end' : 'justify-start')}>
       {/* Reply icon indicator */}
       {isMobile && (
         <div
