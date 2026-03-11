@@ -82,6 +82,9 @@ export default function Profile() {
               {profile?.username && (
                 <p className="text-sm text-muted-foreground">@{profile.username}</p>
               )}
+              {(profile as any)?.bio && (
+                <p className="text-sm text-foreground/80 mt-1">{(profile as any).bio}</p>
+              )}
               <div className="flex items-center gap-2 mt-1.5">
                 {profile?.campus && (
                   <Badge variant="secondary" className="text-xs rounded-lg">🎓 {profile.campus}</Badge>
