@@ -36,6 +36,7 @@ import Conversations from "./pages/customer/Conversations";
 import ChatView from "./pages/customer/ChatView";
 import CustomerNotifications from "./pages/customer/Notifications";
 import NotificationSettings from "./pages/customer/NotificationSettings";
+import ProfileSettings from "./pages/customer/ProfileSettings";
 import { UsernameSetup } from "./components/customer/UsernameSetup";
 // Restaurant Pages
 import RestaurantDashboard from "./pages/restaurant/Dashboard";
