@@ -180,24 +180,29 @@ export default function ChatView() {
               <p className="text-sm text-muted-foreground">Send your first encrypted message</p>
             </div>
           ) : (
-            messages.map((msg) => {
+            messages.map((msg, idx) => {
               const replyToData = (msg as any).reply_to_id ? messageMap.get((msg as any).reply_to_id) : null;
+              const msgDate = new Date(msg.created_at).toDateString();
+              const prevDate = idx > 0 ? new Date(messages[idx - 1].created_at).toDateString() : null;
+              const showDate = idx === 0 || msgDate !== prevDate;
               return (
-                <MessageBubble
-                  key={msg.id}
-                  messageId={msg.id}
-                  isOwn={msg.sender_id === user?.id}
-                  text={msg.decrypted || '🔒'}
-                  time={msg.created_at}
-                  deliveredAt={msg.delivered_at}
-                  readAt={msg.read_at}
-                  reactions={reactions.filter((r) => r.message_id === msg.id)}
-                  currentUserId={user?.id || ''}
-                  onToggleReaction={handleToggleReaction}
-                  onReply={handleReply}
-                  replyToText={replyToData?.text || null}
-                  replyToIsOwn={replyToData ? replyToData.senderId === user?.id : undefined}
-                />
+                <div key={msg.id}>
+                  {showDate && <DateSeparator date={msg.created_at} />}
+                  <MessageBubble
+                    messageId={msg.id}
+                    isOwn={msg.sender_id === user?.id}
+                    text={msg.decrypted || '🔒'}
+                    time={msg.created_at}
+                    deliveredAt={msg.delivered_at}
+                    readAt={msg.read_at}
+                    reactions={reactions.filter((r) => r.message_id === msg.id)}
+                    currentUserId={user?.id || ''}
+                    onToggleReaction={handleToggleReaction}
+                    onReply={handleReply}
+                    replyToText={replyToData?.text || null}
+                    replyToIsOwn={replyToData ? replyToData.senderId === user?.id : undefined}
+                  />
+                </div>
               );
             })
           )}
