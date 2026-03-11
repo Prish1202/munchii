@@ -60,14 +60,18 @@ export default function Profile() {
           <div className="bg-card px-5 pb-5">
             <div className="-mt-10 flex items-end justify-between">
               <Avatar className="w-20 h-20 border-4 border-card shadow-lg">
+                {profile?.avatar_url ? (
+                  <AvatarImage src={profile.avatar_url} alt={profile.name} />
+                ) : null}
                 <AvatarFallback className="gradient-primary text-primary-foreground text-2xl font-display font-bold">
                   {profile?.name?.charAt(0)?.toUpperCase() || '?'}
                 </AvatarFallback>
               </Avatar>
-              <Button variant="outline" size="sm" onClick={editing ? () => setEditing(false) : startEdit} className="rounded-xl mb-1">
-                {editing ? <X className="w-4 h-4 mr-1" /> : <Edit2 className="w-4 h-4 mr-1" />}
-                {editing ? 'Cancel' : 'Edit'}
-              </Button>
+              <div className="flex gap-2 mb-1">
+                <Button variant="outline" size="sm" onClick={() => navigate('/customer/profile/settings')} className="rounded-xl">
+                  <Settings className="w-4 h-4 mr-1" /> Settings
+                </Button>
+              </div>
             </div>
 
             <div className="mt-3">
