@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { E2EEKeySetup } from '@/components/customer/E2EEKeySetup';
 import { MessageBubble } from '@/components/customer/MessageBubble';
@@ -19,6 +19,7 @@ import { ArrowLeft, Send, Loader2, Lock, Coins, X, Reply } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { ChatCoinTransfer } from '@/components/customer/ChatCoinTransfer';
+import { EmojiBurst } from '@/components/customer/EmojiBurst';
 
 export default function ChatView() {
   const { conversationId } = useParams<{ conversationId: string }>();
@@ -29,6 +30,8 @@ export default function ChatView() {
   const [text, setText] = useState('');
   const [showCoinTransfer, setShowCoinTransfer] = useState(false);
   const [replyTo, setReplyTo] = useState<{ id: string; text: string } | null>(null);
+  const [burstEmoji, setBurstEmoji] = useState('');
+  const [burstTrigger, setBurstTrigger] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { data: wallet } = useWallet();
@@ -122,9 +125,12 @@ export default function ChatView() {
     ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
   };
 
-  const handleToggleReaction = (messageId: string, emoji: string) => {
+  const handleToggleReaction = useCallback((messageId: string, emoji: string) => {
     toggleReaction.mutate({ messageId, emoji });
-  };
+    // Trigger emoji burst animation
+    setBurstEmoji(emoji);
+    setBurstTrigger(prev => prev + 1);
+  }, [toggleReaction]);
 
   const handleReply = (messageId: string, messageText: string) => {
     setReplyTo({ id: messageId, text: messageText });
@@ -133,6 +139,7 @@ export default function ChatView() {
 
   return (
     <E2EEKeySetup>
+      <EmojiBurst emoji={burstEmoji} trigger={burstTrigger} />
       <div className="fixed inset-0 z-50 flex flex-col bg-background overflow-hidden">
         {/* Chat header */}
         <header className="flex items-center gap-3 px-3 py-2.5 border-b border-border bg-card/80 backdrop-blur-lg safe-area-top shrink-0">

@@ -36,6 +36,7 @@ import Conversations from "./pages/customer/Conversations";
 import ChatView from "./pages/customer/ChatView";
 import CustomerNotifications from "./pages/customer/Notifications";
 import NotificationSettings from "./pages/customer/NotificationSettings";
+import ProfileSettings from "./pages/customer/ProfileSettings";
 import { UsernameSetup } from "./components/customer/UsernameSetup";
 // Restaurant Pages
 import RestaurantDashboard from "./pages/restaurant/Dashboard";
@@ -88,6 +89,7 @@ const App = () => (
               <Route path="/customer/orders" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><Orders /></UsernameSetup></ProtectedRoute>} />
               <Route path="/customer/orders/:id" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><OrderTracking /></UsernameSetup></ProtectedRoute>} />
               <Route path="/customer/profile" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><CustomerProfile /></UsernameSetup></ProtectedRoute>} />
+              <Route path="/customer/profile/settings" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><ProfileSettings /></UsernameSetup></ProtectedRoute>} />
               <Route path="/customer/coins" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><CustomerCoins /></UsernameSetup></ProtectedRoute>} />
               <Route path="/customer/profile/:type" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><FollowersList /></UsernameSetup></ProtectedRoute>} />
               <Route path="/customer/user/:userId" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><PublicProfile /></UsernameSetup></ProtectedRoute>} />

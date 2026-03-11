@@ -1,46 +1,24 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
-import { useProfile, useUpdateProfile, useUserStats } from '@/hooks/useProfile';
+import { useProfile, useUserStats } from '@/hooks/useProfile';
 import { useWallet } from '@/hooks/useWallet';
 import { useFollowerCounts } from '@/hooks/useFollowers';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Edit2, ShoppingBag, Save, X, Sparkles } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ShoppingBag, Sparkles, Settings } from 'lucide-react';
 import { useCustomerOrders } from '@/hooks/useOrders';
 import { motion } from 'framer-motion';
 
 export default function Profile() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { data: profile } = useProfile();
-  const updateProfile = useUpdateProfile();
   const { data: wallet } = useWallet();
   const { data: stats } = useUserStats();
   const { data: counts } = useFollowerCounts(user?.id || '');
   const { data: orders } = useCustomerOrders();
-
-  const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ campus: '', phone: '' });
-
-  const startEdit = () => {
-    setForm({
-      campus: profile?.campus || '',
-      phone: profile?.phone || '',
-    });
-    setEditing(true);
-  };
-
-  const saveEdit = () => {
-    updateProfile.mutate({
-      campus: form.campus || null,
-      phone: form.phone || null,
-    });
-    setEditing(false);
-  };
 
   const completedOrders = orders?.filter(o => o.status === 'completed').slice(0, 10) || [];
   const coinLevel = (wallet?.total_coins || 0) >= 500 ? 'Gold' : (wallet?.total_coins || 0) >= 100 ? 'Silver' : 'Bronze';
@@ -59,13 +37,15 @@ export default function Profile() {
           <div className="bg-card px-5 pb-5">
             <div className="-mt-10 flex items-end justify-between">
               <Avatar className="w-20 h-20 border-4 border-card shadow-lg">
+                {profile?.avatar_url ? (
+                  <AvatarImage src={profile.avatar_url} alt={profile.name} />
+                ) : null}
                 <AvatarFallback className="gradient-primary text-primary-foreground text-2xl font-display font-bold">
                   {profile?.name?.charAt(0)?.toUpperCase() || '?'}
                 </AvatarFallback>
               </Avatar>
-              <Button variant="outline" size="sm" onClick={editing ? () => setEditing(false) : startEdit} className="rounded-xl mb-1">
-                {editing ? <X className="w-4 h-4 mr-1" /> : <Edit2 className="w-4 h-4 mr-1" />}
-                {editing ? 'Cancel' : 'Edit'}
+              <Button variant="outline" size="sm" onClick={() => navigate('/customer/profile/settings')} className="rounded-xl mb-1">
+                <Settings className="w-4 h-4 mr-1" /> Settings
               </Button>
             </div>
 
@@ -76,6 +56,9 @@ export default function Profile() {
               </div>
               {profile?.username && (
                 <p className="text-sm text-muted-foreground">@{profile.username}</p>
+              )}
+              {profile?.bio && (
+                <p className="text-sm text-foreground/80 mt-1">{profile.bio}</p>
               )}
               <div className="flex items-center gap-2 mt-1.5">
                 {profile?.campus && (
@@ -97,19 +80,6 @@ export default function Profile() {
                 </Link>
               </div>
             </div>
-
-            {editing && (
-              <div className="mt-4 space-y-3">
-                <Separator />
-                <div className="space-y-2">
-                  <Input placeholder="Campus" value={form.campus} onChange={e => setForm(p => ({ ...p, campus: e.target.value }))} className="rounded-xl" />
-                  <Input placeholder="Phone" value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} className="rounded-xl" />
-                </div>
-                <Button onClick={saveEdit} className="w-full gradient-primary border-0 rounded-xl" disabled={updateProfile.isPending}>
-                  <Save className="w-4 h-4 mr-2" /> Save Changes
-                </Button>
-              </div>
-            )}
           </div>
         </motion.div>
 
