@@ -30,6 +30,8 @@ export default function ChatView() {
   const [text, setText] = useState('');
   const [showCoinTransfer, setShowCoinTransfer] = useState(false);
   const [replyTo, setReplyTo] = useState<{ id: string; text: string } | null>(null);
+  const [burstEmoji, setBurstEmoji] = useState('');
+  const [burstTrigger, setBurstTrigger] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { data: wallet } = useWallet();
