@@ -5,7 +5,7 @@ import { Coins, Users, MessageCircle, Sparkles } from 'lucide-react';
 const BANNERS = [
   {
     id: 1,
-    title: 'Get 4% points',
+    title: 'Get 3% points',
     subtitle: 'on every order — 1 point = ₹1',
     icon: Coins,
     gradient: 'from-primary to-primary-glow',
