@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { E2EEKeySetup } from '@/components/customer/E2EEKeySetup';
 import { MessageBubble } from '@/components/customer/MessageBubble';
