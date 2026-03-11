@@ -16,6 +16,7 @@ import { motion } from 'framer-motion';
 
 export default function Profile() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { data: profile } = useProfile();
   const updateProfile = useUpdateProfile();
   const { data: wallet } = useWallet();
