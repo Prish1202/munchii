@@ -90,15 +90,14 @@ export default function ChatView() {
   const hasScrolledRef = useRef(false);
 
   useEffect(() => {
-    if (!messages.length) return;
-    // Instant scroll on first load, smooth on subsequent updates
+    if (!messages.length && !optimisticMessages.length) return;
     if (!hasScrolledRef.current) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
       hasScrolledRef.current = true;
     } else {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages, isOtherTyping]);
+  }, [messages, isOtherTyping, optimisticMessages]);
 
   // Optimistic messages for instant display
   const [optimisticMessages, setOptimisticMessages] = useState<Array<{
