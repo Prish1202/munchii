@@ -25,7 +25,7 @@ export default function ChatView() {
   const { conversationId } = useParams<{ conversationId: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { messages, isLoading } = useMessages(conversationId || '');
+  const { messages, isLoading, rawCount } = useMessages(conversationId || '');
   const sendMessage = useSendMessage();
   const [text, setText] = useState('');
   const [showCoinTransfer, setShowCoinTransfer] = useState(false);
