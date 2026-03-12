@@ -125,10 +125,14 @@ export default function ChatView() {
       reply_to_id: replyToId,
     }]);
 
-    // Keep keyboard open on mobile by refocusing
+    // Keep keyboard open on mobile by refocusing immediately + delayed
+    textareaRef.current?.focus();
     requestAnimationFrame(() => {
       textareaRef.current?.focus();
     });
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 50);
 
     try {
       await sendMessage.mutateAsync({
