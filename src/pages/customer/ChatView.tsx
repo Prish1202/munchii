@@ -87,8 +87,17 @@ export default function ChatView() {
     markAsRead();
   }, [markAsRead]);
 
+  const hasScrolledRef = useRef(false);
+
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (!messages.length) return;
+    // Instant scroll on first load, smooth on subsequent updates
+    if (!hasScrolledRef.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
+      hasScrolledRef.current = true;
+    } else {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [messages, isOtherTyping]);
 
   const handleSend = async () => {
