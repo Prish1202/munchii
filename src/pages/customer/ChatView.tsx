@@ -142,8 +142,10 @@ export default function ChatView() {
         plaintext: msgText,
         replyToId,
       });
+      // Small delay before removing optimistic message to let the real message
+      // appear in the query cache first, preventing a flash/gap
+      await new Promise(r => setTimeout(r, 300));
     } finally {
-      // Remove optimistic message once real one arrives
       setOptimisticMessages(prev => prev.filter(m => m.id !== optimisticId));
     }
   };
