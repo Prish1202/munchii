@@ -100,6 +100,11 @@ export default function ChatView() {
     }
   }, [messages, isOtherTyping]);
 
+  // Optimistic messages for instant display
+  const [optimisticMessages, setOptimisticMessages] = useState<Array<{
+    id: string; text: string; created_at: string; sender_id: string; reply_to_id: string | null;
+  }>>([]);
+
   const handleSend = async () => {
     if (!text.trim() || !recipientPublicKey || !senderPublicKey || !conversationId) return;
     const msgText = text.trim();
@@ -110,13 +115,34 @@ export default function ChatView() {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
-    await sendMessage.mutateAsync({
-      conversationId,
-      recipientPublicKey,
-      senderPublicKey,
-      plaintext: msgText,
-      replyToId,
+
+    // Add optimistic message immediately
+    const optimisticId = `optimistic-${Date.now()}`;
+    setOptimisticMessages(prev => [...prev, {
+      id: optimisticId,
+      text: msgText,
+      created_at: new Date().toISOString(),
+      sender_id: user!.id,
+      reply_to_id: replyToId,
+    }]);
+
+    // Keep keyboard open on mobile by refocusing
+    requestAnimationFrame(() => {
+      textareaRef.current?.focus();
     });
+
+    try {
+      await sendMessage.mutateAsync({
+        conversationId,
+        recipientPublicKey,
+        senderPublicKey,
+        plaintext: msgText,
+        replyToId,
+      });
+    } finally {
+      // Remove optimistic message once real one arrives
+      setOptimisticMessages(prev => prev.filter(m => m.id !== optimisticId));
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
