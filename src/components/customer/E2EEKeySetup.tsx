@@ -9,7 +9,7 @@ import {
   isLocalPrivateKeyMatchingPublicKey,
   restorePrivateKeyFromAccount,
 } from '@/lib/e2ee';
-import { Loader2, ShieldCheck } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface E2EEKeySetupProps {
@@ -18,8 +18,7 @@ interface E2EEKeySetupProps {
 
 /**
  * Wraps chat pages. Ensures the user has an account-level E2EE keypair.
- * - Keeps one keypair per account (restored across devices)
- * - Avoids silent key mismatches that cause "Cannot decrypt"
+ * Renders children immediately — only blocks on missing_private (needs user action).
  */
 export function E2EEKeySetup({ children }: E2EEKeySetupProps) {
   const { user } = useAuth();
@@ -37,14 +36,11 @@ export function E2EEKeySetup({ children }: E2EEKeySetupProps) {
     async function check() {
       const hasLocal = await hasPrivateKey(user!.id);
 
-      // Existing account key + local key: validate key consistency
       if (existingPublicKey && hasLocal) {
         const isMatch = await isLocalPrivateKeyMatchingPublicKey(user!.id, existingPublicKey);
-
         if (!isMatch) {
           setStatus('restoring');
           const restored = await restorePrivateKeyFromAccount(user!.id);
-
           if (!restored) {
             const localPublicKey = await exportPublicKeyFromPrivateKey(user!.id);
             if (localPublicKey) {
@@ -52,27 +48,22 @@ export function E2EEKeySetup({ children }: E2EEKeySetupProps) {
             }
           }
         }
-
         await backupPrivateKeyToAccount(user!.id);
         setStatus('ready');
         return;
       }
 
-      // Public key exists but local key missing: restore from account backup
       if (existingPublicKey && !hasLocal) {
         setStatus('restoring');
         const restored = await restorePrivateKeyFromAccount(user!.id);
-
         if (restored) {
           setStatus('ready');
           return;
         }
-
         setStatus('missing_private');
         return;
       }
 
-      // No key pair exists for account yet: generate once and store both public and backup
       setStatus('generating');
       try {
         const pubKey = await generateKeyPair(user!.id);
@@ -87,25 +78,10 @@ export function E2EEKeySetup({ children }: E2EEKeySetupProps) {
     check();
   }, [existingPublicKey, loadingKey, user]);
 
-  if (status === 'checking' || status === 'generating' || status === 'restoring') {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 gap-3">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <p className="text-sm text-muted-foreground">
-          {status === 'generating'
-            ? 'Setting up end-to-end encryption...'
-            : status === 'restoring'
-              ? 'Restoring your encryption key...'
-              : 'Checking encryption keys...'}
-        </p>
-      </div>
-    );
-  }
-
+  // Only block for missing_private which requires user action
   if (status === 'missing_private') {
     const handleRegenerate = async () => {
       if (!user) return;
-
       setStatus('generating');
       try {
         const pubKey = await generateKeyPair(user.id);
@@ -132,6 +108,6 @@ export function E2EEKeySetup({ children }: E2EEKeySetupProps) {
     );
   }
 
+  // Render children immediately for checking/generating/restoring — no loading screen
   return <>{children}</>;
 }
-
