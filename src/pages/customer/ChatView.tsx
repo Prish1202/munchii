@@ -25,7 +25,7 @@ export default function ChatView() {
   const { conversationId } = useParams<{ conversationId: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { messages, isLoading } = useMessages(conversationId || '');
+  const { messages, isLoading, rawCount } = useMessages(conversationId || '');
   const sendMessage = useSendMessage();
   const [text, setText] = useState('');
   const [showCoinTransfer, setShowCoinTransfer] = useState(false);
@@ -125,10 +125,14 @@ export default function ChatView() {
       reply_to_id: replyToId,
     }]);
 
-    // Keep keyboard open on mobile by refocusing
+    // Keep keyboard open on mobile by refocusing immediately + delayed
+    textareaRef.current?.focus();
     requestAnimationFrame(() => {
       textareaRef.current?.focus();
     });
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 50);
 
     try {
       await sendMessage.mutateAsync({
@@ -211,7 +215,7 @@ export default function ChatView() {
 
         {/* Messages area */}
         <div className="flex-1 overscroll-contain overflow-y-auto px-3 py-4 space-y-3 scrollbar-hide">
-          {isLoading ? (
+          {isLoading || (rawCount > 0 && messages.length === 0) ? (
             <div className="flex justify-center py-8">
               <Loader2 className="w-5 h-5 animate-spin text-primary" />
             </div>
@@ -345,6 +349,15 @@ export default function ChatView() {
               value={text}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
+              onBlur={(e) => {
+                // Prevent keyboard dismiss on mobile when sending
+                if (sendMessage.isPending) {
+                  e.preventDefault();
+                  e.target.focus();
+                }
+              }}
+              inputMode="text"
+              enterKeyHint="send"
               className="flex-1 rounded-2xl bg-secondary border-0 focus-visible:ring-1 resize-none min-h-[38px] max-h-[120px] py-2 px-3.5 text-sm"
               maxLength={2000}
               rows={1}
