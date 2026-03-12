@@ -211,7 +211,7 @@ export default function ChatView() {
 
         {/* Messages area */}
         <div className="flex-1 overscroll-contain overflow-y-auto px-3 py-4 space-y-3 scrollbar-hide">
-          {isLoading ? (
+          {isLoading || (rawCount > 0 && messages.length === 0) ? (
             <div className="flex justify-center py-8">
               <Loader2 className="w-5 h-5 animate-spin text-primary" />
             </div>
