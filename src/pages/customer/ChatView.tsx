@@ -87,9 +87,22 @@ export default function ChatView() {
     markAsRead();
   }, [markAsRead]);
 
+  // Optimistic messages for instant display
+  const [optimisticMessages, setOptimisticMessages] = useState<Array<{
+    id: string; text: string; created_at: string; sender_id: string; reply_to_id: string | null;
+  }>>([]);
+
+  const hasScrolledRef = useRef(false);
+
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isOtherTyping]);
+    if (!messages.length && !optimisticMessages.length) return;
+    if (!hasScrolledRef.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
+      hasScrolledRef.current = true;
+    } else {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isOtherTyping, optimisticMessages]);
 
   const handleSend = async () => {
     if (!text.trim() || !recipientPublicKey || !senderPublicKey || !conversationId) return;
@@ -101,13 +114,34 @@ export default function ChatView() {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
-    await sendMessage.mutateAsync({
-      conversationId,
-      recipientPublicKey,
-      senderPublicKey,
-      plaintext: msgText,
-      replyToId,
+
+    // Add optimistic message immediately
+    const optimisticId = `optimistic-${Date.now()}`;
+    setOptimisticMessages(prev => [...prev, {
+      id: optimisticId,
+      text: msgText,
+      created_at: new Date().toISOString(),
+      sender_id: user!.id,
+      reply_to_id: replyToId,
+    }]);
+
+    // Keep keyboard open on mobile by refocusing
+    requestAnimationFrame(() => {
+      textareaRef.current?.focus();
     });
+
+    try {
+      await sendMessage.mutateAsync({
+        conversationId,
+        recipientPublicKey,
+        senderPublicKey,
+        plaintext: msgText,
+        replyToId,
+      });
+    } finally {
+      // Remove optimistic message once real one arrives
+      setOptimisticMessages(prev => prev.filter(m => m.id !== optimisticId));
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -181,37 +215,61 @@ export default function ChatView() {
             <div className="flex justify-center py-8">
               <Loader2 className="w-5 h-5 animate-spin text-primary" />
             </div>
-          ) : messages.length === 0 ? (
+          ) : messages.length === 0 && optimisticMessages.length === 0 ? (
             <div className="text-center py-12">
               <Lock className="w-8 h-8 mx-auto text-muted-foreground/30 mb-2" />
               <p className="text-sm text-muted-foreground">Send your first encrypted message</p>
             </div>
           ) : (
-            messages.map((msg, idx) => {
-              const replyToData = (msg as any).reply_to_id ? messageMap.get((msg as any).reply_to_id) : null;
-              const msgDate = new Date(msg.created_at).toDateString();
-              const prevDate = idx > 0 ? new Date(messages[idx - 1].created_at).toDateString() : null;
-              const showDate = idx === 0 || msgDate !== prevDate;
-              return (
-                <div key={msg.id}>
-                  {showDate && <DateSeparator date={msg.created_at} />}
-                  <MessageBubble
-                    messageId={msg.id}
-                    isOwn={msg.sender_id === user?.id}
-                    text={msg.decrypted || '🔒'}
-                    time={msg.created_at}
-                    deliveredAt={msg.delivered_at}
-                    readAt={msg.read_at}
-                    reactions={reactions.filter((r) => r.message_id === msg.id)}
-                    currentUserId={user?.id || ''}
-                    onToggleReaction={handleToggleReaction}
-                    onReply={handleReply}
-                    replyToText={replyToData?.text || null}
-                    replyToIsOwn={replyToData ? replyToData.senderId === user?.id : undefined}
-                  />
-                </div>
-              );
-            })
+            <>
+              {messages.map((msg, idx) => {
+                const replyToData = (msg as any).reply_to_id ? messageMap.get((msg as any).reply_to_id) : null;
+                const msgDate = new Date(msg.created_at).toDateString();
+                const prevDate = idx > 0 ? new Date(messages[idx - 1].created_at).toDateString() : null;
+                const showDate = idx === 0 || msgDate !== prevDate;
+                return (
+                  <div key={msg.id}>
+                    {showDate && <DateSeparator date={msg.created_at} />}
+                    <MessageBubble
+                      messageId={msg.id}
+                      isOwn={msg.sender_id === user?.id}
+                      text={msg.decrypted || '🔒'}
+                      time={msg.created_at}
+                      deliveredAt={msg.delivered_at}
+                      readAt={msg.read_at}
+                      reactions={reactions.filter((r) => r.message_id === msg.id)}
+                      currentUserId={user?.id || ''}
+                      onToggleReaction={handleToggleReaction}
+                      onReply={handleReply}
+                      replyToText={replyToData?.text || null}
+                      replyToIsOwn={replyToData ? replyToData.senderId === user?.id : undefined}
+                    />
+                  </div>
+                );
+              })}
+              {/* Optimistic messages - shown instantly before server confirms */}
+              {optimisticMessages.map((msg) => {
+                const replyToData = msg.reply_to_id ? messageMap.get(msg.reply_to_id) : null;
+                return (
+                  <div key={msg.id}>
+                    <MessageBubble
+                      messageId={msg.id}
+                      isOwn={true}
+                      text={msg.text}
+                      time={msg.created_at}
+                      deliveredAt={null}
+                      readAt={null}
+                      reactions={[]}
+                      currentUserId={user?.id || ''}
+                      onToggleReaction={handleToggleReaction}
+                      onReply={handleReply}
+                      replyToText={replyToData?.text || null}
+                      replyToIsOwn={replyToData ? replyToData.senderId === user?.id : undefined}
+                    />
+                  </div>
+                );
+              })}
+            </>
           )}
           {isOtherTyping && <TypingIndicator />}
           <div ref={messagesEndRef} />
