@@ -87,6 +87,11 @@ export default function ChatView() {
     markAsRead();
   }, [markAsRead]);
 
+  // Optimistic messages for instant display
+  const [optimisticMessages, setOptimisticMessages] = useState<Array<{
+    id: string; text: string; created_at: string; sender_id: string; reply_to_id: string | null;
+  }>>([]);
+
   const hasScrolledRef = useRef(false);
 
   useEffect(() => {
@@ -98,11 +103,6 @@ export default function ChatView() {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isOtherTyping, optimisticMessages]);
-
-  // Optimistic messages for instant display
-  const [optimisticMessages, setOptimisticMessages] = useState<Array<{
-    id: string; text: string; created_at: string; sender_id: string; reply_to_id: string | null;
-  }>>([]);
 
   const handleSend = async () => {
     if (!text.trim() || !recipientPublicKey || !senderPublicKey || !conversationId) return;
