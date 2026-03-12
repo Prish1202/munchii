@@ -278,7 +278,7 @@ export function useMessages(conversationId: string) {
     enabled: !!conversationId,
   });
 
-  return { ...query, messages: decryptedMessages };
+  return { ...query, messages: decryptedMessages, rawCount: query.data?.length ?? 0 };
 }
 
 export function useSendMessage() {
