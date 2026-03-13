@@ -1,5 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
-import { cn } from '@/lib/utils';
+import { useState, useEffect } from 'react';
 
 interface BurstEmoji {
   id: number;
@@ -9,41 +8,51 @@ interface BurstEmoji {
   scale: number;
   rotation: number;
   delay: number;
-  side: 'left' | 'right';
+  offsetX: number;
+  offsetY: number;
 }
 
 interface EmojiBurstProps {
   emoji: string;
-  trigger: number; // increment to trigger
-  containerRef?: React.RefObject<HTMLDivElement>;
+  trigger: number;
+  originX?: number; // center X in viewport px
+  originY?: number; // center Y in viewport px
 }
 
-export function EmojiBurst({ emoji, trigger }: EmojiBurstProps) {
+export function EmojiBurst({ emoji, trigger, originX, originY }: EmojiBurstProps) {
   const [bursts, setBursts] = useState<BurstEmoji[]>([]);
 
   useEffect(() => {
     if (trigger <= 0) return;
 
-    const count = 12 + Math.floor(Math.random() * 8);
-    const newBursts: BurstEmoji[] = Array.from({ length: count }, (_, i) => ({
-      id: Date.now() + i,
-      emoji,
-      x: 10 + Math.random() * 80,
-      y: 20 + Math.random() * 60,
-      scale: 0.6 + Math.random() * 1.2,
-      rotation: -30 + Math.random() * 60,
-      delay: Math.random() * 400,
-      side: Math.random() > 0.5 ? 'left' : 'right',
-    }));
+    const cx = originX ?? window.innerWidth / 2;
+    const cy = originY ?? window.innerHeight / 2;
+
+    const count = 14 + Math.floor(Math.random() * 6);
+    const newBursts: BurstEmoji[] = Array.from({ length: count }, (_, i) => {
+      const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.5;
+      const dist = 60 + Math.random() * 120;
+      return {
+        id: Date.now() + i,
+        emoji,
+        x: cx,
+        y: cy,
+        scale: 0.7 + Math.random() * 0.8,
+        rotation: -40 + Math.random() * 80,
+        delay: Math.random() * 200,
+        offsetX: Math.cos(angle) * dist,
+        offsetY: Math.sin(angle) * dist - 40 - Math.random() * 60, // bias upward
+      };
+    });
 
     setBursts(prev => [...prev, ...newBursts]);
 
     const timer = setTimeout(() => {
       setBursts(prev => prev.filter(b => !newBursts.find(nb => nb.id === b.id)));
-    }, 2000);
+    }, 1800);
 
     return () => clearTimeout(timer);
-  }, [trigger, emoji]);
+  }, [trigger, emoji, originX, originY]);
 
   if (bursts.length === 0) return null;
 
@@ -54,13 +63,13 @@ export function EmojiBurst({ emoji, trigger }: EmojiBurstProps) {
           key={b.id}
           className="absolute animate-emoji-burst"
           style={{
-            left: `${b.x}%`,
-            top: `${b.y}%`,
-            fontSize: `${b.scale * 2}rem`,
+            left: `${b.x}px`,
+            top: `${b.y}px`,
+            fontSize: `${b.scale * 1.8}rem`,
             animationDelay: `${b.delay}ms`,
             '--burst-rotation': `${b.rotation}deg`,
-            '--burst-x': `${b.side === 'left' ? -20 - Math.random() * 40 : 20 + Math.random() * 40}px`,
-            '--burst-y': `${-60 - Math.random() * 100}px`,
+            '--burst-x': `${b.offsetX}px`,
+            '--burst-y': `${b.offsetY}px`,
           } as React.CSSProperties}
         >
           {b.emoji}

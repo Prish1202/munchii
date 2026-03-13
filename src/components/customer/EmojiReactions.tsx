@@ -1,20 +1,22 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 
 const QUICK_EMOJIS = ['❤️', '😂', '👍', '😮', '😢', '🔥'];
 
 interface EmojiReactionPickerProps {
   onSelect: (emoji: string) => void;
+  onLongPress?: (emoji: string) => void;
   onClose: () => void;
 }
 
-export function EmojiReactionPicker({ onSelect, onClose }: EmojiReactionPickerProps) {
+export function EmojiReactionPicker({ onSelect, onLongPress, onClose }: EmojiReactionPickerProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressTriggeredRef = useRef(false);
 
   useEffect(() => {
-    // Trigger entrance animation
     requestAnimationFrame(() => setVisible(true));
   }, []);
 
@@ -29,13 +31,42 @@ export function EmojiReactionPicker({ onSelect, onClose }: EmojiReactionPickerPr
   }, [onClose]);
 
   const handleSelect = (emoji: string) => {
+    // If long press was triggered, don't fire normal select
+    if (longPressTriggeredRef.current) {
+      longPressTriggeredRef.current = false;
+      return;
+    }
     setSelectedEmoji(emoji);
-    // Wait for pop animation to finish
     setTimeout(() => {
       onSelect(emoji);
       onClose();
     }, 300);
   };
+
+  const handlePointerDown = useCallback((emoji: string) => {
+    longPressTriggeredRef.current = false;
+    longPressTimerRef.current = setTimeout(() => {
+      longPressTriggeredRef.current = true;
+      setSelectedEmoji(emoji);
+      if (navigator.vibrate) navigator.vibrate(30);
+      onLongPress?.(emoji);
+      setTimeout(() => onClose(), 400);
+    }, 2000);
+  }, [onLongPress, onClose]);
+
+  const handlePointerUp = useCallback(() => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  }, []);
+
+  const handlePointerLeave = useCallback(() => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  }, []);
 
   return (
     <div
@@ -51,8 +82,12 @@ export function EmojiReactionPicker({ onSelect, onClose }: EmojiReactionPickerPr
         <button
           key={emoji}
           onClick={() => handleSelect(emoji)}
+          onPointerDown={() => handlePointerDown(emoji)}
+          onPointerUp={handlePointerUp}
+          onPointerLeave={handlePointerLeave}
+          onContextMenu={(e) => e.preventDefault()}
           className={cn(
-            'text-xl p-1 rounded-full transition-all duration-200 hover:bg-accent/50',
+            'text-xl p-1 rounded-full transition-all duration-200 hover:bg-accent/50 select-none',
             'emoji-reaction-btn',
             selectedEmoji === emoji && 'animate-emoji-pop'
           )}

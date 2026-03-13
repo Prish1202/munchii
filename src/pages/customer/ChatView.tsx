@@ -33,6 +33,7 @@ export default function ChatView() {
   const [replyTo, setReplyTo] = useState<{ id: string; text: string } | null>(null);
   const [burstEmoji, setBurstEmoji] = useState('');
   const [burstTrigger, setBurstTrigger] = useState(0);
+  const [burstOrigin, setBurstOrigin] = useState<{ x: number; y: number } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { data: wallet } = useWallet();
@@ -108,12 +109,34 @@ export default function ChatView() {
   // Remove optimistic messages once the real message appears in the decrypted list
   useEffect(() => {
     if (optimisticMessages.length === 0) return;
-    // Check if real messages now cover the optimistic ones (by matching text + sender)
     const realTexts = new Set(messages.filter(m => m.sender_id === user?.id).map(m => m.decrypted));
     setOptimisticMessages(prev =>
       prev.filter(opt => !realTexts.has(opt.text))
     );
   }, [messages]);
+
+  // ---- Real-time emoji burst via Supabase broadcast ----
+  useEffect(() => {
+    if (!conversationId) return;
+    const channel = supabase.channel(`emoji-burst-${conversationId}`);
+    channel.on('broadcast', { event: 'emoji-burst' }, (payload: any) => {
+      const { emoji, messageId, senderId } = payload.payload || {};
+      // Don't double-show for the sender (they already see it locally)
+      if (senderId === user?.id) return;
+      // Find the message element and get its position
+      const el = document.querySelector(`[data-message-id="${messageId}"]`);
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        setBurstOrigin({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+      } else {
+        setBurstOrigin(null);
+      }
+      setBurstEmoji(emoji);
+      setBurstTrigger(prev => prev + 1);
+    });
+    channel.subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [conversationId, user?.id]);
 
   const handleSend = async () => {
     if (!text.trim() || !recipientPublicKey || !senderPublicKey || !conversationId) return;
@@ -125,7 +148,6 @@ export default function ChatView() {
       textareaRef.current.style.height = 'auto';
     }
 
-    // Add optimistic message immediately — it stays until the real decrypted message appears
     setOptimisticMessages(prev => [...prev, {
       id: `optimistic-${Date.now()}`,
       text: msgText,
@@ -134,7 +156,6 @@ export default function ChatView() {
       reply_to_id: replyToId,
     }]);
 
-    // Keep keyboard open on mobile
     textareaRef.current?.focus();
     requestAnimationFrame(() => textareaRef.current?.focus());
     setTimeout(() => textareaRef.current?.focus(), 50);
@@ -148,7 +169,6 @@ export default function ChatView() {
         replyToId,
       });
     } catch {
-      // On failure remove the optimistic message
       setOptimisticMessages(prev => prev.filter(m => m.text !== msgText));
     }
   };
@@ -168,12 +188,40 @@ export default function ChatView() {
     ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
   };
 
+  // Normal click: just toggle reaction, no animation
   const handleToggleReaction = useCallback((messageId: string, emoji: string) => {
     toggleReaction.mutate({ messageId, emoji });
-    // Trigger emoji burst animation
+  }, [toggleReaction]);
+
+  // Long press (2s): toggle reaction + burst animation + broadcast to other user
+  const handleBurstReaction = useCallback((messageId: string, emoji: string) => {
+    // Find message element position for local burst
+    const el = document.querySelector(`[data-message-id="${messageId}"]`);
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      setBurstOrigin({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+    } else {
+      setBurstOrigin(null);
+    }
     setBurstEmoji(emoji);
     setBurstTrigger(prev => prev + 1);
-  }, [toggleReaction]);
+
+    // Broadcast to other user
+    if (conversationId) {
+      const channel = supabase.channel(`emoji-burst-${conversationId}`);
+      channel.subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          channel.send({
+            type: 'broadcast',
+            event: 'emoji-burst',
+            payload: { emoji, messageId, senderId: user?.id },
+          });
+          // Clean up after sending
+          setTimeout(() => supabase.removeChannel(channel), 1000);
+        }
+      });
+    }
+  }, [conversationId, user?.id]);
 
   const handleReply = (messageId: string, messageText: string) => {
     setReplyTo({ id: messageId, text: messageText });
@@ -182,7 +230,12 @@ export default function ChatView() {
 
   return (
     <E2EEKeySetup>
-      <EmojiBurst emoji={burstEmoji} trigger={burstTrigger} />
+      <EmojiBurst
+        emoji={burstEmoji}
+        trigger={burstTrigger}
+        originX={burstOrigin?.x}
+        originY={burstOrigin?.y}
+      />
       <motion.div
         className="fixed inset-0 z-50 flex flex-col bg-background overflow-hidden"
         initial={{ x: '100%' }}
@@ -255,6 +308,7 @@ export default function ChatView() {
                       reactions={reactions.filter((r) => r.message_id === msg.id)}
                       currentUserId={user?.id || ''}
                       onToggleReaction={handleToggleReaction}
+                      onBurstReaction={handleBurstReaction}
                       onReply={handleReply}
                       replyToText={replyToData?.text || null}
                       replyToIsOwn={replyToData ? replyToData.senderId === user?.id : undefined}
@@ -262,7 +316,6 @@ export default function ChatView() {
                   </div>
                 );
               })}
-              {/* Optimistic messages - shown instantly before server confirms */}
               {optimisticMessages.map((msg) => {
                 const replyToData = msg.reply_to_id ? messageMap.get(msg.reply_to_id) : null;
                 return (
@@ -277,6 +330,7 @@ export default function ChatView() {
                       reactions={[]}
                       currentUserId={user?.id || ''}
                       onToggleReaction={handleToggleReaction}
+                      onBurstReaction={handleBurstReaction}
                       onReply={handleReply}
                       replyToText={replyToData?.text || null}
                       replyToIsOwn={replyToData ? replyToData.senderId === user?.id : undefined}
@@ -361,7 +415,6 @@ export default function ChatView() {
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               onBlur={(e) => {
-                // Prevent keyboard dismiss on mobile when sending
                 if (sendMessage.isPending) {
                   e.preventDefault();
                   e.target.focus();
