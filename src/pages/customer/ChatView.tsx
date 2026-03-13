@@ -20,6 +20,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { ChatCoinTransfer } from '@/components/customer/ChatCoinTransfer';
 import { EmojiBurst } from '@/components/customer/EmojiBurst';
+import { motion } from 'framer-motion';
 
 export default function ChatView() {
   const { conversationId } = useParams<{ conversationId: string }>();
@@ -104,35 +105,39 @@ export default function ChatView() {
     }
   }, [messages, isOtherTyping, optimisticMessages]);
 
+  // Remove optimistic messages once the real message appears in the decrypted list
+  useEffect(() => {
+    if (optimisticMessages.length === 0) return;
+    // Check if real messages now cover the optimistic ones (by matching text + sender)
+    const realTexts = new Set(messages.filter(m => m.sender_id === user?.id).map(m => m.decrypted));
+    setOptimisticMessages(prev =>
+      prev.filter(opt => !realTexts.has(opt.text))
+    );
+  }, [messages]);
+
   const handleSend = async () => {
     if (!text.trim() || !recipientPublicKey || !senderPublicKey || !conversationId) return;
     const msgText = text.trim();
     const replyToId = replyTo?.id || null;
     setText('');
     setReplyTo(null);
-    // Reset textarea height
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
 
-    // Add optimistic message immediately
-    const optimisticId = `optimistic-${Date.now()}`;
+    // Add optimistic message immediately — it stays until the real decrypted message appears
     setOptimisticMessages(prev => [...prev, {
-      id: optimisticId,
+      id: `optimistic-${Date.now()}`,
       text: msgText,
       created_at: new Date().toISOString(),
       sender_id: user!.id,
       reply_to_id: replyToId,
     }]);
 
-    // Keep keyboard open on mobile by refocusing immediately + delayed
+    // Keep keyboard open on mobile
     textareaRef.current?.focus();
-    requestAnimationFrame(() => {
-      textareaRef.current?.focus();
-    });
-    setTimeout(() => {
-      textareaRef.current?.focus();
-    }, 50);
+    requestAnimationFrame(() => textareaRef.current?.focus());
+    setTimeout(() => textareaRef.current?.focus(), 50);
 
     try {
       await sendMessage.mutateAsync({
@@ -142,11 +147,9 @@ export default function ChatView() {
         plaintext: msgText,
         replyToId,
       });
-      // Small delay before removing optimistic message to let the real message
-      // appear in the query cache first, preventing a flash/gap
-      await new Promise(r => setTimeout(r, 300));
-    } finally {
-      setOptimisticMessages(prev => prev.filter(m => m.id !== optimisticId));
+    } catch {
+      // On failure remove the optimistic message
+      setOptimisticMessages(prev => prev.filter(m => m.text !== msgText));
     }
   };
 
@@ -180,12 +183,18 @@ export default function ChatView() {
   return (
     <E2EEKeySetup>
       <EmojiBurst emoji={burstEmoji} trigger={burstTrigger} />
-      <div className="fixed inset-0 z-50 flex flex-col bg-background overflow-hidden">
+      <motion.div
+        className="fixed inset-0 z-50 flex flex-col bg-background overflow-hidden"
+        initial={{ x: '100%' }}
+        animate={{ x: 0 }}
+        exit={{ x: '100%' }}
+        transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+      >
         {/* Chat header */}
         <header className="flex items-center gap-3 px-3 py-2.5 border-b border-border bg-card/80 backdrop-blur-lg safe-area-top shrink-0">
           <button
             onClick={() => navigate('/customer/messages')}
-            className="p-1.5 -ml-1 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            className="p-1.5 -ml-1 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors active:scale-95"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -378,7 +387,7 @@ export default function ChatView() {
             </Button>
           </div>
         )}
-      </div>
+      </motion.div>
     </E2EEKeySetup>
   );
 }

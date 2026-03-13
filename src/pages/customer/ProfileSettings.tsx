@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile, useUpdateProfile } from '@/hooks/useProfile';
@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ArrowLeft, Camera, Save, Loader2 } from 'lucide-react';
+import { ArrowLeft, Camera, Save, Loader2, Check, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
@@ -28,6 +28,8 @@ export default function ProfileSettings() {
     phone: '',
   });
   const [initialized, setInitialized] = useState(false);
+  const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
+  const usernameTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Init form when profile loads
   if (profile && !initialized) {
@@ -40,6 +42,32 @@ export default function ProfileSettings() {
     });
     setInitialized(true);
   }
+
+  const checkUsername = useCallback(async (username: string) => {
+    if (!username || username === profile?.username) {
+      setUsernameStatus('idle');
+      return;
+    }
+    if (username.length < 3) {
+      setUsernameStatus('idle');
+      return;
+    }
+    setUsernameStatus('checking');
+    const { data } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('username', username)
+      .neq('id', user?.id || '')
+      .maybeSingle();
+    setUsernameStatus(data ? 'taken' : 'available');
+  }, [profile?.username, user?.id]);
+
+  const handleUsernameChange = (value: string) => {
+    const cleaned = value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+    setForm(p => ({ ...p, username: cleaned }));
+    if (usernameTimerRef.current) clearTimeout(usernameTimerRef.current);
+    usernameTimerRef.current = setTimeout(() => checkUsername(cleaned), 400);
+  };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -161,12 +189,25 @@ export default function ProfileSettings() {
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Username</label>
-            <Input
-              value={form.username}
-              onChange={e => setForm(p => ({ ...p, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '') }))}
-              placeholder="@username"
-              className="rounded-xl"
-            />
+            <div className="relative">
+              <Input
+                value={form.username}
+                onChange={e => handleUsernameChange(e.target.value)}
+                placeholder="@username"
+                className={`rounded-xl pr-9 ${usernameStatus === 'taken' ? 'border-destructive focus-visible:ring-destructive' : usernameStatus === 'available' ? 'border-green-500 focus-visible:ring-green-500' : ''}`}
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                {usernameStatus === 'checking' && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
+                {usernameStatus === 'available' && <Check className="w-4 h-4 text-green-500" />}
+                {usernameStatus === 'taken' && <X className="w-4 h-4 text-destructive" />}
+              </div>
+            </div>
+            {usernameStatus === 'taken' && (
+              <p className="text-[11px] text-destructive">Username not available</p>
+            )}
+            {usernameStatus === 'available' && (
+              <p className="text-[11px] text-green-500">Username available!</p>
+            )}
           </div>
 
           <div className="space-y-1.5">
@@ -205,7 +246,7 @@ export default function ProfileSettings() {
           <Button
             onClick={handleSave}
             className="w-full gradient-primary border-0 rounded-xl"
-            disabled={updateProfile.isPending}
+            disabled={updateProfile.isPending || usernameStatus === 'taken'}
           >
             {updateProfile.isPending ? (
               <Loader2 className="w-4 h-4 animate-spin mr-2" />
