@@ -101,6 +101,9 @@ export default function PublicProfile() {
             {profile.username && (
               <p className="text-sm text-muted-foreground">@{profile.username}</p>
             )}
+            {(profile as any).bio && (
+              <p className="text-sm mt-1.5">{(profile as any).bio}</p>
+            )}
             {profile.campus && (
               <Badge variant="secondary" className="mt-1.5 text-xs">🎓 {profile.campus}</Badge>
             )}

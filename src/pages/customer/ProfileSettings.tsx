@@ -246,7 +246,7 @@ export default function ProfileSettings() {
           <Button
             onClick={handleSave}
             className="w-full gradient-primary border-0 rounded-xl"
-            disabled={updateProfile.isPending}
+            disabled={updateProfile.isPending || usernameStatus === 'taken'}
           >
             {updateProfile.isPending ? (
               <Loader2 className="w-4 h-4 animate-spin mr-2" />
