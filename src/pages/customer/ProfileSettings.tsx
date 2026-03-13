@@ -28,6 +28,8 @@ export default function ProfileSettings() {
     phone: '',
   });
   const [initialized, setInitialized] = useState(false);
+  const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
+  const usernameTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Init form when profile loads
   if (profile && !initialized) {
@@ -40,6 +42,32 @@ export default function ProfileSettings() {
     });
     setInitialized(true);
   }
+
+  const checkUsername = useCallback(async (username: string) => {
+    if (!username || username === profile?.username) {
+      setUsernameStatus('idle');
+      return;
+    }
+    if (username.length < 3) {
+      setUsernameStatus('idle');
+      return;
+    }
+    setUsernameStatus('checking');
+    const { data } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('username', username)
+      .neq('id', user?.id || '')
+      .maybeSingle();
+    setUsernameStatus(data ? 'taken' : 'available');
+  }, [profile?.username, user?.id]);
+
+  const handleUsernameChange = (value: string) => {
+    const cleaned = value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+    setForm(p => ({ ...p, username: cleaned }));
+    if (usernameTimerRef.current) clearTimeout(usernameTimerRef.current);
+    usernameTimerRef.current = setTimeout(() => checkUsername(cleaned), 400);
+  };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
