@@ -14,6 +14,7 @@ interface MessageBubbleProps {
   reactions: Array<{ emoji: string; user_id: string; id: string }>;
   currentUserId: string;
   onToggleReaction: (messageId: string, emoji: string) => void;
+  onBurstReaction?: (messageId: string, emoji: string) => void;
   onReply?: (messageId: string, text: string) => void;
   replyToText?: string | null;
   replyToIsOwn?: boolean;
@@ -100,7 +101,7 @@ function ReplyQuote({ text, isOwn }: { text: string; isOwn: boolean }) {
 
 export function MessageBubble({
   isOwn, text, time, messageId, deliveredAt, readAt,
-  reactions, currentUserId, onToggleReaction, onReply,
+  reactions, currentUserId, onToggleReaction, onBurstReaction, onReply,
   replyToText, replyToIsOwn,
 }: MessageBubbleProps) {
   const [showPicker, setShowPicker] = useState(false);
@@ -124,19 +125,17 @@ export function MessageBubble({
     const dx = e.touches[0].clientX - swipeRef.current.startX;
     const dy = e.touches[0].clientY - swipeRef.current.startY;
 
-    // If vertical movement is dominant, cancel swipe
     if (!swipeRef.current.swiping && Math.abs(dy) > Math.abs(dx)) {
       longPress.onTouchMove();
       return;
     }
 
-    // Only allow swiping in the reply direction (right for own messages shown on right, left for others)
-    const swipeDir = isOwn ? -1 : 1; // own: swipe left, other: swipe right
+    const swipeDir = isOwn ? -1 : 1;
     const progress = dx * swipeDir;
 
     if (progress > 10) {
       swipeRef.current.swiping = true;
-      longPress.onTouchMove(); // cancel long press
+      longPress.onTouchMove();
       const clamped = Math.min(progress, swipeThreshold + 20);
       setSwipeOffset(clamped * swipeDir);
     }
@@ -159,8 +158,21 @@ export function MessageBubble({
   const swipeActive = isMobile && swipeOffset !== 0;
   const replyIconOpacity = Math.min(Math.abs(swipeOffset) / swipeThreshold, 1);
 
+  const handleEmojiSelect = (emoji: string) => {
+    onToggleReaction(messageId, emoji);
+  };
+
+  const handleEmojiLongPress = (emoji: string) => {
+    // Long press = react + burst animation
+    onToggleReaction(messageId, emoji);
+    onBurstReaction?.(messageId, emoji);
+  };
+
   return (
-    <div className={cn('flex group relative', isOwn ? 'justify-end' : 'justify-start')}>
+    <div
+      className={cn('flex group relative', isOwn ? 'justify-end' : 'justify-start')}
+      data-message-id={messageId}
+    >
       {/* Reply icon indicator */}
       {isMobile && (
         <div
@@ -257,7 +269,8 @@ export function MessageBubble({
             isOwn ? 'right-0' : 'left-0'
           )}>
             <EmojiReactionPicker
-              onSelect={(emoji) => onToggleReaction(messageId, emoji)}
+              onSelect={handleEmojiSelect}
+              onLongPress={handleEmojiLongPress}
               onClose={() => setShowPicker(false)}
             />
           </div>
