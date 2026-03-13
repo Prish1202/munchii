@@ -105,35 +105,39 @@ export default function ChatView() {
     }
   }, [messages, isOtherTyping, optimisticMessages]);
 
+  // Remove optimistic messages once the real message appears in the decrypted list
+  useEffect(() => {
+    if (optimisticMessages.length === 0) return;
+    // Check if real messages now cover the optimistic ones (by matching text + sender)
+    const realTexts = new Set(messages.filter(m => m.sender_id === user?.id).map(m => m.decrypted));
+    setOptimisticMessages(prev =>
+      prev.filter(opt => !realTexts.has(opt.text))
+    );
+  }, [messages]);
+
   const handleSend = async () => {
     if (!text.trim() || !recipientPublicKey || !senderPublicKey || !conversationId) return;
     const msgText = text.trim();
     const replyToId = replyTo?.id || null;
     setText('');
     setReplyTo(null);
-    // Reset textarea height
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
 
-    // Add optimistic message immediately
-    const optimisticId = `optimistic-${Date.now()}`;
+    // Add optimistic message immediately — it stays until the real decrypted message appears
     setOptimisticMessages(prev => [...prev, {
-      id: optimisticId,
+      id: `optimistic-${Date.now()}`,
       text: msgText,
       created_at: new Date().toISOString(),
       sender_id: user!.id,
       reply_to_id: replyToId,
     }]);
 
-    // Keep keyboard open on mobile by refocusing immediately + delayed
+    // Keep keyboard open on mobile
     textareaRef.current?.focus();
-    requestAnimationFrame(() => {
-      textareaRef.current?.focus();
-    });
-    setTimeout(() => {
-      textareaRef.current?.focus();
-    }, 50);
+    requestAnimationFrame(() => textareaRef.current?.focus());
+    setTimeout(() => textareaRef.current?.focus(), 50);
 
     try {
       await sendMessage.mutateAsync({
@@ -143,11 +147,9 @@ export default function ChatView() {
         plaintext: msgText,
         replyToId,
       });
-      // Small delay before removing optimistic message to let the real message
-      // appear in the query cache first, preventing a flash/gap
-      await new Promise(r => setTimeout(r, 300));
-    } finally {
-      setOptimisticMessages(prev => prev.filter(m => m.id !== optimisticId));
+    } catch {
+      // On failure remove the optimistic message
+      setOptimisticMessages(prev => prev.filter(m => m.text !== msgText));
     }
   };
 
