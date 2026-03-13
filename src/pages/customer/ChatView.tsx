@@ -384,7 +384,7 @@ export default function ChatView() {
             </Button>
           </div>
         )}
-      </div>
+      </motion.div>
     </E2EEKeySetup>
   );
 }
