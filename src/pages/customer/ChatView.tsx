@@ -180,7 +180,13 @@ export default function ChatView() {
   return (
     <E2EEKeySetup>
       <EmojiBurst emoji={burstEmoji} trigger={burstTrigger} />
-      <div className="fixed inset-0 z-50 flex flex-col bg-background overflow-hidden">
+      <motion.div
+        className="fixed inset-0 z-50 flex flex-col bg-background overflow-hidden"
+        initial={{ x: '100%' }}
+        animate={{ x: 0 }}
+        exit={{ x: '100%' }}
+        transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+      >
         {/* Chat header */}
         <header className="flex items-center gap-3 px-3 py-2.5 border-b border-border bg-card/80 backdrop-blur-lg safe-area-top shrink-0">
           <button
