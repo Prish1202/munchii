@@ -20,6 +20,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { ChatCoinTransfer } from '@/components/customer/ChatCoinTransfer';
 import { EmojiBurst } from '@/components/customer/EmojiBurst';
+import { motion } from 'framer-motion';
 
 export default function ChatView() {
   const { conversationId } = useParams<{ conversationId: string }>();
