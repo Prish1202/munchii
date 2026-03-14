@@ -403,12 +403,60 @@ export type Database = {
           },
         ]
       }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          order_id: string
+          razorpay_order_id: string
+          razorpay_payment_id: string | null
+          razorpay_signature: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          id?: string
+          order_id: string
+          razorpay_order_id: string
+          razorpay_payment_id?: string | null
+          razorpay_signature?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          order_id?: string
+          razorpay_order_id?: string
+          razorpay_payment_id?: string | null
+          razorpay_signature?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payouts: {
         Row: {
           created_at: string
           id: string
           order_id: string
           platform_fee: number
+          razorpay_transfer_id: string | null
           restaurant_amount: number
         }
         Insert: {
@@ -416,6 +464,7 @@ export type Database = {
           id?: string
           order_id: string
           platform_fee: number
+          razorpay_transfer_id?: string | null
           restaurant_amount: number
         }
         Update: {
@@ -423,6 +472,7 @@ export type Database = {
           id?: string
           order_id?: string
           platform_fee?: number
+          razorpay_transfer_id?: string | null
           restaurant_amount?: number
         }
         Relationships: [
