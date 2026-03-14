@@ -36,7 +36,7 @@ export default function RestaurantOrderDetail() {
 
   const order = orders?.find(o => o.id === orderId);
   const config = order ? STATUS_CONFIG[order.status] : null;
-  const platformFee = 5;
+  const platformFee = 4;
   const itemTotal = order ? Math.max(Number(order.total_amount) - platformFee, 0) : 0;
   const isCOD = order?.payment_method === 'cod';
   const isNew = order?.status === 'placed';

@@ -126,7 +126,7 @@ export function useRestaurantOrders() {
     const newStatus = payload?.new?.status;
     if (newStatus === 'completed') {
       const amount = Number(payload.new.total_amount || 0);
-      const platformFee = 5;
+      const platformFee = 4;
       const itemTotal = Math.max(amount - platformFee, 0);
       const commission = Math.round(itemTotal * 0.10 * 100) / 100;
       const credited = Math.round((itemTotal - commission) * 100) / 100;
