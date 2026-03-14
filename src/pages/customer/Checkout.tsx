@@ -125,7 +125,7 @@ export default function Checkout() {
         // Initiate Razorpay payment
         initiatePayment({
           orderId: order.id,
-          userName: user?.user_metadata?.name,
+          userName: user?.name,
           userEmail: user?.email,
           userPhone: phone,
           onSuccess: (orderId) => {
