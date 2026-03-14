@@ -7,7 +7,8 @@ import { Separator } from '@/components/ui/separator';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCreateOrder } from '@/hooks/useOrders';
-import { ArrowLeft, Phone, CreditCard, Banknote, Wallet, Loader2, Coins, Clock3 } from 'lucide-react';
+import { useRazorpay } from '@/hooks/useRazorpay';
+import { ArrowLeft, Phone, CreditCard, Banknote, Loader2, Coins, Clock3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useWallet, useRedeemCoins } from '@/hooks/useWallet';
 import { format } from 'date-fns';
@@ -16,14 +17,13 @@ import { parseDateTimeLocalValue, toDateTimeLocalValue } from '@/lib/datetimeLoc
 
 const PAYMENT_METHODS = [
   { id: 'cod', label: 'Pay at Pickup', icon: Banknote },
-  { id: 'upi', label: 'UPI', icon: Wallet },
-  { id: 'card', label: 'Credit / Debit Card', icon: CreditCard },
+  { id: 'razorpay', label: 'Pay Online (UPI / Card)', icon: CreditCard },
 ];
 
 const MIN_PICKUP_LEAD_MINUTES = 5;
+const PLATFORM_FEE = 4;
 
 function getMinPickupDate(now = new Date()) {
-  // Enforce: selected pickup time must be >= (now + lead time), rounded UP to the next full minute.
   const minMs = now.getTime() + MIN_PICKUP_LEAD_MINUTES * 60_000;
   const d = new Date(minMs);
   const needsRoundUp = d.getSeconds() !== 0 || d.getMilliseconds() !== 0;
@@ -37,6 +37,7 @@ export default function Checkout() {
   const { user } = useAuth();
   const { items, restaurantId, restaurantName, totalAmount, clearCart } = useCart();
   const createOrder = useCreateOrder();
+  const { initiatePayment, isProcessing: isRazorpayProcessing } = useRazorpay();
 
   const { data: wallet } = useWallet();
   const redeemCoins = useRedeemCoins();
@@ -47,7 +48,6 @@ export default function Checkout() {
   const [isPlacing, setIsPlacing] = useState(false);
   const [useCoins, setUseCoins] = useState(false);
 
-  // Keep the min value "live" so the user cannot pick a time that becomes invalid while the page is open.
   const [minPickupValue, setMinPickupValue] = useState(() => toDateTimeLocalValue(getMinPickupDate()));
   useEffect(() => {
     const tick = () => setMinPickupValue(toDateTimeLocalValue(getMinPickupDate()));
@@ -64,10 +64,9 @@ export default function Checkout() {
     return selectedPickupDate.getTime() >= minPickupDate.getTime();
   }, [minPickupDate, pickupTime, selectedPickupDate]);
 
-  const platformFee = 5;
-  const subtotalWithFees = totalAmount + platformFee;
+  const subtotalWithFees = totalAmount + PLATFORM_FEE;
   const availableCoins = wallet?.total_coins || 0;
-  const maxCoinDiscount = Math.min(availableCoins, Math.floor(subtotalWithFees * 0.5)); // max 50% discount
+  const maxCoinDiscount = Math.min(availableCoins, Math.floor(subtotalWithFees * 0.5));
   const coinDiscount = useCoins ? maxCoinDiscount : 0;
   const grandTotal = subtotalWithFees - coinDiscount;
   const estimatedPoints = Math.round(totalAmount * 0.03);
@@ -75,21 +74,14 @@ export default function Checkout() {
   const canPlace = phone.trim().length >= 10 && items.length > 0 && isPickupTimeValid;
 
   const handlePickupTimeChange = (nextValue: string) => {
-    if (!nextValue) {
-      setPickupTime('');
-      return;
-    }
-
+    if (!nextValue) { setPickupTime(''); return; }
     const nextDate = parseDateTimeLocalValue(nextValue);
     const freshMin = getMinPickupDate();
-
     if (!nextDate || nextDate.getTime() < freshMin.getTime()) {
-      const clamped = toDateTimeLocalValue(freshMin);
-      setPickupTime(clamped);
+      setPickupTime(toDateTimeLocalValue(freshMin));
       toast.error(`Pickup time must be at least ${MIN_PICKUP_LEAD_MINUTES} minutes from now.`);
       return;
     }
-
     setPickupTime(nextValue);
   };
 
@@ -99,13 +91,11 @@ export default function Checkout() {
       return;
     }
 
-    // Re-check right before submit (covers the case where the user waits and the chosen time becomes "past").
     if (pickupTime) {
       const pickup = parseDateTimeLocalValue(pickupTime);
       const freshMin = getMinPickupDate();
       if (!pickup || pickup.getTime() < freshMin.getTime()) {
-        const clamped = toDateTimeLocalValue(freshMin);
-        setPickupTime(clamped);
+        setPickupTime(toDateTimeLocalValue(freshMin));
         toast.error(`Pickup time must be after ${format(freshMin, 'PPp')}.`);
         return;
       }
@@ -113,6 +103,7 @@ export default function Checkout() {
 
     setIsPlacing(true);
     try {
+      // Create order in DB with status 'placed'
       const order = await createOrder.mutateAsync({
         restaurantId,
         items: items.map((item) => ({
@@ -121,18 +112,41 @@ export default function Checkout() {
           price: item.price,
         })),
         totalAmount: grandTotal,
-        paymentMethod: payment,
+        paymentMethod: payment === 'razorpay' ? 'razorpay' : 'cod',
         pickupTime: pickupTime ? new Date(pickupTime).toISOString() : undefined,
       });
+
+      // Redeem coins if applicable
       if (coinDiscount > 0) {
         await redeemCoins.mutateAsync({ coins: coinDiscount, orderId: order.id });
       }
-      clearCart();
-      navigate(`/customer/order-success/${order.id}`);
+
+      if (payment === 'razorpay') {
+        // Initiate Razorpay payment
+        initiatePayment({
+          orderId: order.id,
+          userName: user?.name,
+          userEmail: user?.email,
+          userPhone: phone,
+          onSuccess: (orderId) => {
+            clearCart();
+            navigate(`/customer/order-success/${orderId}`);
+          },
+          onFailure: () => {
+            setIsPlacing(false);
+            // Order stays in 'placed' status - user can retry
+            toast.error('Payment failed. You can retry from your orders page.');
+          },
+        });
+      } else {
+        // COD flow - go directly to success
+        clearCart();
+        navigate(`/customer/order-success/${order.id}`);
+      }
     } catch {
       // error handled by hook
     } finally {
-      setIsPlacing(false);
+      if (payment !== 'razorpay') setIsPlacing(false);
     }
   };
 
@@ -148,6 +162,8 @@ export default function Checkout() {
       </DashboardLayout>
     );
   }
+
+  const busy = isPlacing || isRazorpayProcessing;
 
   return (
     <DashboardLayout>
@@ -248,9 +264,9 @@ export default function Checkout() {
               <div className="flex items-center gap-3">
                 <Coins className={cn('w-5 h-5', useCoins ? 'text-primary' : 'text-muted-foreground')} />
                 <div className="text-left">
-                  <span className="text-sm font-medium">Use {maxCoinDiscount} coins</span>
+                  <span className="text-sm font-medium">Use {maxCoinDiscount} points</span>
                   <p className="text-xs text-muted-foreground">
-                    Save ₹{maxCoinDiscount} · Balance: {availableCoins} coins
+                    Save ₹{maxCoinDiscount} · Balance: {availableCoins} pts
                   </p>
                 </div>
               </div>
@@ -265,7 +281,6 @@ export default function Checkout() {
         )}
 
         {/* Order summary */}
-
         <section className="bg-card rounded-2xl border border-border p-4 space-y-3">
           <h3 className="text-sm font-semibold">Order Summary — {restaurantName}</h3>
           <div className="space-y-2 text-sm">
@@ -286,7 +301,7 @@ export default function Checkout() {
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Platform Fee</span>
-              <span>₹{platformFee}</span>
+              <span>₹{PLATFORM_FEE}</span>
             </div>
             {pickupTime && (
               <div className="flex justify-between">
@@ -297,7 +312,7 @@ export default function Checkout() {
           </div>
           {coinDiscount > 0 && (
             <div className="flex justify-between text-primary">
-              <span className="text-muted-foreground">Coin Discount</span>
+              <span className="text-muted-foreground">Points Discount</span>
               <span>-₹{coinDiscount}</span>
             </div>
           )}
@@ -318,11 +333,14 @@ export default function Checkout() {
 
         {/* Place order */}
         <div className="fixed bottom-16 md:bottom-4 left-0 right-0 p-4 md:left-64 z-40 bg-background/80 backdrop-blur-sm">
-          <Button className="w-full h-14 text-base rounded-2xl shadow-xl" onClick={handlePlaceOrder} disabled={isPlacing || !canPlace}>
-            {isPlacing ? (
+          <Button className="w-full h-14 text-base rounded-2xl shadow-xl" onClick={handlePlaceOrder} disabled={busy || !canPlace}>
+            {busy ? (
               <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" /> Placing Order...
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                {payment === 'razorpay' ? 'Processing Payment...' : 'Placing Order...'}
               </>
+            ) : payment === 'razorpay' ? (
+              `Pay ₹${grandTotal.toFixed(0)} Online`
             ) : (
               `Place Pickup Order • ₹${grandTotal.toFixed(0)}`
             )}

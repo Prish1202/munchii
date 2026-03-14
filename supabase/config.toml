@@ -2,3 +2,12 @@ project_id = "fvariumpdjqfajltqqrv"
 
 [functions.transfer-coins]
 verify_jwt = false
+
+[functions.create-razorpay-order]
+verify_jwt = false
+
+[functions.verify-razorpay-payment]
+verify_jwt = false
+
+[functions.transfer-restaurant-payout]
+verify_jwt = false

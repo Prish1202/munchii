@@ -8,7 +8,7 @@ import { ArrowLeft, Minus, Plus, Trash2, ShoppingCart, Store, Coins } from 'luci
 export default function Cart() {
   const { items, restaurantId, restaurantName, updateQuantity, removeItem, clearCart, totalAmount } = useCart();
 
-  const platformFee = 5;
+  const platformFee = 4;
   const grandTotal = totalAmount + platformFee;
   const estimatedPoints = Math.round(totalAmount * 0.03);
 
