@@ -1,8 +1,9 @@
 import { useState, useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { Check, CheckCheck, SmilePlus, Coins, Reply } from 'lucide-react';
+import { Check, CheckCheck, SmilePlus, Coins, Reply, Flag } from 'lucide-react';
 import { EmojiReactionPicker, ReactionBadges } from './EmojiReactions';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { ReportDialog } from './ReportDialog';
 
 interface MessageBubbleProps {
   isOwn: boolean;
