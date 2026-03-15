@@ -213,6 +213,13 @@ export default function PublicProfile() {
           <CoinTransfer availableCoins={wallet?.total_coins || 0} prefillUsername={profile.username || undefined} />
         </DialogContent>
       </Dialog>
+
+      {/* Report Dialog */}
+      <ReportDialog
+        open={showReport}
+        onOpenChange={setShowReport}
+        reportedUserId={userId}
+      />
     </DashboardLayout>
   );
 }
