@@ -68,7 +68,8 @@ export default function Checkout() {
   const subtotalWithFees = totalAmount + PLATFORM_FEE;
   const availableCoins = wallet?.total_coins || 0;
   const maxCoinDiscount = Math.min(availableCoins, Math.floor(subtotalWithFees * 0.5));
-  const coinDiscount = useCoins ? maxCoinDiscount : 0;
+  const parsedCoinInput = Math.min(Math.max(parseInt(coinInputValue) || 0, 0), maxCoinDiscount);
+  const coinDiscount = useCoins ? parsedCoinInput : 0;
   const grandTotal = subtotalWithFees - coinDiscount;
   const estimatedPoints = Math.round(totalAmount * 0.03);
 
