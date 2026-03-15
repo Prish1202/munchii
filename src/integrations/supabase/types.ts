@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      abuse_reports: {
+        Row: {
+          created_at: string
+          id: string
+          reason: string
+          report_type: string
+          reported_message_id: string | null
+          reported_user_id: string | null
+          reporter_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reason: string
+          report_type?: string
+          reported_message_id?: string | null
+          reported_user_id?: string | null
+          reporter_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reason?: string
+          report_type?: string
+          reported_message_id?: string | null
+          reported_user_id?: string | null
+          reporter_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       city_interests: {
         Row: {
           city: string
@@ -365,6 +401,7 @@ export type Database = {
           customer_id: string | null
           id: string
           payment_method: string
+          pickup_otp: string | null
           pickup_time: string | null
           restaurant_id: string | null
           status: Database["public"]["Enums"]["order_status"]
@@ -376,6 +413,7 @@ export type Database = {
           customer_id?: string | null
           id?: string
           payment_method?: string
+          pickup_otp?: string | null
           pickup_time?: string | null
           restaurant_id?: string | null
           status?: Database["public"]["Enums"]["order_status"]
@@ -387,6 +425,7 @@ export type Database = {
           customer_id?: string | null
           id?: string
           payment_method?: string
+          pickup_otp?: string | null
           pickup_time?: string | null
           restaurant_id?: string | null
           status?: Database["public"]["Enums"]["order_status"]
