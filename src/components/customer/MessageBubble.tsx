@@ -287,6 +287,15 @@ export function MessageBubble({
           </div>
         )}
       </div>
+
+      {/* Report dialog for message */}
+      {!isOwn && (
+        <ReportDialog
+          open={showReport}
+          onOpenChange={setShowReport}
+          reportedMessageId={messageId}
+        />
+      )}
     </div>
   );
 }

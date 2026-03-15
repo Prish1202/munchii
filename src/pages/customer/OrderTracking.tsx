@@ -137,12 +137,23 @@ export default function OrderTracking() {
           </p>
         </div>
 
-        {!isCancelled && (
-          <div className="bg-card rounded-2xl border border-border p-5">
-            <h3 className="font-display font-semibold text-sm mb-4">Order Progress</h3>
-            <OrderProgressBar status={order.status} />
+        {/* OTP Card - show when order is active (not completed/cancelled) */}
+        {!isCancelled && order.status !== 'completed' && (order as any).pickup_otp && (
+          <div className="bg-primary/5 border-2 border-primary/30 rounded-2xl p-5 text-center space-y-2">
+            <div className="flex items-center justify-center gap-2">
+              <KeyRound className="w-5 h-5 text-primary" />
+              <h3 className="font-display font-semibold text-sm text-primary">Pickup OTP</h3>
+            </div>
+            <p className="text-3xl font-display font-bold tracking-[0.3em] text-primary">
+              {(order as any).pickup_otp}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Share this code with the restaurant when you pick up your order
+            </p>
           </div>
         )}
+
+        {!isCancelled && (
 
         {!isCancelled && (
           <div className="bg-card rounded-2xl border border-border p-5">
