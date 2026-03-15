@@ -27,6 +27,7 @@ export default function PublicProfile() {
   const startConversation = useStartConversation();
   const { data: wallet } = useWallet();
   const [showShareCoins, setShowShareCoins] = useState(false);
+  const [showReport, setShowReport] = useState(false);
 
   const handleMessage = async () => {
     if (!userId) return;
