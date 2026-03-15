@@ -263,6 +263,15 @@ export function MessageBubble({
           >
             <SmilePlus className="w-3.5 h-3.5 text-muted-foreground" />
           </button>
+          {!isOwn && (
+            <button
+              onClick={() => setShowReport(true)}
+              className="bg-popover border border-border rounded-full p-1 shadow-sm hover:bg-destructive/10"
+              title="Report"
+            >
+              <Flag className="w-3.5 h-3.5 text-muted-foreground" />
+            </button>
+          )}
         </div>
 
         {showPicker && (
