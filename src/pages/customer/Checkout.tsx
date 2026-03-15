@@ -47,6 +47,7 @@ export default function Checkout() {
   const [pickupTime, setPickupTime] = useState('');
   const [isPlacing, setIsPlacing] = useState(false);
   const [useCoins, setUseCoins] = useState(false);
+  const [coinInputValue, setCoinInputValue] = useState('');
 
   const [minPickupValue, setMinPickupValue] = useState(() => toDateTimeLocalValue(getMinPickupDate()));
   useEffect(() => {
