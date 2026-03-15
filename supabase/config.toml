@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.transfer-restaurant-payout]
 verify_jwt = false
+
+[functions.send-abuse-report-email]
+verify_jwt = false

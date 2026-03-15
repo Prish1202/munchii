@@ -19,6 +19,7 @@ import {
   Clock,
   Wifi,
   WifiOff,
+  KeyRound,
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -135,6 +136,22 @@ export default function OrderTracking() {
             {formatDistanceToNow(new Date(order.created_at), { addSuffix: true })}
           </p>
         </div>
+
+        {/* OTP Card - show when order is active (not completed/cancelled) */}
+        {!isCancelled && order.status !== 'completed' && (order as any).pickup_otp && (
+          <div className="bg-primary/5 border-2 border-primary/30 rounded-2xl p-5 text-center space-y-2">
+            <div className="flex items-center justify-center gap-2">
+              <KeyRound className="w-5 h-5 text-primary" />
+              <h3 className="font-display font-semibold text-sm text-primary">Pickup OTP</h3>
+            </div>
+            <p className="text-3xl font-display font-bold tracking-[0.3em] text-primary">
+              {(order as any).pickup_otp}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Share this code with the restaurant when you pick up your order
+            </p>
+          </div>
+        )}
 
         {!isCancelled && (
           <div className="bg-card rounded-2xl border border-border p-5">

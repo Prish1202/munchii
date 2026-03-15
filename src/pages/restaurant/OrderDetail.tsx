@@ -5,17 +5,19 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
 import { useRestaurantOrders, useUpdateOrderStatus } from '@/hooks/useRestaurantOrders';
 import { OrderStatus } from '@/hooks/useOrders';
-import { ArrowLeft, Clock, User, Phone, Banknote, Wallet, CreditCard, ChefHat, ShoppingBag, Package, Check, X } from 'lucide-react';
+import { ArrowLeft, Clock, User, Phone, Banknote, Wallet, CreditCard, ChefHat, ShoppingBag, Package, Check, X, KeyRound, Loader2 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; nextStatus?: OrderStatus; nextLabel?: string }> = {
   placed: { label: 'New', color: 'bg-blue-500', nextStatus: 'accepted', nextLabel: 'Accept Order' },
   accepted: { label: 'Accepted', color: 'bg-indigo-500', nextStatus: 'preparing', nextLabel: 'Start Preparing' },
   preparing: { label: 'Preparing', color: 'bg-yellow-500', nextStatus: 'ready_for_pickup', nextLabel: 'Mark Ready for Pickup' },
-  ready_for_pickup: { label: 'Ready for Pickup', color: 'bg-orange-500', nextStatus: 'picked_up', nextLabel: 'Mark Picked Up' },
+  ready_for_pickup: { label: 'Ready for Pickup', color: 'bg-orange-500' },
   picked_up: { label: 'Picked Up', color: 'bg-purple-500' },
   completed: { label: 'Completed', color: 'bg-green-500' },
   cancelled: { label: 'Cancelled', color: 'bg-red-500' },
@@ -33,6 +35,8 @@ export default function RestaurantOrderDetail() {
   const { data: orders, isLoading } = useRestaurantOrders();
   const updateStatus = useUpdateOrderStatus();
   const [cashCollected, setCashCollected] = useState(false);
+  const [otpInput, setOtpInput] = useState('');
+  const [otpError, setOtpError] = useState(false);
 
   const order = orders?.find(o => o.id === orderId);
   const config = order ? STATUS_CONFIG[order.status] : null;
@@ -47,6 +51,17 @@ export default function RestaurantOrderDetail() {
   const handleUpdateStatus = (status: OrderStatus) => {
     if (!orderId) return;
     updateStatus.mutate({ orderId, status });
+  };
+
+  const handleOtpVerifyAndPickup = () => {
+    const orderOtp = (order as any)?.pickup_otp;
+    if (!orderOtp || otpInput !== orderOtp) {
+      setOtpError(true);
+      toast.error('Invalid OTP. Please check with the customer.');
+      return;
+    }
+    setOtpError(false);
+    handleUpdateStatus('picked_up');
   };
 
   if (isLoading) {
@@ -158,7 +173,45 @@ export default function RestaurantOrderDetail() {
           </CardContent>
         </Card>
 
-        {/* COD Cash Collection */}
+        {/* OTP Verification for Ready for Pickup */}
+        {isReadyForPickup && (
+          <Card className="border-primary/40">
+            <CardContent className="p-5 space-y-3">
+              <div className="flex items-center gap-2">
+                <KeyRound className="w-5 h-5 text-primary" />
+                <span className="font-semibold text-primary">Verify Customer OTP</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Ask the customer for their 4-digit pickup OTP to verify and complete the handover.
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={4}
+                  placeholder="Enter 4-digit OTP"
+                  value={otpInput}
+                  onChange={e => {
+                    setOtpInput(e.target.value.replace(/\D/g, '').slice(0, 4));
+                    setOtpError(false);
+                  }}
+                  className={`flex-1 text-center text-xl tracking-[0.3em] font-bold rounded-xl ${otpError ? 'border-destructive' : ''}`}
+                />
+                <Button
+                  onClick={handleOtpVerifyAndPickup}
+                  disabled={otpInput.length !== 4 || updateStatus.isPending}
+                  className="rounded-xl px-6"
+                >
+                  {updateStatus.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4 mr-1" />}
+                  Verify
+                </Button>
+              </div>
+              {otpError && <p className="text-xs text-destructive">Invalid OTP. Please try again.</p>}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* COD Cash Collection - only before OTP verify */}
         {isCOD && isReadyForPickup && (
           <Card className="border-amber-500">
             <CardContent className="p-4">
@@ -166,24 +219,15 @@ export default function RestaurantOrderDetail() {
                 <Banknote className="w-5 h-5 text-amber-600" />
                 <span className="font-semibold text-amber-800 dark:text-amber-300">Collect Cash: ₹{Number(order.total_amount).toFixed(0)}</span>
               </div>
-              <p className="text-xs text-muted-foreground mb-3">
+              <p className="text-xs text-muted-foreground">
                 Collect ₹{Number(order.total_amount).toFixed(0)} from customer (includes ₹{platformFee} platform fee). Your earning: ₹{itemTotal.toFixed(0)}
               </p>
-              {!cashCollected ? (
-                <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white" onClick={() => setCashCollected(true)} disabled={updateStatus.isPending}>
-                  <Banknote className="w-4 h-4 mr-2" /> Cash Collected
-                </Button>
-              ) : (
-                <Button className="w-full bg-green-600 hover:bg-green-700 text-white" onClick={() => handleUpdateStatus('picked_up')} disabled={updateStatus.isPending}>
-                  <Package className="w-4 h-4 mr-2" /> Complete Order (Picked Up)
-                </Button>
-              )}
             </CardContent>
           </Card>
         )}
 
         {/* Action Buttons */}
-        {!['picked_up', 'completed', 'cancelled'].includes(order.status) && (
+        {!['ready_for_pickup', 'picked_up', 'completed', 'cancelled'].includes(order.status) && (
           <div className="flex gap-3">
             {isNew ? (
               <>
@@ -194,11 +238,10 @@ export default function RestaurantOrderDetail() {
                   <Check className="w-4 h-4 mr-2" /> Accept
                 </Button>
               </>
-            ) : (isCOD && isReadyForPickup) ? null : config?.nextStatus ? (
+            ) : config?.nextStatus ? (
               <Button className="w-full bg-restaurant hover:bg-restaurant/90" onClick={() => handleUpdateStatus(config.nextStatus!)} disabled={updateStatus.isPending}>
                 {order.status === 'accepted' && <ChefHat className="w-4 h-4 mr-2" />}
                 {order.status === 'preparing' && <ShoppingBag className="w-4 h-4 mr-2" />}
-                {!isCOD && isReadyForPickup && <Package className="w-4 h-4 mr-2" />}
                 {config.nextLabel}
               </Button>
             ) : null}

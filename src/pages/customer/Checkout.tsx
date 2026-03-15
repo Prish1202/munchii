@@ -47,6 +47,7 @@ export default function Checkout() {
   const [pickupTime, setPickupTime] = useState('');
   const [isPlacing, setIsPlacing] = useState(false);
   const [useCoins, setUseCoins] = useState(false);
+  const [coinInputValue, setCoinInputValue] = useState('');
 
   const [minPickupValue, setMinPickupValue] = useState(() => toDateTimeLocalValue(getMinPickupDate()));
   useEffect(() => {
@@ -67,7 +68,8 @@ export default function Checkout() {
   const subtotalWithFees = totalAmount + PLATFORM_FEE;
   const availableCoins = wallet?.total_coins || 0;
   const maxCoinDiscount = Math.min(availableCoins, Math.floor(subtotalWithFees * 0.5));
-  const coinDiscount = useCoins ? maxCoinDiscount : 0;
+  const parsedCoinInput = Math.min(Math.max(parseInt(coinInputValue) || 0, 0), maxCoinDiscount);
+  const coinDiscount = useCoins ? parsedCoinInput : 0;
   const grandTotal = subtotalWithFees - coinDiscount;
   const estimatedPoints = Math.round(totalAmount * 0.03);
 
@@ -253,9 +255,13 @@ export default function Checkout() {
 
         {/* Coins Discount */}
         {availableCoins > 0 && (
-          <section className="bg-card rounded-2xl border border-border p-4">
+          <section className="bg-card rounded-2xl border border-border p-4 space-y-3">
             <button
-              onClick={() => setUseCoins(!useCoins)}
+              onClick={() => {
+                const next = !useCoins;
+                setUseCoins(next);
+                if (next && !coinInputValue) setCoinInputValue(String(maxCoinDiscount));
+              }}
               className={cn(
                 'w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-colors',
                 useCoins ? 'border-primary bg-primary/5' : 'border-border'
@@ -264,9 +270,9 @@ export default function Checkout() {
               <div className="flex items-center gap-3">
                 <Coins className={cn('w-5 h-5', useCoins ? 'text-primary' : 'text-muted-foreground')} />
                 <div className="text-left">
-                  <span className="text-sm font-medium">Use {maxCoinDiscount} points</span>
+                  <span className="text-sm font-medium">Use Points</span>
                   <p className="text-xs text-muted-foreground">
-                    Save ₹{maxCoinDiscount} · Balance: {availableCoins} pts
+                    Balance: {availableCoins} pts · Max: {maxCoinDiscount} pts (50% cap)
                   </p>
                 </div>
               </div>
@@ -277,6 +283,30 @@ export default function Checkout() {
                 )}
               />
             </button>
+            {useCoins && (
+              <div className="flex items-center gap-3 px-1">
+                <Input
+                  type="number"
+                  min={0}
+                  max={maxCoinDiscount}
+                  value={coinInputValue}
+                  onChange={e => setCoinInputValue(e.target.value)}
+                  placeholder={`Enter points (max ${maxCoinDiscount})`}
+                  className="flex-1 rounded-xl"
+                />
+                <button
+                  onClick={() => setCoinInputValue(String(maxCoinDiscount))}
+                  className="text-xs font-semibold text-primary hover:underline whitespace-nowrap"
+                >
+                  Use Max
+                </button>
+              </div>
+            )}
+            {useCoins && parsedCoinInput > 0 && (
+              <p className="text-xs text-primary font-medium px-1">
+                Saving ₹{parsedCoinInput} with {parsedCoinInput} points
+              </p>
+            )}
           </section>
         )}
 

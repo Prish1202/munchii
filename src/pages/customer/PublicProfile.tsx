@@ -11,8 +11,9 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { CoinTransfer } from '@/components/customer/CoinTransfer';
 import { useWallet } from '@/hooks/useWallet';
-import { ShoppingBag, UserPlus, UserMinus, Loader2, MessageSquare, Send, Grid3x3, Sparkles } from 'lucide-react';
+import { ShoppingBag, UserPlus, UserMinus, Loader2, MessageSquare, Send, Grid3x3, Sparkles, Flag } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { ReportDialog } from '@/components/customer/ReportDialog';
 
 export default function PublicProfile() {
   const { userId } = useParams<{ userId: string }>();
@@ -26,6 +27,7 @@ export default function PublicProfile() {
   const startConversation = useStartConversation();
   const { data: wallet } = useWallet();
   const [showShareCoins, setShowShareCoins] = useState(false);
+  const [showReport, setShowReport] = useState(false);
 
   const handleMessage = async () => {
     if (!userId) return;
@@ -142,6 +144,14 @@ export default function PublicProfile() {
                   </Button>
                 </>
               )}
+              <Button
+                variant="ghost"
+                className="rounded-xl text-muted-foreground hover:text-destructive"
+                onClick={() => setShowReport(true)}
+                size="sm"
+              >
+                <Flag className="w-4 h-4" />
+              </Button>
             </div>
           )}
 
@@ -203,6 +213,13 @@ export default function PublicProfile() {
           <CoinTransfer availableCoins={wallet?.total_coins || 0} prefillUsername={profile.username || undefined} />
         </DialogContent>
       </Dialog>
+
+      {/* Report Dialog */}
+      <ReportDialog
+        open={showReport}
+        onOpenChange={setShowReport}
+        reportedUserId={userId}
+      />
     </DashboardLayout>
   );
 }

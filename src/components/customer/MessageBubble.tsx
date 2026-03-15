@@ -1,8 +1,9 @@
 import { useState, useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { Check, CheckCheck, SmilePlus, Coins, Reply } from 'lucide-react';
+import { Check, CheckCheck, SmilePlus, Coins, Reply, Flag } from 'lucide-react';
 import { EmojiReactionPicker, ReactionBadges } from './EmojiReactions';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { ReportDialog } from './ReportDialog';
 
 interface MessageBubbleProps {
   isOwn: boolean;
@@ -105,6 +106,7 @@ export function MessageBubble({
   replyToText, replyToIsOwn,
 }: MessageBubbleProps) {
   const [showPicker, setShowPicker] = useState(false);
+  const [showReport, setShowReport] = useState(false);
   const longPress = useLongPress(() => setShowPicker(true));
   const isMobile = useIsMobile();
 
@@ -261,6 +263,15 @@ export function MessageBubble({
           >
             <SmilePlus className="w-3.5 h-3.5 text-muted-foreground" />
           </button>
+          {!isOwn && (
+            <button
+              onClick={() => setShowReport(true)}
+              className="bg-popover border border-border rounded-full p-1 shadow-sm hover:bg-destructive/10"
+              title="Report"
+            >
+              <Flag className="w-3.5 h-3.5 text-muted-foreground" />
+            </button>
+          )}
         </div>
 
         {showPicker && (
@@ -276,6 +287,15 @@ export function MessageBubble({
           </div>
         )}
       </div>
+
+      {/* Report dialog for message */}
+      {!isOwn && (
+        <ReportDialog
+          open={showReport}
+          onOpenChange={setShowReport}
+          reportedMessageId={messageId}
+        />
+      )}
     </div>
   );
 }

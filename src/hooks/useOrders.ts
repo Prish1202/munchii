@@ -122,6 +122,9 @@ export function useCreateOrder() {
 
   return useMutation({
     mutationFn: async ({ restaurantId, items, totalAmount, paymentMethod, pickupTime }: CreateOrderInput) => {
+      // Generate 4-digit OTP
+      const pickupOtp = String(Math.floor(1000 + Math.random() * 9000));
+
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
@@ -131,6 +134,7 @@ export function useCreateOrder() {
           status: 'placed',
           payment_method: paymentMethod,
           pickup_time: pickupTime ?? null,
+          pickup_otp: pickupOtp,
         } as any)
         .select()
         .single();
