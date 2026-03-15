@@ -11,8 +11,9 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { CoinTransfer } from '@/components/customer/CoinTransfer';
 import { useWallet } from '@/hooks/useWallet';
-import { ShoppingBag, UserPlus, UserMinus, Loader2, MessageSquare, Send, Grid3x3, Sparkles } from 'lucide-react';
+import { ShoppingBag, UserPlus, UserMinus, Loader2, MessageSquare, Send, Grid3x3, Sparkles, Flag } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { ReportDialog } from '@/components/customer/ReportDialog';
 
 export default function PublicProfile() {
   const { userId } = useParams<{ userId: string }>();
