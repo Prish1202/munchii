@@ -15,6 +15,7 @@ export interface RestaurantOrder {
   total_amount: number;
   payment_method: string;
   pickup_time: string | null;
+  pickup_otp: string | null;
   created_at: string;
   updated_at: string;
   customer?: {
