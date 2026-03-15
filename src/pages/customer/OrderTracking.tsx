@@ -154,6 +154,11 @@ export default function OrderTracking() {
         )}
 
         {!isCancelled && (
+          <div className="bg-card rounded-2xl border border-border p-5">
+            <h3 className="font-display font-semibold text-sm mb-4">Order Progress</h3>
+            <OrderProgressBar status={order.status} />
+          </div>
+        )}
 
         {!isCancelled && (
           <div className="bg-card rounded-2xl border border-border p-5">
