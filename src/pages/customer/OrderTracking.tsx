@@ -19,6 +19,7 @@ import {
   Clock,
   Wifi,
   WifiOff,
+  KeyRound,
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { cn } from '@/lib/utils';
