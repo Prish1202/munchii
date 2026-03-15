@@ -106,6 +106,7 @@ export function MessageBubble({
   replyToText, replyToIsOwn,
 }: MessageBubbleProps) {
   const [showPicker, setShowPicker] = useState(false);
+  const [showReport, setShowReport] = useState(false);
   const longPress = useLongPress(() => setShowPicker(true));
   const isMobile = useIsMobile();
 
