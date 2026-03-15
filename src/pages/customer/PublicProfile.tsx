@@ -144,6 +144,14 @@ export default function PublicProfile() {
                   </Button>
                 </>
               )}
+              <Button
+                variant="ghost"
+                className="rounded-xl text-muted-foreground hover:text-destructive"
+                onClick={() => setShowReport(true)}
+                size="sm"
+              >
+                <Flag className="w-4 h-4" />
+              </Button>
             </div>
           )}
 
