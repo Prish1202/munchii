@@ -207,7 +207,7 @@ function OrderCard({ order, onUpdateStatus, isUpdating, compact = false }: { ord
                       <Check className="w-4 h-4 mr-2" />Accept
                     </Button>
                   </>
-                ) : (isCOD && isReadyForPickup) ? null : config.nextStatus ? (
+                ) : isReadyForPickup ? null : config.nextStatus ? (
                   <Button className="w-full bg-restaurant hover:bg-restaurant/90" onClick={() => onUpdateStatus(config.nextStatus!)} disabled={isUpdating}>
                     {order.status === 'accepted' && <ChefHat className="w-4 h-4 mr-2" />}
                     {order.status === 'preparing' && <ShoppingBag className="w-4 h-4 mr-2" />}
