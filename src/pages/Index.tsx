@@ -74,7 +74,7 @@ export default function Index() {
             <div className="w-10 h-10 rounded-2xl gradient-primary flex items-center justify-center shadow-lg glow-primary">
               <UtensilsCrossed className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="font-display font-bold text-xl">FoodyZone</span>
+            <span className="font-display font-bold text-xl">Munchii</span>
           </Link>
           
           <div className="flex items-center gap-2">
