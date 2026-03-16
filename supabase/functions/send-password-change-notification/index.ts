@@ -106,7 +106,7 @@ serve(async (req) => {
             </div>
             
             <div style="text-align: center; padding: 20px; color: #999; font-size: 12px;">
-              <p>This is an automated security notification from FoodyZone</p>
+              <p>This is an automated security notification from Munchii</p>
               <p>Built in India 🇮🇳</p>
             </div>
           </body>

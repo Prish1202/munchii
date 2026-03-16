@@ -103,7 +103,7 @@ export default function Coins() {
             <li>• Minimum 10 points per transfer to friends.</li>
             <li>• Max 10 transfers per hour to prevent misuse.</li>
             <li>• Points earned never expire.</li>
-            <li>• FoodyZone reserves the right to modify the rewards program.</li>
+            <li>• Munchii reserves the right to modify the rewards program.</li>
           </ul>
         </div>
 

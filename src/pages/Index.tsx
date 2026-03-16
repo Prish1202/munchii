@@ -298,10 +298,10 @@ export default function Index() {
             <div className="w-8 h-8 rounded-xl gradient-primary flex items-center justify-center">
               <UtensilsCrossed className="w-4 h-4 text-primary-foreground" />
             </div>
-            <span className="font-display font-bold">FoodyZone</span>
+            <span className="font-display font-bold">Munchii</span>
           </div>
           <p className="text-sm text-muted-foreground">
-            © 2026 FoodyZone · Made with 🍕 in India · Student-first food network
+            © 2026 Munchii · Made with 🍕 in India · Student-first food network
           </p>
         </div>
       </footer>

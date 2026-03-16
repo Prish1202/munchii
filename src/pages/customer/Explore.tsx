@@ -115,7 +115,7 @@ export default function Explore() {
               </div>
               <div>
                 <h2 className="font-display font-bold text-lg">Leaderboard</h2>
-                <p className="text-xs text-muted-foreground">Top earners on FoodyZone</p>
+                <p className="text-xs text-muted-foreground">Top earners on Munchii</p>
               </div>
             </div>
 

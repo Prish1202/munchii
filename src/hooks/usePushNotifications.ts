@@ -79,7 +79,7 @@ export function usePushNotifications() {
           if (!(preferences as any)[prefKey]) return;
           if (!preferences.push_notifications) return;
 
-          showNotification(n.title || 'FoodyZone', n.message || '', n.link || undefined);
+          showNotification(n.title || 'Munchii', n.message || '', n.link || undefined);
         }
       )
       .subscribe();

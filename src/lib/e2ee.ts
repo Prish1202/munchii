@@ -5,7 +5,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
-const DB_NAME = 'foodyzone_e2ee';
+const DB_NAME = 'munchii_e2ee';
 const STORE_NAME = 'keys';
 
 function getKeyId(userId: string) {

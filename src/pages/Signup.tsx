@@ -88,7 +88,7 @@ export default function SignupPage() {
             <UtensilsCrossed className="w-8 h-8" />
           </Link>
           <div>
-            <h1 className="text-3xl font-display font-bold tracking-tight">Join FoodyZone</h1>
+            <h1 className="text-3xl font-display font-bold tracking-tight">Join Munchii</h1>
             <p className="text-muted-foreground text-sm mt-1">Create your account to get started</p>
           </div>
         </div>

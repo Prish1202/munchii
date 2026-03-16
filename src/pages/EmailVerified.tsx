@@ -22,7 +22,7 @@ export default function EmailVerifiedPage() {
             </div>
             <CardTitle className="text-2xl">Email Verified!</CardTitle>
             <CardDescription className="text-base mt-2">
-              Your email has been successfully verified. You can now log in to your FoodyZone account.
+              Your email has been successfully verified. You can now log in to your Munchii account.
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-4">
