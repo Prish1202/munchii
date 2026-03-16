@@ -70,7 +70,7 @@ export default function LoginPage() {
           </Link>
           <div>
             <h1 className="text-3xl font-display font-bold tracking-tight">Welcome back</h1>
-            <p className="text-muted-foreground text-sm mt-1">Sign in to your FoodyZone account</p>
+            <p className="text-muted-foreground text-sm mt-1">Sign in to your Munchii account</p>
           </div>
         </div>
 

@@ -86,7 +86,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="w-8 h-8 rounded-xl gradient-primary flex items-center justify-center shadow-md">
               <UtensilsCrossed className="w-4 h-4 text-primary-foreground" />
             </div>
-            <span className="font-display font-bold text-lg">FoodyZone</span>
+            <span className="font-display font-bold text-lg">Munchii</span>
           </Link>
           
           <div className="flex items-center gap-1.5">

@@ -49,6 +49,11 @@ import RestaurantNotificationSettings from "./pages/restaurant/NotificationSetti
 import RestaurantOnboarding from "./pages/restaurant/Onboarding";
 import { OnboardingGuard } from "./components/restaurant/OnboardingGuard";
 
+// Legal Pages
+import TermsOfService from "./pages/legal/TermsOfService";
+import CommunityGuidelines from "./pages/legal/CommunityGuidelines";
+import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
+
 // Admin Pages
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminUsers from "./pages/admin/Users";
@@ -77,6 +82,11 @@ const App = () => (
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/auth" element={<Navigate to="/login" replace />} />
+
+              {/* Legal Pages */}
+              <Route path="/terms" element={<TermsOfService />} />
+              <Route path="/community-guidelines" element={<CommunityGuidelines />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
 
               {/* Customer Routes */}
               <Route path="/customer" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><CustomerDashboard /></UsernameSetup></ProtectedRoute>} />

@@ -17,7 +17,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; nextStatus?:
   placed: { label: 'New', color: 'bg-blue-500', nextStatus: 'accepted', nextLabel: 'Accept' },
   accepted: { label: 'Accepted', color: 'bg-indigo-500', nextStatus: 'preparing', nextLabel: 'Start Preparing' },
   preparing: { label: 'Preparing', color: 'bg-yellow-500', nextStatus: 'ready_for_pickup', nextLabel: 'Mark Ready for Pickup' },
-  ready_for_pickup: { label: 'Ready for Pickup', color: 'bg-orange-500', nextStatus: 'picked_up', nextLabel: 'Mark Picked Up' },
+  ready_for_pickup: { label: 'Ready for Pickup', color: 'bg-orange-500' },
   picked_up: { label: 'Picked Up', color: 'bg-purple-500' },
   completed: { label: 'Completed', color: 'bg-green-500' },
   cancelled: { label: 'Cancelled', color: 'bg-red-500' },
@@ -188,35 +188,11 @@ function OrderCard({ order, onUpdateStatus, isUpdating, compact = false }: { ord
               <p className="text-sm">{orderItems}</p>
             </div>
 
-            {/* COD Cash Collection for ready_for_pickup */}
-            {isCOD && isReadyForPickup && onUpdateStatus && (
-              <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-4 mb-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Banknote className="w-5 h-5 text-amber-600" />
-                  <span className="font-semibold text-amber-800 dark:text-amber-300">Collect Cash: ₹{Number(order.total_amount).toFixed(0)}</span>
-                </div>
-                <p className="text-xs text-muted-foreground mb-3">
-                  Collect ₹{Number(order.total_amount).toFixed(0)} from customer (includes ₹{platformFee} platform fee). Your earning: ₹{itemTotal.toFixed(0)}
-                </p>
-                {!cashCollected ? (
-                  <Button
-                    className="w-full bg-amber-600 hover:bg-amber-700 text-white"
-                    onClick={() => setCashCollected(true)}
-                    disabled={isUpdating}
-                  >
-                    <Banknote className="w-4 h-4 mr-2" />
-                    Cash Collected
-                  </Button>
-                ) : (
-                  <Button
-                    className="w-full bg-green-600 hover:bg-green-700 text-white"
-                    onClick={() => onUpdateStatus('picked_up')}
-                    disabled={isUpdating}
-                  >
-                    <Package className="w-4 h-4 mr-2" />
-                    Complete Order (Picked Up)
-                  </Button>
-                )}
+            {/* OTP Required for Pickup - redirect to detail page */}
+            {isReadyForPickup && onUpdateStatus && (
+              <div className="bg-primary/5 border border-primary/30 rounded-xl p-4 mb-4 text-center">
+                <p className="text-sm font-medium text-primary">OTP verification required</p>
+                <p className="text-xs text-muted-foreground mt-1">Tap to open order details and verify customer OTP</p>
               </div>
             )}
 
@@ -231,7 +207,7 @@ function OrderCard({ order, onUpdateStatus, isUpdating, compact = false }: { ord
                       <Check className="w-4 h-4 mr-2" />Accept
                     </Button>
                   </>
-                ) : (isCOD && isReadyForPickup) ? null : config.nextStatus ? (
+                ) : isReadyForPickup ? null : config.nextStatus ? (
                   <Button className="w-full bg-restaurant hover:bg-restaurant/90" onClick={() => onUpdateStatus(config.nextStatus!)} disabled={isUpdating}>
                     {order.status === 'accepted' && <ChefHat className="w-4 h-4 mr-2" />}
                     {order.status === 'preparing' && <ShoppingBag className="w-4 h-4 mr-2" />}

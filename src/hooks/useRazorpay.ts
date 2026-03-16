@@ -78,7 +78,7 @@ export function useRazorpay() {
         key: data.keyId,
         amount: data.amount,
         currency: data.currency,
-        name: 'FoodyZone',
+        name: 'Munchii',
         description: 'Food Order Payment',
         order_id: data.razorpayOrderId,
         handler: async (response: RazorpayResponse) => {

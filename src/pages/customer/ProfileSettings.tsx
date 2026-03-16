@@ -201,14 +201,12 @@ export default function ProfileSettings() {
           <div className="px-5 pt-4 pb-2">
             <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Legal & Safety</h3>
           </div>
-          {LEGAL_LINKS.map((item, i) => {
+          {LEGAL_LINKS.map((item) => {
             const Icon = item.icon;
             return (
-              <a
+              <Link
                 key={item.href}
-                href={item.href}
-                target="_blank"
-                rel="noopener noreferrer"
+                to={item.href}
                 className="flex items-center justify-between px-5 py-3 hover:bg-secondary/50 transition-colors"
               >
                 <div className="flex items-center gap-3">
@@ -216,7 +214,7 @@ export default function ProfileSettings() {
                   <span className="text-sm font-medium">{item.label}</span>
                 </div>
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
-              </a>
+              </Link>
             );
           })}
         </motion.div>

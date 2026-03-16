@@ -60,9 +60,9 @@ serve(async (req) => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: 'FoodyZone <noreply@foodyzone.com>',
+        from: 'Munchii <noreply@munchii.in>',
         to: [user.email],
-        subject: 'Password Changed Successfully - FoodyZone',
+        subject: 'Password Changed Successfully - Munchii',
         html: `
           <!DOCTYPE html>
           <html>
@@ -79,7 +79,7 @@ serve(async (req) => {
               <p style="font-size: 16px; margin-bottom: 20px;">Hi ${userName},</p>
               
               <p style="font-size: 16px; margin-bottom: 20px;">
-                Your FoodyZone account password was successfully changed.
+                Your Munchii account password was successfully changed.
               </p>
               
               <div style="background: white; border-left: 4px solid #667eea; padding: 15px; margin: 20px 0; border-radius: 5px;">
@@ -101,12 +101,12 @@ serve(async (req) => {
               
               <p style="font-size: 14px; color: #666; margin-top: 30px;">
                 Best regards,<br>
-                The FoodyZone Team
+                The Munchii Team
               </p>
             </div>
             
             <div style="text-align: center; padding: 20px; color: #999; font-size: 12px;">
-              <p>This is an automated security notification from FoodyZone</p>
+              <p>This is an automated security notification from Munchii</p>
               <p>Built in India 🇮🇳</p>
             </div>
           </body>
