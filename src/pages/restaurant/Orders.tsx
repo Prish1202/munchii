@@ -188,35 +188,11 @@ function OrderCard({ order, onUpdateStatus, isUpdating, compact = false }: { ord
               <p className="text-sm">{orderItems}</p>
             </div>
 
-            {/* COD Cash Collection for ready_for_pickup */}
-            {isCOD && isReadyForPickup && onUpdateStatus && (
-              <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-4 mb-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Banknote className="w-5 h-5 text-amber-600" />
-                  <span className="font-semibold text-amber-800 dark:text-amber-300">Collect Cash: ₹{Number(order.total_amount).toFixed(0)}</span>
-                </div>
-                <p className="text-xs text-muted-foreground mb-3">
-                  Collect ₹{Number(order.total_amount).toFixed(0)} from customer (includes ₹{platformFee} platform fee). Your earning: ₹{itemTotal.toFixed(0)}
-                </p>
-                {!cashCollected ? (
-                  <Button
-                    className="w-full bg-amber-600 hover:bg-amber-700 text-white"
-                    onClick={() => setCashCollected(true)}
-                    disabled={isUpdating}
-                  >
-                    <Banknote className="w-4 h-4 mr-2" />
-                    Cash Collected
-                  </Button>
-                ) : (
-                  <Button
-                    className="w-full bg-green-600 hover:bg-green-700 text-white"
-                    onClick={() => onUpdateStatus('picked_up')}
-                    disabled={isUpdating}
-                  >
-                    <Package className="w-4 h-4 mr-2" />
-                    Complete Order (Picked Up)
-                  </Button>
-                )}
+            {/* OTP Required for Pickup - redirect to detail page */}
+            {isReadyForPickup && onUpdateStatus && (
+              <div className="bg-primary/5 border border-primary/30 rounded-xl p-4 mb-4 text-center">
+                <p className="text-sm font-medium text-primary">OTP verification required</p>
+                <p className="text-xs text-muted-foreground mt-1">Tap to open order details and verify customer OTP</p>
               </div>
             )}
 
