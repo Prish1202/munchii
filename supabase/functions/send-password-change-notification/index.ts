@@ -79,7 +79,7 @@ serve(async (req) => {
               <p style="font-size: 16px; margin-bottom: 20px;">Hi ${userName},</p>
               
               <p style="font-size: 16px; margin-bottom: 20px;">
-                Your FoodyZone account password was successfully changed.
+                Your Munchii account password was successfully changed.
               </p>
               
               <div style="background: white; border-left: 4px solid #667eea; padding: 15px; margin: 20px 0; border-radius: 5px;">
