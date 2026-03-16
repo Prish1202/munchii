@@ -44,7 +44,7 @@ export default function Explore() {
         <div>
           <h1 className="font-display font-bold text-2xl">Explore</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Find people on FoodyZone
+            Find people on Munchii
           </p>
         </div>
 
