@@ -37,7 +37,7 @@ export function usePushNotifications() {
       const notif = new Notification(title, {
         body,
         icon: '/favicon.ico',
-        tag: `foodyzone-${Date.now()}`,
+        tag: `munchii-${Date.now()}`,
       });
       if (link) {
         notif.onclick = () => {
