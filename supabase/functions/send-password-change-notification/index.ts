@@ -101,7 +101,7 @@ serve(async (req) => {
               
               <p style="font-size: 14px; color: #666; margin-top: 30px;">
                 Best regards,<br>
-                The FoodyZone Team
+                The Munchii Team
               </p>
             </div>
             
