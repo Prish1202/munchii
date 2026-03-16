@@ -62,7 +62,7 @@ serve(async (req) => {
       body: JSON.stringify({
         from: 'Munchii <noreply@munchii.in>',
         to: [user.email],
-        subject: 'Password Changed Successfully - FoodyZone',
+        subject: 'Password Changed Successfully - Munchii',
         html: `
           <!DOCTYPE html>
           <html>
