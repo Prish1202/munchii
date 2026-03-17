@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useLeaderboard } from '@/hooks/useLeaderboard';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Search, Users, Loader2, User, Trophy, Coins, Crown } from 'lucide-react';
+import { Search, Users, Loader2, User, Trophy, Coins, Crown, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 function useSearchProfiles(query: string) {
@@ -27,10 +27,12 @@ function useSearchProfiles(query: string) {
 }
 
 const RANK_COLORS = [
-  'from-yellow-400 to-amber-500', // 1st - Gold
-  'from-slate-300 to-slate-400',   // 2nd - Silver
-  'from-amber-600 to-orange-700',  // 3rd - Bronze
+  'from-yellow-400 to-amber-500',
+  'from-slate-300 to-slate-400',
+  'from-amber-600 to-orange-700',
 ];
+
+const RANK_EMOJIS = ['👑', '🥈', '🥉'];
 
 export default function Explore() {
   const [search, setSearch] = useState('');
@@ -43,9 +45,7 @@ export default function Explore() {
         {/* Header */}
         <div>
           <h1 className="font-display font-bold text-2xl">Explore</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Find people on Munchii
-          </p>
+          <p className="text-sm text-muted-foreground mt-0.5">Find people on Munchii</p>
         </div>
 
         {/* Search */}
@@ -92,14 +92,10 @@ export default function Explore() {
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <p className="font-display font-bold text-sm truncate">{profile.name}</p>
-                      {profile.username && (
-                        <p className="text-xs text-muted-foreground">@{profile.username}</p>
-                      )}
+                      {profile.username && <p className="text-xs text-muted-foreground">@{profile.username}</p>}
                     </div>
                     {profile.campus && (
-                      <Badge variant="secondary" className="text-[10px] shrink-0">
-                        🎓 {profile.campus}
-                      </Badge>
+                      <Badge variant="secondary" className="text-[10px] shrink-0">🎓 {profile.campus}</Badge>
                     )}
                   </Link>
                 </motion.div>
@@ -109,15 +105,23 @@ export default function Explore() {
         ) : (
           /* Leaderboard */
           <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center">
+            <motion.div
+              className="flex items-center gap-2"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <motion.div
+                className="w-8 h-8 rounded-xl bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center"
+                animate={{ rotate: [0, 5, -5, 0] }}
+                transition={{ duration: 3, repeat: Infinity }}
+              >
                 <Trophy className="w-4 h-4 text-white" />
-              </div>
+              </motion.div>
               <div>
                 <h2 className="font-display font-bold text-lg">Leaderboard</h2>
                 <p className="text-xs text-muted-foreground">Top earners on Munchii</p>
               </div>
-            </div>
+            </motion.div>
 
             {loadingLeaderboard ? (
               <div className="flex items-center justify-center py-12">
@@ -131,31 +135,65 @@ export default function Explore() {
               </div>
             ) : (
               <div className="space-y-2">
+                {/* Top 3 podium */}
+                {leaderboard.length >= 3 && (
+                  <div className="flex items-end justify-center gap-3 mb-6 pt-4">
+                    {[1, 0, 2].map((rank) => {
+                      const entry = leaderboard[rank];
+                      if (!entry) return null;
+                      const height = rank === 0 ? 'h-24' : rank === 1 ? 'h-20' : 'h-16';
+                      return (
+                        <motion.div
+                          key={entry.user_id}
+                          className="flex flex-col items-center"
+                          initial={{ opacity: 0, y: 30 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.3 + rank * 0.15, type: "spring" }}
+                        >
+                          <motion.div
+                            className="text-xl mb-1"
+                            animate={rank === 0 ? { y: [0, -5, 0], scale: [1, 1.1, 1] } : {}}
+                            transition={{ duration: 2, repeat: Infinity }}
+                          >
+                            {RANK_EMOJIS[rank]}
+                          </motion.div>
+                          <Avatar className={`w-10 h-10 border-2 ${rank === 0 ? 'border-yellow-400' : rank === 1 ? 'border-slate-300' : 'border-amber-600'}`}>
+                            <AvatarFallback className="font-display font-bold text-xs bg-primary/10 text-primary">
+                              {entry.name.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <p className="text-xs font-bold mt-1 truncate max-w-[70px]">{entry.name}</p>
+                          <p className="text-[10px] text-coin font-bold">{entry.total_coins} pts</p>
+                          <div className={`w-16 ${height} rounded-t-xl mt-1 bg-gradient-to-t ${RANK_COLORS[rank]} opacity-20`} />
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Rest of leaderboard */}
                 {leaderboard.map((entry, i) => (
                   <motion.div
                     key={entry.user_id}
                     initial={{ opacity: 0, x: -15 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.06, duration: 0.3 }}
+                    transition={{ delay: 0.5 + i * 0.06, duration: 0.3 }}
                   >
                     <Link
                       to={`/customer/user/${entry.user_id}`}
                       className={`flex items-center gap-3 p-3 rounded-2xl border transition-all hover:shadow-md ${
-                        i < 3
-                          ? 'bg-gradient-to-r from-card to-card border-yellow-400/30'
-                          : 'bg-card border-border'
+                        i < 3 ? 'bg-gradient-to-r from-card to-card border-yellow-400/30' : 'bg-card border-border'
                       }`}
                     >
-                      {/* Rank */}
-                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 font-display font-bold text-sm ${
-                        i < 3
-                          ? `bg-gradient-to-br ${RANK_COLORS[i]} text-white`
-                          : 'bg-muted text-muted-foreground'
-                      }`}>
+                      <motion.div
+                        className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 font-display font-bold text-sm ${
+                          i < 3 ? `bg-gradient-to-br ${RANK_COLORS[i]} text-white` : 'bg-muted text-muted-foreground'
+                        }`}
+                        whileHover={{ scale: 1.15 }}
+                      >
                         {i === 0 ? <Crown className="w-4 h-4" /> : `#${i + 1}`}
-                      </div>
+                      </motion.div>
 
-                      {/* Avatar */}
                       <Avatar className={`w-10 h-10 ${i < 3 ? 'border-2 border-yellow-400/40' : 'border border-border'}`}>
                         <AvatarFallback className={`font-display font-bold text-sm ${
                           i < 3 ? 'bg-yellow-400/10 text-yellow-700' : 'bg-primary/10 text-primary'
@@ -164,20 +202,19 @@ export default function Explore() {
                         </AvatarFallback>
                       </Avatar>
 
-                      {/* Info */}
                       <div className="flex-1 min-w-0">
                         <p className="font-display font-bold text-sm truncate">{entry.name}</p>
-                        {entry.username && (
-                          <p className="text-xs text-muted-foreground">@{entry.username}</p>
-                        )}
+                        {entry.username && <p className="text-xs text-muted-foreground">@{entry.username}</p>}
                       </div>
 
-                      {/* Coins */}
                       <div className="flex items-center gap-1.5 shrink-0">
-                        <Coins className="w-4 h-4 text-yellow-500" />
-                        <span className="font-display font-bold text-sm text-foreground">
-                          {entry.total_coins}
-                        </span>
+                        <motion.div
+                          animate={i < 3 ? { rotate: [0, 360] } : {}}
+                          transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                        >
+                          <Coins className="w-4 h-4 text-yellow-500" />
+                        </motion.div>
+                        <span className="font-display font-bold text-sm text-foreground">{entry.total_coins}</span>
                       </div>
                     </Link>
                   </motion.div>
