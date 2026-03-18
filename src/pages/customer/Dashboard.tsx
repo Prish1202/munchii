@@ -64,36 +64,37 @@ export default function CustomerDashboard() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-5 pb-24 md:pb-0 max-w-3xl mx-auto">
-        {/* Greeting */}
+      <div className="space-y-6 pb-24 md:pb-0 max-w-4xl mx-auto">
         <motion.div
-          className="flex items-center justify-between"
+          className="gradient-surface rounded-[2rem] border border-border/80 p-5 md:p-6 shadow-soft overflow-hidden relative"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div>
-            <p className="text-sm text-muted-foreground font-medium">Hey, {user?.name?.split(' ')[0]} 👋</p>
-            <p className="font-display font-bold text-lg text-foreground">What would you like to eat?</p>
+          <div className="absolute inset-y-0 right-0 w-40 bg-hero-orb-3 blur-3xl opacity-80 pointer-events-none" />
+          <div className="relative flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm text-muted-foreground font-medium">Hey, {user?.name?.split(' ')[0]} 👋</p>
+              <h1 className="font-display font-bold text-2xl md:text-3xl text-foreground mt-1">Craving something worth sharing?</h1>
+              <p className="text-sm text-muted-foreground mt-2 max-w-xl">Pickup-first food, smooth rewards, and a social vibe made for campus life.</p>
+            </div>
+            <Link to="/customer/coins" className="flex items-center gap-2 px-4 py-3 rounded-[1.25rem] bg-card border border-border shadow-soft hover:-translate-y-0.5 transition-all">
+              <div className="w-9 h-9 rounded-2xl gradient-coin flex items-center justify-center glow-coin">
+                <Sparkles className="w-4 h-4 text-primary-foreground" />
+              </div>
+              <div className="text-right">
+                <p className="text-[11px] text-muted-foreground leading-none">My Coins</p>
+                <p className="font-display font-bold text-base text-foreground mt-1">{wallet?.total_coins || 0}</p>
+              </div>
+            </Link>
           </div>
-          {/* Coin balance card */}
-          <Link to="/customer/coins" className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-coin/10 border border-coin/20 hover:bg-coin/15 transition-colors">
-            <div className="w-7 h-7 rounded-xl gradient-coin flex items-center justify-center">
-              <Sparkles className="w-3.5 h-3.5 text-primary-foreground" />
-            </div>
-            <div className="text-right">
-              <p className="text-xs text-muted-foreground leading-none">My Coins</p>
-              <p className="font-display font-bold text-sm text-coin-foreground">{wallet?.total_coins || 0}</p>
-            </div>
-          </Link>
         </motion.div>
 
-        {/* City Search */}
         <div className="relative">
           <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
           <input
             type="text"
             placeholder="Enter your city..."
-            className="w-full pl-11 pr-10 py-3 rounded-2xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all text-sm font-medium placeholder:text-muted-foreground/60"
+            className="w-full pl-11 pr-10 py-3.5 rounded-[1.4rem] border border-border bg-card text-foreground shadow-soft focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all text-sm font-medium placeholder:text-muted-foreground/60"
             value={cityInput}
             onChange={(e) => handleCityInputChange(e.target.value)}
             onFocus={() => cityInput.trim() && setShowSuggestions(true)}
@@ -105,13 +106,12 @@ export default function CustomerDashboard() {
             </button>
           )}
 
-          {/* Autocomplete dropdown */}
           {showSuggestions && filteredCities.length > 0 && (
-            <div className="absolute z-50 top-full mt-1 w-full bg-card border border-border rounded-xl shadow-lg overflow-hidden">
+            <div className="absolute z-50 top-full mt-2 w-full bg-card border border-border rounded-[1.25rem] shadow-soft overflow-hidden">
               {filteredCities.map((city) => (
                 <button
                   key={city}
-                  className="w-full text-left px-4 py-2.5 text-sm font-medium hover:bg-accent/50 transition-colors flex items-center gap-2"
+                  className="w-full text-left px-4 py-3 text-sm font-medium hover:bg-secondary transition-colors flex items-center gap-2"
                   onMouseDown={() => handleCitySelect(city)}
                 >
                   <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
@@ -122,60 +122,54 @@ export default function CustomerDashboard() {
           )}
         </div>
 
-        {/* Coming Soon for unregistered city */}
         {isUnregisteredCity && (
           <motion.div
-            className="flex flex-col items-center justify-center py-16 px-6 text-center max-w-md mx-auto"
+            className="flex flex-col items-center justify-center py-16 px-6 text-center max-w-md mx-auto gradient-surface rounded-[2rem] border border-border/80 shadow-soft"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <div className="w-20 h-20 rounded-3xl gradient-social flex items-center justify-center mb-6 shadow-lg animate-float">
+            <div className="w-20 h-20 rounded-[1.75rem] gradient-social flex items-center justify-center mb-6 shadow-soft animate-float">
               <Rocket className="w-10 h-10 text-primary-foreground" />
             </div>
             <h2 className="font-display font-bold text-2xl text-foreground">Coming Soon!</h2>
             <p className="text-muted-foreground mt-3 text-sm leading-relaxed">
-              Thank you for your patience. We are working hard to expand our services to your city. ❤️
+              We’re lining up the best pickup spots for your city right now.
             </p>
           </motion.div>
         )}
 
-        {/* Show restaurants when city is selected */}
         {selectedCity && (
           <>
-            {/* Restaurant Search */}
             <SearchBar value={search} onChange={setSearch} />
 
-            {/* Categories */}
-            <section>
-              <h2 className="font-display font-bold text-sm text-muted-foreground uppercase tracking-wider mb-3">What's on your mind?</h2>
+            <section className="space-y-3">
+              <h2 className="font-display font-bold text-sm text-muted-foreground uppercase tracking-[0.2em]">What’s on your mind?</h2>
               <CategoryFilter selected={category} onSelect={setCategory} />
             </section>
 
-            {/* Promo Banner */}
             <PromoBanner />
 
-            {/* Quick stats */}
             <div className="grid grid-cols-3 gap-3">
-              <div className="bg-card rounded-2xl border border-border p-3 text-center">
+              <div className="gradient-surface rounded-[1.4rem] border border-border/70 p-4 text-center shadow-soft">
                 <p className="text-xs text-muted-foreground">Earned</p>
-                <p className="font-display font-bold text-primary">{wallet?.total_coins || 0} pts</p>
+                <p className="font-display font-bold text-primary text-lg mt-1">{wallet?.total_coins || 0} pts</p>
               </div>
-              <div className="bg-card rounded-2xl border border-border p-3 text-center">
+              <div className="gradient-surface rounded-[1.4rem] border border-border/70 p-4 text-center shadow-soft">
                 <p className="text-xs text-muted-foreground">Saved</p>
-                <p className="font-display font-bold text-accent">₹{Math.round((wallet?.total_coins || 0) / 10)}</p>
+                <p className="font-display font-bold text-accent text-lg mt-1">₹{Math.round((wallet?.total_coins || 0) / 10)}</p>
               </div>
-              <div className="bg-card rounded-2xl border border-border p-3 text-center">
+              <div className="gradient-surface rounded-[1.4rem] border border-border/70 p-4 text-center shadow-soft">
                 <p className="text-xs text-muted-foreground">Pickup</p>
-                <p className="font-display font-bold text-foreground">₹0 fee</p>
+                <p className="font-display font-bold text-foreground text-lg mt-1">₹0 fee</p>
               </div>
             </div>
 
-            {/* Restaurants */}
             <section>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-display font-bold text-lg text-foreground">
-                  Restaurants in {selectedCity}
-                </h2>
+                <div>
+                  <h2 className="font-display font-bold text-xl text-foreground">Restaurants in {selectedCity}</h2>
+                  <p className="text-sm text-muted-foreground mt-1">Fresh picks with rewards built in.</p>
+                </div>
                 <Link
                   to="/customer/browse"
                   className="text-sm text-primary font-semibold flex items-center gap-0.5 hover:underline underline-offset-4"
@@ -214,12 +208,11 @@ export default function CustomerDashboard() {
           </>
         )}
 
-        {/* No city selected yet prompt */}
         {!selectedCity && !isUnregisteredCity && !cityInput.trim() && (
-          <div className="text-center py-16">
-            <MapPin className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-            <p className="font-display font-semibold">Enter your city above</p>
-            <p className="text-sm text-muted-foreground mt-1">to discover restaurants near you</p>
+          <div className="text-center py-16 gradient-surface rounded-[2rem] border border-border/80 shadow-soft">
+            <MapPin className="w-10 h-10 text-primary mx-auto mb-3" />
+            <p className="font-display font-semibold text-lg">Enter your city above</p>
+            <p className="text-sm text-muted-foreground mt-1">to unlock pickup spots, rewards, and campus food drops</p>
           </div>
         )}
       </div>
