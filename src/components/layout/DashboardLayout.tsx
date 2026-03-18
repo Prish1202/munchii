@@ -39,7 +39,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
   customer: [
     { label: 'Home', href: '/customer', icon: <Home className="w-5 h-5" /> },
     { label: 'Explore', href: '/customer/explore', icon: <Search className="w-5 h-5" /> },
-    { label: 'Orders', href: '/customer/orders', icon: <ClipboardList className="w-5 h-5" /> },
+    { label: 'Coins', href: '/customer/coins', icon: <Coins className="w-5 h-5" /> },
     { label: 'Chat', href: '/customer/messages', icon: <MessageSquare className="w-5 h-5" /> },
     { label: 'Profile', href: '/customer/profile', icon: <User className="w-5 h-5" /> },
   ],
@@ -77,33 +77,36 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className="min-h-screen bg-background relative">
-      {/* Background pattern */}
-      <div className="fixed inset-0 bg-dot-pattern opacity-[0.02] pointer-events-none z-0" />
-      {/* Top bar */}
-      <header className="sticky top-0 z-50 border-b glass-strong">
-        <div className="container flex h-14 items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl gradient-primary flex items-center justify-center shadow-md">
-              <UtensilsCrossed className="w-4 h-4 text-primary-foreground" />
+      <div className="fixed inset-0 bg-dot-pattern opacity-[0.12] pointer-events-none z-0" />
+
+      <header className="sticky top-0 z-50 border-b border-border/80 glass-strong">
+        <div className="container flex h-16 items-center justify-between gap-3">
+          <Link to="/" className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl gradient-primary flex items-center justify-center shadow-soft glow-primary">
+              <UtensilsCrossed className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="font-display font-bold text-lg">Munchii</span>
+            <div>
+              <span className="font-display font-bold text-lg leading-none">Munchii</span>
+              <p className="text-[11px] text-muted-foreground leading-none mt-1 hidden sm:block">Order. Earn. Share.</p>
+            </div>
           </Link>
-          
+
           <div className="flex items-center gap-1.5">
-            {/* Coin balance pill */}
             {isCustomer && (
-              <Link to="/customer/coins" className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-coin/10 border border-coin/20 mr-1">
-                <Sparkles className="w-3.5 h-3.5 text-coin" />
-                <span className="text-xs font-bold text-coin-foreground">{wallet?.total_coins || 0}</span>
+              <Link to="/customer/coins" className="hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-full bg-card border border-border shadow-soft mr-1">
+                <span className="w-7 h-7 rounded-full gradient-coin flex items-center justify-center glow-coin">
+                  <Sparkles className="w-3.5 h-3.5 text-primary-foreground" />
+                </span>
+                <span className="text-xs font-bold text-foreground">{wallet?.total_coins || 0} pts</span>
               </Link>
             )}
-            
+
             {isCustomer && (
               <Link to="/customer/cart" className="relative">
-                <Button variant="ghost" size="icon" className="rounded-xl h-9 w-9">
+                <Button variant="ghost" size="icon" className="rounded-2xl h-10 w-10 bg-card/70 hover:bg-card shadow-soft">
                   <ShoppingCart className="w-4.5 h-4.5" />
                   {totalItems > 0 && (
-                    <Badge className="absolute -top-1 -right-1 h-4.5 w-4.5 p-0 flex items-center justify-center text-[10px] gradient-primary border-0">
+                    <Badge className="absolute -top-1 -right-1 h-5 min-w-5 px-1.5 flex items-center justify-center text-[10px] gradient-primary border-0 shadow-soft">
                       {totalItems}
                     </Badge>
                   )}
@@ -111,17 +114,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               </Link>
             )}
             <NotificationBell />
-            <Button variant="ghost" size="icon" onClick={logout} className="rounded-xl h-9 w-9">
+            <Button variant="ghost" size="icon" onClick={logout} className="rounded-2xl h-10 w-10 bg-card/70 hover:bg-card shadow-soft">
               <LogOut className="w-4 h-4" />
             </Button>
           </div>
         </div>
       </header>
 
-      <div className="flex">
-        {/* Sidebar - desktop */}
-        <aside className="hidden md:flex w-56 flex-col border-r bg-card/50 min-h-[calc(100vh-3.5rem)] p-3">
-          <nav className="space-y-0.5">
+      <div className="flex relative z-10">
+        <aside className="hidden md:flex w-60 flex-col border-r border-border/70 bg-sidebar/80 min-h-[calc(100vh-4rem)] p-4">
+          <nav className="space-y-1.5">
             {navItems.map((item) => {
               const isActive = location.pathname === item.href;
               const badge = item.label === 'Chat' && totalUnread > 0 ? totalUnread : 0;
@@ -130,16 +132,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   key={item.href + item.label}
                   to={item.href}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+                    'flex items-center gap-3 px-3.5 py-3 rounded-2xl text-sm font-medium transition-all duration-200 shadow-soft',
                     isActive
-                      ? "gradient-primary text-primary-foreground shadow-md"
-                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                      ? 'gradient-primary text-primary-foreground'
+                      : 'bg-card/70 text-muted-foreground hover:text-foreground hover:-translate-y-0.5'
                   )}
                 >
                   {item.icon}
                   {item.label}
                   {badge > 0 && (
-                    <Badge className="ml-auto h-5 min-w-5 px-1.5 flex items-center justify-center text-[10px] gradient-primary border-0">
+                    <Badge className="ml-auto h-5 min-w-5 px-1.5 flex items-center justify-center text-[10px] bg-primary-foreground/18 text-primary-foreground border-0">
                       {badge > 99 ? '99+' : badge}
                     </Badge>
                   )}
@@ -149,17 +151,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </nav>
         </aside>
 
-        {/* Main content */}
-        <main className="flex-1 p-4 md:p-6">
-          <div className="animate-fade-in">
-            {children}
-          </div>
+        <main className="flex-1 p-4 md:p-6 lg:p-8">
+          <div className="animate-fade-in">{children}</div>
         </main>
       </div>
 
-      {/* Mobile bottom nav - sticky */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t glass-strong z-50 safe-area-bottom">
-        <div className="flex justify-around py-1.5 px-2">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t border-border/80 glass-strong z-50 safe-area-bottom">
+        <div className="grid grid-cols-5 gap-1 px-2 py-2">
           {navItems.map((item) => {
             const isActive = location.pathname === item.href;
             const badge = item.label === 'Chat' && totalUnread > 0 ? totalUnread : 0;
@@ -168,16 +166,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 key={item.href + item.label}
                 to={item.href}
                 className={cn(
-                  "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-[10px] font-medium transition-all min-w-[3.5rem]",
-                  isActive
-                    ? "text-primary"
-                    : "text-muted-foreground"
+                  'flex flex-col items-center gap-1 px-2 py-2 rounded-2xl text-[10px] font-semibold transition-all min-w-0',
+                  isActive ? 'text-primary' : 'text-muted-foreground'
                 )}
               >
-                <div className={cn(
-                  "p-1 rounded-xl transition-all relative",
-                  isActive && "bg-primary/10"
-                )}>
+                <div className={cn('p-2 rounded-2xl transition-all relative', isActive && 'bg-primary/10 shadow-soft')}>
                   {item.icon}
                   {badge > 0 && (
                     <Badge className="absolute -top-1 -right-2 h-4 min-w-4 px-1 flex items-center justify-center text-[9px] gradient-primary border-0">
@@ -185,7 +178,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     </Badge>
                   )}
                 </div>
-                <span>{item.label}</span>
+                <span className="truncate">{item.label}</span>
               </Link>
             );
           })}

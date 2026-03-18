@@ -31,11 +31,10 @@ interface RestaurantCardProps {
 
 export function RestaurantCard({ restaurant }: RestaurantCardProps) {
   const image = getImageForRestaurant(restaurant.id);
-  
+
   return (
     <Link to={`/customer/restaurant/${restaurant.id}`} className="block group">
-      <div className="bg-card rounded-3xl border border-border overflow-hidden hover:shadow-xl transition-all duration-300 group-hover:-translate-y-1">
-        {/* Image */}
+      <div className="gradient-surface rounded-[1.75rem] border border-border/80 overflow-hidden shadow-soft transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-xl">
         <div className="relative aspect-[16/10] overflow-hidden">
           <img
             src={image}
@@ -43,48 +42,51 @@ export function RestaurantCard({ restaurant }: RestaurantCardProps) {
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             loading="lazy"
           />
-          {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-          
-          {/* Badges */}
+          <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-foreground/10 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-background/35 to-transparent" />
+
           <div className="absolute top-3 left-3 flex gap-2">
-            <span className="gradient-primary text-primary-foreground text-[11px] font-bold px-2.5 py-1 rounded-xl shadow-lg">
-              PICKUP
+            <span className="gradient-primary text-primary-foreground text-[11px] font-bold px-3 py-1.5 rounded-full shadow-soft">
+              PICKUP ONLY
             </span>
           </div>
-          
-          {/* Earn badge */}
-          <div className="absolute bottom-3 right-3">
-            <div className="flex items-center gap-1 bg-card/90 backdrop-blur-sm px-2 py-1 rounded-lg">
-              <Coins className="w-3 h-3 text-coin" />
-              <span className="text-[10px] font-bold text-foreground">Earn 3%</span>
-            </div>
-          </div>
 
-          {/* Rating */}
-          <div className="absolute top-3 right-3 flex items-center gap-1 bg-card/90 backdrop-blur-sm px-2 py-1 rounded-lg">
+          <div className="absolute top-3 right-3 flex items-center gap-1.5 glass px-2.5 py-1.5 rounded-full shadow-soft">
             <Star className="w-3 h-3 fill-coin text-coin" />
             <span className="text-xs font-bold text-foreground">{getRating()}</span>
           </div>
+
+          <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-2">
+            <div>
+              <h3 className="font-display font-bold text-lg text-primary-foreground truncate drop-shadow-sm">
+                {restaurant.name}
+              </h3>
+              <p className="text-xs text-primary-foreground/80 mt-1 flex items-center gap-1 truncate">
+                <MapPin className="w-3 h-3 shrink-0" />
+                {restaurant.address}
+              </p>
+            </div>
+            <div className="glass px-2.5 py-1.5 rounded-2xl shrink-0 shadow-soft">
+              <div className="flex items-center gap-1 text-[10px] font-bold text-foreground">
+                <Coins className="w-3 h-3 text-coin" />
+                Earn 3%
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Content */}
-        <div className="p-3.5">
-          <h3 className="font-display font-bold text-[15px] text-foreground truncate">
-            {restaurant.name}
-          </h3>
-          
-          <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1 truncate">
-            <MapPin className="w-3 h-3 shrink-0" />
-            {restaurant.address}
-          </p>
-          
-          <div className="flex items-center justify-between mt-2.5 pt-2.5 border-t border-border">
-            <span className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
-              <Clock className="w-3 h-3" />
-              {getPickupTime()}
-            </span>
-            <span className="text-xs font-semibold text-accent">₹0 fee</span>
+        <div className="p-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-2xl bg-secondary/65 px-3 py-2.5 border border-border/60">
+              <span className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                <Clock className="w-3 h-3" /> Ready in
+              </span>
+              <p className="text-sm font-display font-bold mt-1">{getPickupTime()}</p>
+            </div>
+            <div className="rounded-2xl bg-card px-3 py-2.5 border border-border/60 text-right">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Fees</span>
+              <p className="text-sm font-display font-bold mt-1 text-primary">₹0 pickup fee</p>
+            </div>
           </div>
         </div>
       </div>
