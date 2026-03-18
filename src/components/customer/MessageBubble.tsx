@@ -1,9 +1,10 @@
 import { useState, useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { Check, CheckCheck, SmilePlus, Coins, Reply, Flag } from 'lucide-react';
+import { Check, CheckCheck, SmilePlus, Coins, Reply, Flag, Copy, Forward, Trash2 } from 'lucide-react';
 import { EmojiReactionPicker, ReactionBadges } from './EmojiReactions';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ReportDialog } from './ReportDialog';
+import { toast } from 'sonner';
 
 interface MessageBubbleProps {
   isOwn: boolean;
@@ -17,6 +18,8 @@ interface MessageBubbleProps {
   onToggleReaction: (messageId: string, emoji: string) => void;
   onBurstReaction?: (messageId: string, emoji: string) => void;
   onReply?: (messageId: string, text: string) => void;
+  onForward?: (messageId: string, text: string) => void;
+  onUnsend?: (messageId: string) => void;
   replyToText?: string | null;
   replyToIsOwn?: boolean;
 }
@@ -103,14 +106,14 @@ function ReplyQuote({ text, isOwn }: { text: string; isOwn: boolean }) {
 export function MessageBubble({
   isOwn, text, time, messageId, deliveredAt, readAt,
   reactions, currentUserId, onToggleReaction, onBurstReaction, onReply,
-  replyToText, replyToIsOwn,
+  onForward, onUnsend, replyToText,
 }: MessageBubbleProps) {
   const [showPicker, setShowPicker] = useState(false);
   const [showReport, setShowReport] = useState(false);
-  const longPress = useLongPress(() => setShowPicker(true));
+  const [showActions, setShowActions] = useState(false);
+  const longPress = useLongPress(() => setShowActions(true));
   const isMobile = useIsMobile();
 
-  // Swipe-to-reply state
   const swipeRef = useRef<{ startX: number; startY: number; swiping: boolean }>({ startX: 0, startY: 0, swiping: false });
   const [swipeOffset, setSwipeOffset] = useState(0);
   const swipeThreshold = 60;
@@ -165,17 +168,37 @@ export function MessageBubble({
   };
 
   const handleEmojiLongPress = (emoji: string) => {
-    // Long press = react + burst animation
     onToggleReaction(messageId, emoji);
     onBurstReaction?.(messageId, emoji);
   };
 
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success('Message copied');
+    } catch {
+      toast.error('Failed to copy message');
+    } finally {
+      setShowActions(false);
+    }
+  };
+
+  const actionItems = isOwn
+    ? [
+        { label: 'Reply', icon: Reply, action: () => onReply?.(messageId, text) },
+        { label: 'Forward', icon: Forward, action: () => onForward?.(messageId, text) },
+        { label: 'Copy', icon: Copy, action: handleCopy },
+        { label: 'Unsend', icon: Trash2, action: () => onUnsend?.(messageId), destructive: true },
+      ]
+    : [
+        { label: 'Copy', icon: Copy, action: handleCopy },
+        { label: 'Forward', icon: Forward, action: () => onForward?.(messageId, text) },
+        { label: 'Report', icon: Flag, action: () => setShowReport(true), destructive: true },
+        { label: 'Reply', icon: Reply, action: () => onReply?.(messageId, text) },
+      ];
+
   return (
-    <div
-      className={cn('flex group relative', isOwn ? 'justify-end' : 'justify-start')}
-      data-message-id={messageId}
-    >
-      {/* Reply icon indicator */}
+    <div className={cn('flex group relative', isOwn ? 'justify-end' : 'justify-start')} data-message-id={messageId}>
       {isMobile && (
         <div
           className={cn(
@@ -201,29 +224,25 @@ export function MessageBubble({
           onTouchStart={isMobile ? handleTouchStart : undefined}
           onTouchMove={isMobile ? handleTouchMove : undefined}
           onTouchEnd={isMobile ? handleTouchEnd : undefined}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            setShowActions(true);
+          }}
           className={cn(
-            'px-3.5 py-2.5 rounded-2xl text-sm select-none',
+            'px-3.5 py-2.5 rounded-2xl text-sm select-none shadow-soft',
             isOwn
               ? 'bg-primary text-primary-foreground rounded-br-md'
-              : 'bg-secondary text-secondary-foreground rounded-bl-md'
+              : 'bg-card text-card-foreground rounded-bl-md border border-border/70'
           )}
         >
-          {replyToText && (
-            <ReplyQuote text={replyToText} isOwn={isOwn} />
-          )}
+          {replyToText && <ReplyQuote text={replyToText} isOwn={isOwn} />}
           <p className="whitespace-pre-wrap break-words">{text}</p>
           <div className={cn('flex items-center gap-1 mt-1', isOwn ? 'justify-end' : '')}>
-            <span className={cn(
-              'text-[10px]',
-              isOwn ? 'text-primary-foreground/60' : 'text-muted-foreground'
-            )}>
+            <span className={cn('text-[10px]', isOwn ? 'text-primary-foreground/60' : 'text-muted-foreground')}>
               {new Date(time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
             {isOwn && (
-              <span className={cn(
-                'flex-shrink-0 transition-all duration-500',
-                readAt ? 'text-blue-400 animate-[seen-pop_0.4s_ease-out]' : 'text-primary-foreground/50'
-              )}>
+              <span className={cn('flex-shrink-0 transition-all duration-500', readAt ? 'text-blue-400 animate-[seen-pop_0.4s_ease-out]' : 'text-primary-foreground/50')}>
                 {readAt ? (
                   <CheckCheck className="w-3.5 h-3.5" />
                 ) : deliveredAt ? (
@@ -242,43 +261,43 @@ export function MessageBubble({
           onToggle={(emoji) => onToggleReaction(messageId, emoji)}
         />
 
-        {/* Desktop action buttons */}
-        <div className={cn(
-          'absolute -bottom-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity flex gap-0.5',
-          'hidden md:flex',
-          isOwn ? '-left-14' : '-right-14'
-        )}>
+        <div className={cn('absolute -bottom-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity flex gap-0.5', 'hidden md:flex', isOwn ? '-left-14' : '-right-14')}>
           {onReply && (
-            <button
-              onClick={() => onReply(messageId, text)}
-              className="bg-popover border border-border rounded-full p-1 shadow-sm hover:bg-accent"
-              title="Reply"
-            >
+            <button onClick={() => onReply(messageId, text)} className="bg-popover border border-border rounded-full p-1 shadow-soft hover:bg-accent/10" title="Reply">
               <Reply className="w-3.5 h-3.5 text-muted-foreground" />
             </button>
           )}
-          <button
-            onClick={() => setShowPicker(!showPicker)}
-            className="bg-popover border border-border rounded-full p-1 shadow-sm hover:bg-accent"
-          >
+          <button onClick={() => setShowPicker(!showPicker)} className="bg-popover border border-border rounded-full p-1 shadow-soft hover:bg-accent/10" title="React">
             <SmilePlus className="w-3.5 h-3.5 text-muted-foreground" />
           </button>
-          {!isOwn && (
-            <button
-              onClick={() => setShowReport(true)}
-              className="bg-popover border border-border rounded-full p-1 shadow-sm hover:bg-destructive/10"
-              title="Report"
-            >
-              <Flag className="w-3.5 h-3.5 text-muted-foreground" />
-            </button>
-          )}
+          <button onClick={handleCopy} className="bg-popover border border-border rounded-full p-1 shadow-soft hover:bg-accent/10" title="Copy">
+            <Copy className="w-3.5 h-3.5 text-muted-foreground" />
+          </button>
         </div>
 
+        {showActions && (
+          <div className={cn('absolute z-50 top-full mt-2 min-w-[180px] rounded-2xl border border-border bg-popover p-1.5 shadow-soft', isOwn ? 'right-0' : 'left-0')}>
+            {actionItems.map((item) => (
+              <button
+                key={item.label}
+                onClick={() => {
+                  item.action();
+                  if (item.label !== 'Report') setShowActions(false);
+                }}
+                className={cn(
+                  'w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-left hover:bg-secondary transition-colors',
+                  item.destructive && 'text-destructive'
+                )}
+              >
+                <item.icon className="w-4 h-4" />
+                {item.label}
+              </button>
+            ))}
+          </div>
+        )}
+
         {showPicker && (
-          <div className={cn(
-            'absolute z-50 bottom-full mb-1',
-            isOwn ? 'right-0' : 'left-0'
-          )}>
+          <div className={cn('absolute z-50 bottom-full mb-1', isOwn ? 'right-0' : 'left-0')}>
             <EmojiReactionPicker
               onSelect={handleEmojiSelect}
               onLongPress={handleEmojiLongPress}
@@ -288,11 +307,13 @@ export function MessageBubble({
         )}
       </div>
 
-      {/* Report dialog for message */}
       {!isOwn && (
         <ReportDialog
           open={showReport}
-          onOpenChange={setShowReport}
+          onOpenChange={(open) => {
+            setShowReport(open);
+            if (!open) setShowActions(false);
+          }}
           reportedMessageId={messageId}
         />
       )}

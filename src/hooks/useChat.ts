@@ -322,6 +322,32 @@ export function useSendMessage() {
   });
 }
 
+export function useDeleteMessage() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ messageId, conversationId }: { messageId: string; conversationId: string }) => {
+      const { error } = await supabase
+        .from('messages')
+        .delete()
+        .eq('id', messageId)
+        .eq('sender_id', user!.id);
+
+      if (error) throw error;
+      return { conversationId };
+    },
+    onSuccess: ({ conversationId }) => {
+      queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      toast.success('Message unsent');
+    },
+    onError: () => {
+      toast.error('Failed to unsend message');
+    },
+  });
+}
+
 export function useStartConversation() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
