@@ -6,7 +6,7 @@ import { TypingIndicator } from '@/components/customer/TypingIndicator';
 import { DateSeparator } from '@/components/customer/DateSeparator';
 import { OnlineIndicator } from '@/components/customer/OnlineIndicator';
 import { useAuth } from '@/contexts/AuthContext';
-import { useMessages, useSendMessage, useRecipientPublicKey, usePublicKey } from '@/hooks/useChat';
+import { useMessages, useSendMessage, useRecipientPublicKey, usePublicKey, useConversations, useDeleteMessage } from '@/hooks/useChat';
 import { useWallet } from '@/hooks/useWallet';
 import { useTypingIndicator } from '@/hooks/useTypingIndicator';
 import { useMessageStatus } from '@/hooks/useMessageStatus';
@@ -15,22 +15,27 @@ import { useReactions } from '@/hooks/useReactions';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { ArrowLeft, Send, Loader2, Lock, Coins, X, Reply } from 'lucide-react';
+import { ArrowLeft, Send, Loader2, Lock, Coins, X, Reply, Forward } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { ChatCoinTransfer } from '@/components/customer/ChatCoinTransfer';
 import { EmojiBurst } from '@/components/customer/EmojiBurst';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 
 export default function ChatView() {
   const { conversationId } = useParams<{ conversationId: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { messages, isLoading, rawCount } = useMessages(conversationId || '');
+  const { data: allConversations } = useConversations();
   const sendMessage = useSendMessage();
+  const deleteMessage = useDeleteMessage();
   const [text, setText] = useState('');
   const [showCoinTransfer, setShowCoinTransfer] = useState(false);
   const [replyTo, setReplyTo] = useState<{ id: string; text: string } | null>(null);
+  const [forwardMessage, setForwardMessage] = useState<{ id: string; text: string } | null>(null);
+  const [isForwarding, setIsForwarding] = useState(false);
   const [burstEmoji, setBurstEmoji] = useState('');
   const [burstTrigger, setBurstTrigger] = useState(0);
   const [burstOrigin, setBurstOrigin] = useState<{ x: number; y: number } | null>(null);
@@ -76,7 +81,6 @@ export default function ChatView() {
   const { reactions, toggleReaction } = useReactions(conversationId || '');
   const { markAsRead } = useMessageStatus(conversationId || '', messages);
 
-  // Build a map of message id -> decrypted text for reply quotes
   const messageMap = useMemo(() => {
     const map = new Map<string, { text: string; senderId: string }>();
     for (const msg of messages) {
@@ -89,7 +93,6 @@ export default function ChatView() {
     markAsRead();
   }, [markAsRead]);
 
-  // Optimistic messages for instant display
   const [optimisticMessages, setOptimisticMessages] = useState<Array<{
     id: string; text: string; created_at: string; sender_id: string; reply_to_id: string | null;
   }>>([]);
@@ -99,31 +102,25 @@ export default function ChatView() {
   useEffect(() => {
     if (!messages.length && !optimisticMessages.length) return;
     if (!hasScrolledRef.current) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
+      messagesEndRef.current?.scrollIntoView({ behavior: 'instant' as ScrollBehavior });
       hasScrolledRef.current = true;
     } else {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isOtherTyping, optimisticMessages]);
 
-  // Remove optimistic messages once the real message appears in the decrypted list
   useEffect(() => {
     if (optimisticMessages.length === 0) return;
     const realTexts = new Set(messages.filter(m => m.sender_id === user?.id).map(m => m.decrypted));
-    setOptimisticMessages(prev =>
-      prev.filter(opt => !realTexts.has(opt.text))
-    );
-  }, [messages]);
+    setOptimisticMessages(prev => prev.filter(opt => !realTexts.has(opt.text)));
+  }, [messages, optimisticMessages.length, user?.id]);
 
-  // ---- Real-time emoji burst via Supabase broadcast ----
   useEffect(() => {
     if (!conversationId) return;
     const channel = supabase.channel(`emoji-burst-${conversationId}`);
     channel.on('broadcast', { event: 'emoji-burst' }, (payload: any) => {
       const { emoji, messageId, senderId } = payload.payload || {};
-      // Don't double-show for the sender (they already see it locally)
       if (senderId === user?.id) return;
-      // Find the message element and get its position
       const el = document.querySelector(`[data-message-id="${messageId}"]`);
       if (el) {
         const rect = el.getBoundingClientRect();
@@ -144,9 +141,7 @@ export default function ChatView() {
     const replyToId = replyTo?.id || null;
     setText('');
     setReplyTo(null);
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-    }
+    if (textareaRef.current) textareaRef.current.style.height = 'auto';
 
     setOptimisticMessages(prev => [...prev, {
       id: `optimistic-${Date.now()}`,
@@ -188,14 +183,11 @@ export default function ChatView() {
     ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
   };
 
-  // Normal click: just toggle reaction, no animation
   const handleToggleReaction = useCallback((messageId: string, emoji: string) => {
     toggleReaction.mutate({ messageId, emoji });
   }, [toggleReaction]);
 
-  // Long press (2s): toggle reaction + burst animation + broadcast to other user
   const handleBurstReaction = useCallback((messageId: string, emoji: string) => {
-    // Find message element position for local burst
     const el = document.querySelector(`[data-message-id="${messageId}"]`);
     if (el) {
       const rect = el.getBoundingClientRect();
@@ -206,7 +198,6 @@ export default function ChatView() {
     setBurstEmoji(emoji);
     setBurstTrigger(prev => prev + 1);
 
-    // Broadcast to other user
     if (conversationId) {
       const channel = supabase.channel(`emoji-burst-${conversationId}`);
       channel.subscribe((status) => {
@@ -216,7 +207,6 @@ export default function ChatView() {
             event: 'emoji-burst',
             payload: { emoji, messageId, senderId: user?.id },
           });
-          // Clean up after sending
           setTimeout(() => supabase.removeChannel(channel), 1000);
         }
       });
@@ -228,14 +218,53 @@ export default function ChatView() {
     textareaRef.current?.focus();
   };
 
+  const handleForward = (messageId: string, messageText: string) => {
+    setForwardMessage({ id: messageId, text: messageText });
+  };
+
+  const handleUnsend = async (messageId: string) => {
+    if (!conversationId) return;
+    if (!window.confirm('Unsend this message?')) return;
+    await deleteMessage.mutateAsync({ messageId, conversationId });
+  };
+
+  const handleForwardSelect = async (targetConversationId: string, targetUserId: string) => {
+    if (!senderPublicKey || !forwardMessage) return;
+    setIsForwarding(true);
+    try {
+      const { data: publicKeyRow, error } = await supabase
+        .from('user_public_keys')
+        .select('public_key')
+        .eq('user_id', targetUserId)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!publicKeyRow?.public_key) {
+        toast.error('This user has not set up encryption yet');
+        return;
+      }
+
+      await sendMessage.mutateAsync({
+        conversationId: targetConversationId,
+        recipientPublicKey: publicKeyRow.public_key,
+        senderPublicKey,
+        plaintext: `↪️ ${forwardMessage.text}`,
+      });
+
+      toast.success('Message forwarded');
+      setForwardMessage(null);
+    } catch {
+      toast.error('Failed to forward message');
+    } finally {
+      setIsForwarding(false);
+    }
+  };
+
+  const forwardTargets = (allConversations || []).filter((conv) => conv.id !== conversationId);
+
   return (
     <E2EEKeySetup>
-      <EmojiBurst
-        emoji={burstEmoji}
-        trigger={burstTrigger}
-        originX={burstOrigin?.x}
-        originY={burstOrigin?.y}
-      />
+      <EmojiBurst emoji={burstEmoji} trigger={burstTrigger} originX={burstOrigin?.x} originY={burstOrigin?.y} />
       <motion.div
         className="fixed inset-0 z-50 flex flex-col bg-background overflow-hidden"
         initial={{ x: '100%' }}
@@ -243,7 +272,6 @@ export default function ChatView() {
         exit={{ x: '100%' }}
         transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
       >
-        {/* Chat header */}
         <header className="flex items-center gap-3 px-3 py-2.5 border-b border-border bg-card/80 backdrop-blur-lg safe-area-top shrink-0">
           <button
             onClick={() => navigate('/customer/messages')}
@@ -277,7 +305,6 @@ export default function ChatView() {
           </div>
         </header>
 
-        {/* Messages area */}
         <div className="flex-1 overscroll-contain overflow-y-auto px-3 py-4 space-y-3 scrollbar-hide">
           {isLoading || (rawCount > 0 && messages.length === 0) ? (
             <div className="flex justify-center py-8">
@@ -310,6 +337,8 @@ export default function ChatView() {
                       onToggleReaction={handleToggleReaction}
                       onBurstReaction={handleBurstReaction}
                       onReply={handleReply}
+                      onForward={handleForward}
+                      onUnsend={msg.sender_id === user?.id ? handleUnsend : undefined}
                       replyToText={replyToData?.text || null}
                       replyToIsOwn={replyToData ? replyToData.senderId === user?.id : undefined}
                     />
@@ -332,6 +361,7 @@ export default function ChatView() {
                       onToggleReaction={handleToggleReaction}
                       onBurstReaction={handleBurstReaction}
                       onReply={handleReply}
+                      onForward={handleForward}
                       replyToText={replyToData?.text || null}
                       replyToIsOwn={replyToData ? replyToData.senderId === user?.id : undefined}
                     />
@@ -344,7 +374,6 @@ export default function ChatView() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Coin transfer inline */}
         {showCoinTransfer && otherProfile && (
           <div className="px-3 shrink-0">
             <ChatCoinTransfer
@@ -373,7 +402,49 @@ export default function ChatView() {
           </div>
         )}
 
-        {/* Reply preview bar */}
+        {forwardMessage && (
+          <div className="border-t border-border bg-card/95 backdrop-blur-lg px-3 py-3 shrink-0 space-y-3 max-h-60 overflow-y-auto">
+            <div className="flex items-center gap-2">
+              <Forward className="w-4 h-4 text-primary" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold">Forward message</p>
+                <p className="text-xs text-muted-foreground truncate">{forwardMessage.text}</p>
+              </div>
+              <button onClick={() => setForwardMessage(null)} className="p-1 rounded-full hover:bg-secondary transition-colors">
+                <X className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </div>
+            {forwardTargets.length === 0 ? (
+              <p className="text-xs text-muted-foreground">No other conversations available yet.</p>
+            ) : (
+              <div className="space-y-2">
+                {forwardTargets.map((conv) => {
+                  const targetId = conv.user1_id === user?.id ? conv.user2_id : conv.user1_id;
+                  return (
+                    <button
+                      key={conv.id}
+                      onClick={() => handleForwardSelect(conv.id, targetId)}
+                      disabled={isForwarding}
+                      className="w-full flex items-center gap-3 rounded-2xl border border-border bg-background px-3 py-2.5 text-left hover:bg-secondary transition-colors disabled:opacity-60"
+                    >
+                      <Avatar className="w-9 h-9">
+                        <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                          {conv.other_user?.name?.charAt(0)?.toUpperCase() || '?'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold truncate">{conv.other_user?.name || 'User'}</p>
+                        {conv.other_user?.username && <p className="text-xs text-muted-foreground">@{conv.other_user.username}</p>}
+                      </div>
+                      {isForwarding ? <Loader2 className="w-4 h-4 animate-spin text-primary" /> : <Forward className="w-4 h-4 text-muted-foreground" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
         {replyTo && (
           <div className="flex items-center gap-2 px-3 py-2 border-t border-border bg-secondary/50 shrink-0">
             <Reply className="w-4 h-4 text-primary shrink-0" />
@@ -381,21 +452,15 @@ export default function ChatView() {
               <p className="text-[11px] font-medium text-primary">Reply</p>
               <p className="text-xs text-muted-foreground truncate">{replyTo.text}</p>
             </div>
-            <button
-              onClick={() => setReplyTo(null)}
-              className="p-1 rounded-full hover:bg-secondary transition-colors"
-            >
+            <button onClick={() => setReplyTo(null)} className="p-1 rounded-full hover:bg-secondary transition-colors">
               <X className="w-4 h-4 text-muted-foreground" />
             </button>
           </div>
         )}
 
-        {/* Input footer */}
         {!recipientPublicKey && !isLoading ? (
           <div className="px-3 py-3 text-center border-t border-border bg-card/80 backdrop-blur-lg safe-area-bottom shrink-0">
-            <p className="text-sm text-muted-foreground">
-              This user hasn't set up encryption yet.
-            </p>
+            <p className="text-sm text-muted-foreground">This user hasn't set up encryption yet.</p>
           </div>
         ) : (
           <div className="flex items-center gap-2 px-3 py-2.5 border-t border-border bg-card/80 backdrop-blur-lg safe-area-bottom shrink-0">
@@ -426,17 +491,8 @@ export default function ChatView() {
               maxLength={2000}
               rows={1}
             />
-            <Button
-              size="icon"
-              onClick={handleSend}
-              disabled={!text.trim() || sendMessage.isPending}
-              className="flex-shrink-0 h-9 w-9 rounded-full"
-            >
-              {sendMessage.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Send className="w-4 h-4" />
-              )}
+            <Button size="icon" onClick={handleSend} disabled={!text.trim() || sendMessage.isPending} className="flex-shrink-0 h-9 w-9 rounded-full">
+              {sendMessage.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </Button>
           </div>
         )}
@@ -444,3 +500,4 @@ export default function ChatView() {
     </E2EEKeySetup>
   );
 }
+
