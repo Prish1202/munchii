@@ -27,7 +27,7 @@ export default function ChatView() {
   const { conversationId } = useParams<{ conversationId: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { messages, isLoading, rawCount } = useMessages(conversationId || '');
+  const { messages, isLoading, isFetched } = useMessages(conversationId || '');
   const { data: allConversations } = useConversations();
   const sendMessage = useSendMessage();
   const deleteMessage = useDeleteMessage();
@@ -266,18 +266,18 @@ export default function ChatView() {
   }, []);
 
   // Close action menu when tapping the message area background
-  const handleMessagesAreaClick = useCallback((e: React.MouseEvent) => {
-    // Only close if clicking the background, not a button inside action sheet
-    if (activeMessageId && (e.target as HTMLElement).closest('[data-message-id]') === null) {
+  const handleMessagesAreaPointerDown = useCallback((e: React.PointerEvent) => {
+    const target = e.target as HTMLElement;
+    if (!activeMessageId) return;
+    if (target.closest('[data-message-actions]')) return;
+    if (target.closest('[data-message-id]') === null) {
       setActiveMessageId(null);
     }
   }, [activeMessageId]);
 
   const forwardTargets = (allConversations || []).filter((conv) => conv.id !== conversationId);
 
-  // Show content immediately - no full-screen loader
-  const showEmptyState = !isLoading && messages.length === 0 && optimisticMessages.length === 0;
-  const showDecryptingHint = isLoading && rawCount > 0 && messages.length === 0;
+  const showEmptyState = isFetched && !isLoading && messages.length === 0 && optimisticMessages.length === 0;
 
   return (
     <E2EEKeySetup>
@@ -324,16 +324,8 @@ export default function ChatView() {
 
         <div
           className="flex-1 overscroll-contain overflow-y-auto px-3 py-4 space-y-3 scrollbar-hide"
-          onClick={handleMessagesAreaClick}
+          onPointerDown={handleMessagesAreaPointerDown}
         >
-          {showDecryptingHint && (
-            <div className="flex justify-center py-4">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                Decrypting...
-              </div>
-            </div>
-          )}
           {showEmptyState ? (
             <div className="text-center py-12">
               <Lock className="w-8 h-8 mx-auto text-muted-foreground/30 mb-2" />
@@ -486,7 +478,7 @@ export default function ChatView() {
           </div>
         )}
 
-        {!recipientPublicKey && !isLoading ? (
+        {!recipientPublicKey && !isLoading && isFetched ? (
           <div className="px-3 py-3 text-center border-t border-border bg-card/80 backdrop-blur-lg safe-area-bottom shrink-0">
             <p className="text-sm text-muted-foreground">This user hasn't set up encryption yet.</p>
           </div>

@@ -215,6 +215,7 @@ export function useConversations() {
     table: 'messages',
     onInsert: handleNewMessage,
     onUpdate: handleChange,
+    onDelete: handleChange,
     enabled: !!user?.id,
   });
 
@@ -238,33 +239,57 @@ export function useMessages(conversationId: string) {
       return data as Message[];
     },
     enabled: !!conversationId,
+    refetchInterval: conversationId ? 2000 : false,
+    refetchIntervalInBackground: true,
   });
 
-  // Decrypt messages when data changes
   useEffect(() => {
+    let isActive = true;
+
     async function decrypt() {
-      if (!query.data || !user?.id) return;
-      const results: Message[] = [];
-        for (const msg of query.data) {
+      if (!query.data || !user?.id) {
+        if (isActive) setDecryptedMessages([]);
+        return;
+      }
+
+      const results = await Promise.all(
+        query.data.map(async (msg) => {
           try {
-            // For own messages, decrypt the sender copy; for received, decrypt the recipient copy
             const isMine = msg.sender_id === user.id;
             const ciphertext = isMine && msg.encrypted_for_sender
               ? msg.encrypted_for_sender
               : msg.encrypted_message;
             const decrypted = await decryptMessage(ciphertext, user.id);
-            results.push({ ...msg, decrypted });
+            return { ...msg, decrypted };
           } catch {
-            results.push({ ...msg, decrypted: '🔒 Cannot decrypt' });
+            return { ...msg, decrypted: '🔒 Cannot decrypt' };
           }
-        }
-      setDecryptedMessages(results);
+        })
+      );
+
+      if (isActive) {
+        setDecryptedMessages(results);
+      }
     }
+
     decrypt();
+
+    return () => {
+      isActive = false;
+    };
   }, [query.data, user?.id]);
 
-  // Real-time new messages
-  const handleNewMessage = useCallback(() => {
+  const removeMessageLocally = useCallback((messageId?: string) => {
+    if (!messageId) return;
+
+    queryClient.setQueryData<Message[]>(['messages', conversationId], (current) =>
+      current ? current.filter((message) => message.id !== messageId) : current
+    );
+    setDecryptedMessages((current) => current.filter((message) => message.id !== messageId));
+    queryClient.invalidateQueries({ queryKey: ['conversations'] });
+  }, [conversationId, queryClient]);
+
+  const refreshMessages = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
     queryClient.invalidateQueries({ queryKey: ['conversations'] });
   }, [queryClient, conversationId]);
@@ -273,13 +298,40 @@ export function useMessages(conversationId: string) {
     channelName: `messages-${conversationId}`,
     table: 'messages',
     filter: `conversation_id=eq.${conversationId}`,
-    onInsert: handleNewMessage,
-    onUpdate: handleNewMessage,
-    onDelete: handleNewMessage,
+    onInsert: refreshMessages,
+    onUpdate: refreshMessages,
+    onDelete: (payload) => {
+      const deletedRow = payload.old as { id?: string } | null;
+      const deletedId = deletedRow?.id;
+      if (deletedId) {
+        removeMessageLocally(deletedId);
+        return;
+      }
+      refreshMessages();
+    },
     enabled: !!conversationId,
   });
 
-  return { ...query, messages: decryptedMessages, rawCount: query.data?.length ?? 0 };
+  useEffect(() => {
+    if (!conversationId) return;
+
+    const channel = supabase.channel(`message-actions-${conversationId}`);
+    channel.on('broadcast', { event: 'message-unsent' }, (payload: any) => {
+      removeMessageLocally(payload.payload?.messageId);
+    });
+    channel.subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [conversationId, removeMessageLocally]);
+
+  return {
+    ...query,
+    messages: decryptedMessages,
+    rawCount: query.data?.length ?? 0,
+    isFetched: query.isFetched,
+  };
 }
 
 export function useSendMessage() {
@@ -336,14 +388,40 @@ export function useDeleteMessage() {
         .eq('sender_id', user!.id);
 
       if (error) throw error;
-      return { conversationId };
+      return { conversationId, messageId };
     },
-    onSuccess: ({ conversationId }) => {
+    onMutate: async ({ messageId, conversationId }) => {
+      await queryClient.cancelQueries({ queryKey: ['messages', conversationId] });
+
+      const previousMessages = queryClient.getQueryData<Message[]>(['messages', conversationId]);
+      queryClient.setQueryData<Message[]>(['messages', conversationId], (current) =>
+        current ? current.filter((message) => message.id !== messageId) : current
+      );
+
+      return { previousMessages };
+    },
+    onSuccess: ({ conversationId, messageId }) => {
       queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
+
+      const channel = supabase.channel(`message-actions-${conversationId}`);
+      channel.subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          channel.send({
+            type: 'broadcast',
+            event: 'message-unsent',
+            payload: { messageId },
+          });
+          setTimeout(() => supabase.removeChannel(channel), 1000);
+        }
+      });
+
       toast.success('Message unsent');
     },
-    onError: () => {
+    onError: (_, vars, context) => {
+      if (context?.previousMessages) {
+        queryClient.setQueryData(['messages', vars.conversationId], context.previousMessages);
+      }
       toast.error('Failed to unsend message');
     },
   });
