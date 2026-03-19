@@ -324,16 +324,8 @@ export default function ChatView() {
 
         <div
           className="flex-1 overscroll-contain overflow-y-auto px-3 py-4 space-y-3 scrollbar-hide"
-          onClick={handleMessagesAreaClick}
+          onPointerDown={handleMessagesAreaPointerDown}
         >
-          {showDecryptingHint && (
-            <div className="flex justify-center py-4">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                Decrypting...
-              </div>
-            </div>
-          )}
           {showEmptyState ? (
             <div className="text-center py-12">
               <Lock className="w-8 h-8 mx-auto text-muted-foreground/30 mb-2" />
