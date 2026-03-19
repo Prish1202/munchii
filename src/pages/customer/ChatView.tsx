@@ -39,6 +39,7 @@ export default function ChatView() {
   const [burstEmoji, setBurstEmoji] = useState('');
   const [burstTrigger, setBurstTrigger] = useState(0);
   const [burstOrigin, setBurstOrigin] = useState<{ x: number; y: number } | null>(null);
+  const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { data: wallet } = useWallet();
@@ -213,20 +214,20 @@ export default function ChatView() {
     }
   }, [conversationId, user?.id]);
 
-  const handleReply = (messageId: string, messageText: string) => {
+  const handleReply = useCallback((messageId: string, messageText: string) => {
     setReplyTo({ id: messageId, text: messageText });
     textareaRef.current?.focus();
-  };
+  }, []);
 
-  const handleForward = (messageId: string, messageText: string) => {
+  const handleForward = useCallback((messageId: string, messageText: string) => {
     setForwardMessage({ id: messageId, text: messageText });
-  };
+  }, []);
 
-  const handleUnsend = async (messageId: string) => {
+  const handleUnsend = useCallback(async (messageId: string) => {
     if (!conversationId) return;
     if (!window.confirm('Unsend this message?')) return;
     await deleteMessage.mutateAsync({ messageId, conversationId });
-  };
+  }, [conversationId, deleteMessage]);
 
   const handleForwardSelect = async (targetConversationId: string, targetUserId: string) => {
     if (!senderPublicKey || !forwardMessage) return;
@@ -260,7 +261,23 @@ export default function ChatView() {
     }
   };
 
+  const handleActivateMessage = useCallback((id: string | null) => {
+    setActiveMessageId(id);
+  }, []);
+
+  // Close action menu when tapping the message area background
+  const handleMessagesAreaClick = useCallback((e: React.MouseEvent) => {
+    // Only close if clicking the background, not a button inside action sheet
+    if (activeMessageId && (e.target as HTMLElement).closest('[data-message-id]') === null) {
+      setActiveMessageId(null);
+    }
+  }, [activeMessageId]);
+
   const forwardTargets = (allConversations || []).filter((conv) => conv.id !== conversationId);
+
+  // Show content immediately - no full-screen loader
+  const showEmptyState = !isLoading && messages.length === 0 && optimisticMessages.length === 0;
+  const showDecryptingHint = isLoading && rawCount > 0 && messages.length === 0;
 
   return (
     <E2EEKeySetup>
@@ -270,7 +287,7 @@ export default function ChatView() {
         initial={{ x: '100%' }}
         animate={{ x: 0 }}
         exit={{ x: '100%' }}
-        transition={{ type: 'tween', duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+        transition={{ type: 'tween', duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
       >
         <header className="flex items-center gap-3 px-3 py-2.5 border-b border-border bg-card/80 backdrop-blur-lg safe-area-top shrink-0">
           <button
@@ -305,12 +322,19 @@ export default function ChatView() {
           </div>
         </header>
 
-        <div className="flex-1 overscroll-contain overflow-y-auto px-3 py-4 space-y-3 scrollbar-hide">
-          {isLoading || (rawCount > 0 && messages.length === 0) ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="w-5 h-5 animate-spin text-primary" />
+        <div
+          className="flex-1 overscroll-contain overflow-y-auto px-3 py-4 space-y-3 scrollbar-hide"
+          onClick={handleMessagesAreaClick}
+        >
+          {showDecryptingHint && (
+            <div className="flex justify-center py-4">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                Decrypting...
+              </div>
             </div>
-          ) : messages.length === 0 && optimisticMessages.length === 0 ? (
+          )}
+          {showEmptyState ? (
             <div className="text-center py-12">
               <Lock className="w-8 h-8 mx-auto text-muted-foreground/30 mb-2" />
               <p className="text-sm text-muted-foreground">Send your first encrypted message</p>
@@ -341,6 +365,8 @@ export default function ChatView() {
                       onUnsend={msg.sender_id === user?.id ? handleUnsend : undefined}
                       replyToText={replyToData?.text || null}
                       replyToIsOwn={replyToData ? replyToData.senderId === user?.id : undefined}
+                      activeMessageId={activeMessageId}
+                      onActivate={handleActivateMessage}
                     />
                   </div>
                 );
@@ -364,6 +390,8 @@ export default function ChatView() {
                       onForward={handleForward}
                       replyToText={replyToData?.text || null}
                       replyToIsOwn={replyToData ? replyToData.senderId === user?.id : undefined}
+                      activeMessageId={activeMessageId}
+                      onActivate={handleActivateMessage}
                     />
                   </div>
                 );
@@ -500,4 +528,3 @@ export default function ChatView() {
     </E2EEKeySetup>
   );
 }
-
