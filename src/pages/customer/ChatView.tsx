@@ -266,18 +266,18 @@ export default function ChatView() {
   }, []);
 
   // Close action menu when tapping the message area background
-  const handleMessagesAreaClick = useCallback((e: React.MouseEvent) => {
-    // Only close if clicking the background, not a button inside action sheet
-    if (activeMessageId && (e.target as HTMLElement).closest('[data-message-id]') === null) {
+  const handleMessagesAreaPointerDown = useCallback((e: React.PointerEvent) => {
+    const target = e.target as HTMLElement;
+    if (!activeMessageId) return;
+    if (target.closest('[data-message-actions]')) return;
+    if (target.closest('[data-message-id]') === null) {
       setActiveMessageId(null);
     }
   }, [activeMessageId]);
 
   const forwardTargets = (allConversations || []).filter((conv) => conv.id !== conversationId);
 
-  // Show content immediately - no full-screen loader
-  const showEmptyState = !isLoading && messages.length === 0 && optimisticMessages.length === 0;
-  const showDecryptingHint = isLoading && rawCount > 0 && messages.length === 0;
+  const showEmptyState = isFetched && !isLoading && messages.length === 0 && optimisticMessages.length === 0;
 
   return (
     <E2EEKeySetup>
