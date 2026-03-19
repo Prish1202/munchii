@@ -27,7 +27,7 @@ export default function ChatView() {
   const { conversationId } = useParams<{ conversationId: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { messages, isLoading, rawCount } = useMessages(conversationId || '');
+  const { messages, isLoading, rawCount, isFetched } = useMessages(conversationId || '');
   const { data: allConversations } = useConversations();
   const sendMessage = useSendMessage();
   const deleteMessage = useDeleteMessage();
