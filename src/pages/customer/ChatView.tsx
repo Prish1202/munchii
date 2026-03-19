@@ -478,7 +478,7 @@ export default function ChatView() {
           </div>
         )}
 
-        {!recipientPublicKey && !isLoading ? (
+        {!recipientPublicKey && !isLoading && isFetched ? (
           <div className="px-3 py-3 text-center border-t border-border bg-card/80 backdrop-blur-lg safe-area-bottom shrink-0">
             <p className="text-sm text-muted-foreground">This user hasn't set up encryption yet.</p>
           </div>

@@ -301,7 +301,8 @@ export function useMessages(conversationId: string) {
     onInsert: refreshMessages,
     onUpdate: refreshMessages,
     onDelete: (payload) => {
-      const deletedId = payload.old?.id as string | undefined;
+      const deletedRow = payload.old as { id?: string } | null;
+      const deletedId = deletedRow?.id;
       if (deletedId) {
         removeMessageLocally(deletedId);
         return;
