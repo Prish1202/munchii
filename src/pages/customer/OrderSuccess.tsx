@@ -41,17 +41,17 @@ export default function OrderSuccess() {
           transition={{ type: "spring", stiffness: 200, damping: 12 }}
         >
           <motion.div
-            className="absolute inset-0 w-20 h-20 rounded-full bg-green-400/20"
+            className="absolute inset-0 w-20 h-20 rounded-full bg-primary/20"
             animate={{ scale: [1, 1.6, 1], opacity: [0.5, 0, 0.5] }}
             transition={{ duration: 2, repeat: Infinity }}
           />
-          <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center relative">
+          <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center relative">
             <motion.div
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
             >
-              <CheckCircle2 className="w-10 h-10 text-green-600" />
+              <CheckCircle2 className="w-10 h-10 text-primary" />
             </motion.div>
           </div>
         </motion.div>

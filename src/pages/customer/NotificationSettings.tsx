@@ -66,7 +66,7 @@ export default function NotificationSettings() {
             onToggle={toggle('order_notifications')}
           />
           <SettingRow
-            icon={<UserPlus className="w-4 h-4 text-emerald-500" />}
+            icon={<UserPlus className="w-4 h-4 text-secondary" />}
             title="Social Activity"
             description="New followers and social interactions"
             checked={preferences.social_notifications}

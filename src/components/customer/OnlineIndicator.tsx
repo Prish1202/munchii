@@ -11,7 +11,7 @@ export function OnlineIndicator({ isOnline, size = 'sm', className }: OnlineIndi
     <span
       className={cn(
         'rounded-full border-2 border-background block',
-        isOnline ? 'bg-emerald-500' : 'bg-muted-foreground/40',
+        isOnline ? 'bg-primary' : 'bg-muted-foreground/40',
         size === 'sm' ? 'w-2.5 h-2.5' : 'w-3 h-3',
         className
       )}
