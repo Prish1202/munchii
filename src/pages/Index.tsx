@@ -335,7 +335,7 @@ export default function Index() {
             </Link>
             <Link to="/signup">
               <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.98 }}>
-                <Button size="lg" variant="outline" className="text-base font-semibold gap-2 h-14 px-8 rounded-2xl border-2">
+                <Button size="lg" variant="outline" className="text-base font-semibold gap-2 h-14 px-8 rounded-2xl border-2 border-secondary text-secondary hover:bg-secondary/10">
                   Partner with us <UtensilsCrossed className="w-4 h-4" />
                 </Button>
               </motion.div>
