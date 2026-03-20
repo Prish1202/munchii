@@ -148,16 +148,16 @@ export default function ProfileSettings() {
                 value={form.username}
                 onChange={e => handleUsernameChange(e.target.value)}
                 placeholder="@username"
-                className={`rounded-xl pr-9 ${usernameStatus === 'taken' ? 'border-destructive focus-visible:ring-destructive' : usernameStatus === 'available' ? 'border-green-500 focus-visible:ring-green-500' : ''}`}
+                className={`rounded-xl pr-9 ${usernameStatus === 'taken' ? 'border-destructive focus-visible:ring-destructive' : usernameStatus === 'available' ? 'border-primary focus-visible:ring-primary' : ''}`}
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
                 {usernameStatus === 'checking' && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
-                {usernameStatus === 'available' && <Check className="w-4 h-4 text-green-500" />}
+                {usernameStatus === 'available' && <Check className="w-4 h-4 text-primary" />}
                 {usernameStatus === 'taken' && <X className="w-4 h-4 text-destructive" />}
               </div>
             </div>
             {usernameStatus === 'taken' && <p className="text-[11px] text-destructive">Username not available</p>}
-            {usernameStatus === 'available' && <p className="text-[11px] text-green-500">Username available!</p>}
+            {usernameStatus === 'available' && <p className="text-[11px] text-primary">Username available!</p>}
           </div>
 
           <div className="space-y-1.5">

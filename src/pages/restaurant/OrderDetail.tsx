@@ -216,8 +216,8 @@ export default function RestaurantOrderDetail() {
           <Card className="border-amber-500">
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-2">
-                <Banknote className="w-5 h-5 text-amber-600" />
-                <span className="font-semibold text-amber-800 dark:text-amber-300">Collect Cash: ₹{Number(order.total_amount).toFixed(0)}</span>
+                <Banknote className="w-5 h-5 text-primary" />
+                <span className="font-semibold text-foreground">Collect Cash: ₹{Number(order.total_amount).toFixed(0)}</span>
               </div>
               <p className="text-xs text-muted-foreground">
                 Collect ₹{Number(order.total_amount).toFixed(0)} from customer (includes ₹{platformFee} platform fee). Your earning: ₹{itemTotal.toFixed(0)}
