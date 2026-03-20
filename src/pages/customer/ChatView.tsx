@@ -15,7 +15,7 @@ import { useReactions } from '@/hooks/useReactions';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { ArrowLeft, Send, Loader2, Lock, Coins, X, Reply, Forward } from 'lucide-react';
+import { ArrowLeft, Send, Loader2, Coins, X, Reply, Forward } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { ChatCoinTransfer } from '@/components/customer/ChatCoinTransfer';
@@ -316,10 +316,6 @@ export default function ChatView() {
               <p className="text-xs text-muted-foreground">@{otherProfile.username}</p>
             ) : null}
           </div>
-          <div className="flex items-center gap-1 text-[10px] text-muted-foreground/60">
-            <Lock className="w-3 h-3" />
-            E2EE
-          </div>
         </header>
 
         <div
@@ -328,8 +324,7 @@ export default function ChatView() {
         >
           {showEmptyState ? (
             <div className="text-center py-12">
-              <Lock className="w-8 h-8 mx-auto text-muted-foreground/30 mb-2" />
-              <p className="text-sm text-muted-foreground">Send your first encrypted message</p>
+              <p className="text-sm text-muted-foreground">Say hi 👋</p>
             </div>
           ) : (
             <>
