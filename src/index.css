@@ -6,108 +6,108 @@
 
 @layer base {
   :root {
-    /* Warm orange × soft neutrals */
-    --background: 32 45% 97%;
-    --foreground: 18 14% 14%;
+    /* Orange + Royal Blue premium palette */
+    --background: 220 20% 97%;
+    --foreground: 220 18% 13%;
 
     --card: 0 0% 100%;
-    --card-foreground: 18 14% 14%;
+    --card-foreground: 220 18% 13%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 18 14% 14%;
+    --popover-foreground: 220 18% 13%;
 
-    --primary: 24 92% 58%;
+    --primary: 24 92% 56%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 18 96% 66%;
+    --primary-glow: 20 96% 64%;
 
-    --secondary: 35 42% 93%;
-    --secondary-foreground: 24 18% 24%;
+    --secondary: 224 76% 48%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 30 24% 90%;
-    --muted-foreground: 22 10% 43%;
+    --muted: 220 16% 91%;
+    --muted-foreground: 220 10% 44%;
 
-    --accent: 16 88% 63%;
+    --accent: 224 68% 54%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 74% 56%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 28 22% 86%;
-    --input: 28 22% 86%;
-    --ring: 24 92% 58%;
+    --border: 220 16% 88%;
+    --input: 220 16% 88%;
+    --ring: 224 76% 48%;
 
     --radius: 1.1rem;
 
-    --coin: 35 94% 58%;
-    --coin-foreground: 24 28% 18%;
+    --coin: 38 94% 56%;
+    --coin-foreground: 30 28% 16%;
 
-    --social: 20 84% 61%;
+    --social: 224 68% 54%;
     --social-foreground: 0 0% 100%;
 
-    --sidebar-background: 34 38% 95%;
-    --sidebar-foreground: 18 14% 14%;
-    --sidebar-primary: 24 92% 58%;
+    --sidebar-background: 224 32% 96%;
+    --sidebar-foreground: 220 18% 13%;
+    --sidebar-primary: 224 76% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 35 42% 91%;
-    --sidebar-accent-foreground: 24 18% 24%;
-    --sidebar-border: 28 22% 86%;
-    --sidebar-ring: 24 92% 58%;
+    --sidebar-accent: 224 28% 92%;
+    --sidebar-accent-foreground: 224 40% 28%;
+    --sidebar-border: 220 16% 88%;
+    --sidebar-ring: 224 76% 48%;
 
-    --customer: 24 92% 58%;
-    --restaurant: 12 80% 58%;
+    --customer: 24 92% 56%;
+    --restaurant: 224 76% 48%;
     --delivery: 30 82% 56%;
-    --admin: 18 75% 52%;
+    --admin: 224 68% 42%;
   }
 
   .dark {
-    --background: 22 18% 9%;
-    --foreground: 32 40% 94%;
+    --background: 222 22% 8%;
+    --foreground: 220 20% 94%;
 
-    --card: 24 16% 12%;
-    --card-foreground: 32 40% 94%;
+    --card: 222 20% 12%;
+    --card-foreground: 220 20% 94%;
 
-    --popover: 24 16% 12%;
-    --popover-foreground: 32 40% 94%;
+    --popover: 222 20% 12%;
+    --popover-foreground: 220 20% 94%;
 
-    --primary: 24 92% 60%;
+    --primary: 24 92% 58%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 18 96% 68%;
+    --primary-glow: 20 96% 66%;
 
-    --secondary: 22 14% 17%;
-    --secondary-foreground: 32 26% 84%;
+    --secondary: 224 72% 52%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 24 12% 18%;
-    --muted-foreground: 28 10% 61%;
+    --muted: 222 16% 18%;
+    --muted-foreground: 220 10% 58%;
 
-    --accent: 16 84% 61%;
+    --accent: 224 64% 56%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 66% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 24 12% 20%;
-    --input: 24 12% 20%;
-    --ring: 24 92% 60%;
+    --border: 222 14% 20%;
+    --input: 222 14% 20%;
+    --ring: 224 72% 52%;
 
-    --coin: 35 94% 58%;
-    --coin-foreground: 35 36% 90%;
+    --coin: 38 94% 56%;
+    --coin-foreground: 38 36% 90%;
 
-    --social: 20 84% 61%;
+    --social: 224 64% 56%;
     --social-foreground: 0 0% 100%;
 
-    --sidebar-background: 24 16% 10%;
-    --sidebar-foreground: 32 40% 94%;
-    --sidebar-primary: 24 92% 60%;
+    --sidebar-background: 222 20% 10%;
+    --sidebar-foreground: 220 20% 94%;
+    --sidebar-primary: 224 72% 52%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 22 14% 17%;
-    --sidebar-accent-foreground: 32 26% 84%;
-    --sidebar-border: 24 12% 20%;
-    --sidebar-ring: 24 92% 60%;
+    --sidebar-accent: 222 16% 17%;
+    --sidebar-accent-foreground: 220 20% 84%;
+    --sidebar-border: 222 14% 20%;
+    --sidebar-ring: 224 72% 52%;
 
-    --customer: 24 92% 60%;
-    --restaurant: 12 80% 60%;
+    --customer: 24 92% 58%;
+    --restaurant: 224 72% 52%;
     --delivery: 30 82% 58%;
-    --admin: 18 75% 58%;
+    --admin: 224 64% 48%;
   }
 }
 
@@ -151,20 +151,28 @@
     background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
   }
 
+  .gradient-royal {
+    background: linear-gradient(135deg, hsl(var(--secondary)), hsl(var(--accent)));
+  }
+
+  .gradient-brand {
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
+  }
+
   .gradient-coin {
-    background: linear-gradient(135deg, hsl(var(--coin)), hsl(var(--accent)));
+    background: linear-gradient(135deg, hsl(var(--coin)), hsl(var(--primary)));
   }
 
   .gradient-social {
-    background: linear-gradient(135deg, hsl(var(--social)), hsl(var(--accent)));
+    background: linear-gradient(135deg, hsl(var(--social)), hsl(var(--secondary)));
   }
 
   .gradient-mint {
-    background: linear-gradient(135deg, hsl(var(--secondary-foreground) / 0.92), hsl(var(--foreground) / 0.82));
+    background: linear-gradient(135deg, hsl(var(--secondary) / 0.92), hsl(var(--accent) / 0.82));
   }
 
   .gradient-surface {
-    background: linear-gradient(180deg, hsl(var(--card)), hsl(var(--secondary) / 0.72));
+    background: linear-gradient(180deg, hsl(var(--card)), hsl(var(--secondary) / 0.12));
   }
 
   .glass {
