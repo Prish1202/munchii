@@ -64,7 +64,7 @@ export default function RestaurantNotificationSettings() {
             onToggle={toggle('order_notifications')}
           />
           <SettingRow
-            icon={<TrendingUp className="w-4 h-4 text-amber-500" />}
+            icon={<TrendingUp className="w-4 h-4 text-primary" />}
             title="Earnings"
             description="Earnings and payout notifications"
             checked={preferences.earning_notifications}

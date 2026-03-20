@@ -10,7 +10,7 @@ const TYPE_ICONS: Record<string, React.ReactNode> = {
   order: <ShoppingBag className="w-4 h-4 text-primary" />,
   social: <UserPlus className="w-4 h-4 text-secondary" />,
   error: <AlertCircle className="w-4 h-4 text-destructive" />,
-  earning: <TrendingUp className="w-4 h-4 text-amber-500" />,
+  earning: <TrendingUp className="w-4 h-4 text-primary" />,
   info: <Bell className="w-4 h-4 text-muted-foreground" />,
 };
 

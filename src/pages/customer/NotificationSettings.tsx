@@ -80,7 +80,7 @@ export default function NotificationSettings() {
             onToggle={toggle('message_notifications')}
           />
           <SettingRow
-            icon={<TrendingUp className="w-4 h-4 text-amber-500" />}
+            icon={<TrendingUp className="w-4 h-4 text-primary" />}
             title="Earnings & Coins"
             description="Coin rewards and transaction updates"
             checked={preferences.earning_notifications}
