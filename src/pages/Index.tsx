@@ -134,7 +134,7 @@ function GamificationShowcase() {
 
       {/* Leaderboard Card */}
       <motion.div variants={scaleIn} className="p-6 rounded-3xl border bg-card/80 backdrop-blur-sm overflow-hidden">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center mb-4 shadow-lg">
+        <div className="w-12 h-12 rounded-2xl gradient-coin flex items-center justify-center mb-4 shadow-lg">
           <Trophy className="w-6 h-6 text-white" />
         </div>
         <h3 className="font-display font-bold text-lg">Leaderboard</h3>
@@ -149,8 +149,8 @@ function GamificationShowcase() {
               transition={{ delay: 1 + i * 0.2 }}
             >
               <span className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold ${
-                i === 0 ? 'bg-gradient-to-br from-yellow-400 to-amber-500 text-white' :
-                i === 1 ? 'bg-slate-300 text-white' : 'bg-primary text-primary-foreground'
+                i === 0 ? 'gradient-coin text-primary-foreground' :
+                i === 1 ? 'bg-muted text-muted-foreground' : 'gradient-royal text-secondary-foreground'
               }`}>
                 {i + 1}
               </span>
@@ -223,20 +223,20 @@ export default function Index() {
         <div className="container flex h-16 items-center justify-between backdrop-blur-xl">
           <Link to="/" className="flex items-center gap-2.5">
             <motion.div
-              className="w-10 h-10 rounded-2xl gradient-primary flex items-center justify-center shadow-lg glow-primary"
+              className="w-10 h-10 rounded-2xl gradient-brand flex items-center justify-center shadow-lg"
               whileHover={{ scale: 1.1, rotate: 5 }}
               whileTap={{ scale: 0.95 }}
             >
               <UtensilsCrossed className="w-5 h-5 text-primary-foreground" />
             </motion.div>
-            <span className="font-display font-bold text-xl">Munchii</span>
+            <span className="font-display font-bold text-xl text-secondary">Munchii</span>
           </Link>
           <div className="flex items-center gap-2">
             <Link to="/login">
               <Button variant="ghost" className="font-medium">Login</Button>
             </Link>
             <Link to="/signup">
-              <Button className="gradient-primary border-0 font-semibold shadow-lg glow-primary">
+              <Button className="gradient-royal border-0 font-semibold shadow-lg">
                 Get Started
               </Button>
             </Link>
@@ -286,7 +286,7 @@ export default function Index() {
         <div className="container text-center relative">
           <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}>
             <motion.div
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary text-secondary-foreground text-sm font-semibold mb-8 border border-border"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 text-secondary text-sm font-semibold mb-8 border border-secondary/20"
               whileHover={{ scale: 1.05 }}
             >
               <Sparkles className="w-4 h-4 text-primary" />
@@ -335,7 +335,7 @@ export default function Index() {
             </Link>
             <Link to="/signup">
               <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.98 }}>
-                <Button size="lg" variant="outline" className="text-base font-semibold gap-2 h-14 px-8 rounded-2xl border-2">
+                <Button size="lg" variant="outline" className="text-base font-semibold gap-2 h-14 px-8 rounded-2xl border-2 border-secondary text-secondary hover:bg-secondary/10">
                   Partner with us <UtensilsCrossed className="w-4 h-4" />
                 </Button>
               </motion.div>
