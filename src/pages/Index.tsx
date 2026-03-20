@@ -134,7 +134,7 @@ function GamificationShowcase() {
 
       {/* Leaderboard Card */}
       <motion.div variants={scaleIn} className="p-6 rounded-3xl border bg-card/80 backdrop-blur-sm overflow-hidden">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center mb-4 shadow-lg">
+        <div className="w-12 h-12 rounded-2xl gradient-coin flex items-center justify-center mb-4 shadow-lg">
           <Trophy className="w-6 h-6 text-white" />
         </div>
         <h3 className="font-display font-bold text-lg">Leaderboard</h3>
@@ -149,8 +149,8 @@ function GamificationShowcase() {
               transition={{ delay: 1 + i * 0.2 }}
             >
               <span className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold ${
-                i === 0 ? 'bg-gradient-to-br from-yellow-400 to-amber-500 text-white' :
-                i === 1 ? 'bg-slate-300 text-white' : 'bg-primary text-primary-foreground'
+                i === 0 ? 'gradient-coin text-primary-foreground' :
+                i === 1 ? 'bg-muted text-muted-foreground' : 'gradient-royal text-secondary-foreground'
               }`}>
                 {i + 1}
               </span>
