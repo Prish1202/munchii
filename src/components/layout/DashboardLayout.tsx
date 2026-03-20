@@ -167,7 +167,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 to={item.href}
                 className={cn(
                   'flex flex-col items-center gap-1 px-2 py-2 rounded-2xl text-[10px] font-semibold transition-all min-w-0',
-                  isActive ? 'text-primary' : 'text-muted-foreground'
+                  isActive ? 'text-secondary' : 'text-muted-foreground'
                 )}
               >
                 <div className={cn('p-2 rounded-2xl transition-all relative', isActive && 'bg-secondary/12 shadow-soft')}>
