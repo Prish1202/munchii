@@ -502,7 +502,7 @@ export default function ChatView() {
               }}
               inputMode="text"
               enterKeyHint="send"
-              className="flex-1 rounded-2xl bg-secondary border-0 focus-visible:ring-1 resize-none min-h-[38px] max-h-[120px] py-2 px-3.5 text-sm"
+              className="flex-1 rounded-2xl bg-muted border-0 focus-visible:ring-1 focus-visible:ring-ring resize-none min-h-[38px] max-h-[120px] py-2 px-3.5 text-sm"
               maxLength={2000}
               rows={1}
             />

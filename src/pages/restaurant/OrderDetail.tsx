@@ -14,13 +14,13 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; nextStatus?: OrderStatus; nextLabel?: string }> = {
-  placed: { label: 'New', color: 'bg-blue-500', nextStatus: 'accepted', nextLabel: 'Accept Order' },
-  accepted: { label: 'Accepted', color: 'bg-indigo-500', nextStatus: 'preparing', nextLabel: 'Start Preparing' },
-  preparing: { label: 'Preparing', color: 'bg-yellow-500', nextStatus: 'ready_for_pickup', nextLabel: 'Mark Ready for Pickup' },
-  ready_for_pickup: { label: 'Ready for Pickup', color: 'bg-orange-500' },
-  picked_up: { label: 'Picked Up', color: 'bg-purple-500' },
-  completed: { label: 'Completed', color: 'bg-green-500' },
-  cancelled: { label: 'Cancelled', color: 'bg-red-500' },
+  placed: { label: 'New', color: 'bg-secondary', nextStatus: 'accepted', nextLabel: 'Accept Order' },
+  accepted: { label: 'Accepted', color: 'bg-accent', nextStatus: 'preparing', nextLabel: 'Start Preparing' },
+  preparing: { label: 'Preparing', color: 'bg-primary', nextStatus: 'ready_for_pickup', nextLabel: 'Mark Ready for Pickup' },
+  ready_for_pickup: { label: 'Ready for Pickup', color: 'bg-primary' },
+  picked_up: { label: 'Picked Up', color: 'bg-secondary' },
+  completed: { label: 'Completed', color: 'bg-secondary' },
+  cancelled: { label: 'Cancelled', color: 'bg-destructive' },
 };
 
 const PAYMENT_LABELS: Record<string, { label: string; icon: typeof Banknote }> = {
@@ -216,8 +216,8 @@ export default function RestaurantOrderDetail() {
           <Card className="border-amber-500">
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-2">
-                <Banknote className="w-5 h-5 text-amber-600" />
-                <span className="font-semibold text-amber-800 dark:text-amber-300">Collect Cash: ₹{Number(order.total_amount).toFixed(0)}</span>
+                <Banknote className="w-5 h-5 text-primary" />
+                <span className="font-semibold text-foreground">Collect Cash: ₹{Number(order.total_amount).toFixed(0)}</span>
               </div>
               <p className="text-xs text-muted-foreground">
                 Collect ₹{Number(order.total_amount).toFixed(0)} from customer (includes ₹{platformFee} platform fee). Your earning: ₹{itemTotal.toFixed(0)}
@@ -234,7 +234,7 @@ export default function RestaurantOrderDetail() {
                 <Button variant="outline" className="flex-1 border-destructive text-destructive hover:bg-destructive/10" onClick={() => handleUpdateStatus('cancelled')} disabled={updateStatus.isPending}>
                   <X className="w-4 h-4 mr-2" /> Reject
                 </Button>
-                <Button className="flex-1 bg-green-600 hover:bg-green-700" onClick={() => handleUpdateStatus('accepted')} disabled={updateStatus.isPending}>
+                <Button className="flex-1 bg-secondary hover:bg-secondary/90 text-secondary-foreground" onClick={() => handleUpdateStatus('accepted')} disabled={updateStatus.isPending}>
                   <Check className="w-4 h-4 mr-2" /> Accept
                 </Button>
               </>

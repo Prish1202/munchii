@@ -6,80 +6,80 @@
 
 @layer base {
   :root {
-    /* Orange + Royal Blue premium palette */
-    --background: 220 20% 97%;
-    --foreground: 220 18% 13%;
+    /* Brand: Orange #FF6A1A + Royal Blue #1E3A8A */
+    --background: 210 40% 98%;
+    --foreground: 220 26% 17%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 18% 13%;
+    --card-foreground: 220 26% 17%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 18% 13%;
+    --popover-foreground: 220 26% 17%;
 
-    --primary: 24 92% 56%;
+    --primary: 22 95% 55%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 20 96% 64%;
+    --primary-glow: 22 96% 62%;
 
-    --secondary: 224 76% 48%;
+    --secondary: 224 63% 33%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 220 16% 91%;
-    --muted-foreground: 220 10% 44%;
+    --muted: 210 20% 92%;
+    --muted-foreground: 220 14% 46%;
 
-    --accent: 224 68% 54%;
+    --accent: 224 56% 42%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 74% 56%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 16% 88%;
-    --input: 220 16% 88%;
-    --ring: 224 76% 48%;
+    --border: 214 18% 88%;
+    --input: 214 18% 88%;
+    --ring: 224 63% 33%;
 
     --radius: 1.1rem;
 
     --coin: 38 94% 56%;
     --coin-foreground: 30 28% 16%;
 
-    --social: 224 68% 54%;
+    --social: 224 56% 42%;
     --social-foreground: 0 0% 100%;
 
-    --sidebar-background: 224 32% 96%;
-    --sidebar-foreground: 220 18% 13%;
-    --sidebar-primary: 224 76% 48%;
+    --sidebar-background: 210 30% 97%;
+    --sidebar-foreground: 220 26% 17%;
+    --sidebar-primary: 224 63% 33%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 224 28% 92%;
+    --sidebar-accent: 214 28% 92%;
     --sidebar-accent-foreground: 224 40% 28%;
-    --sidebar-border: 220 16% 88%;
-    --sidebar-ring: 224 76% 48%;
+    --sidebar-border: 214 18% 88%;
+    --sidebar-ring: 224 63% 33%;
 
-    --customer: 24 92% 56%;
-    --restaurant: 224 76% 48%;
+    --customer: 22 95% 55%;
+    --restaurant: 224 63% 33%;
     --delivery: 30 82% 56%;
-    --admin: 224 68% 42%;
+    --admin: 224 56% 38%;
   }
 
   .dark {
     --background: 222 22% 8%;
-    --foreground: 220 20% 94%;
+    --foreground: 210 30% 94%;
 
     --card: 222 20% 12%;
-    --card-foreground: 220 20% 94%;
+    --card-foreground: 210 30% 94%;
 
     --popover: 222 20% 12%;
-    --popover-foreground: 220 20% 94%;
+    --popover-foreground: 210 30% 94%;
 
-    --primary: 24 92% 58%;
+    --primary: 22 95% 57%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 20 96% 66%;
+    --primary-glow: 22 96% 64%;
 
-    --secondary: 224 72% 52%;
+    --secondary: 224 58% 40%;
     --secondary-foreground: 0 0% 100%;
 
     --muted: 222 16% 18%;
-    --muted-foreground: 220 10% 58%;
+    --muted-foreground: 210 12% 58%;
 
-    --accent: 224 64% 56%;
+    --accent: 224 50% 48%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 66% 50%;
@@ -87,27 +87,27 @@
 
     --border: 222 14% 20%;
     --input: 222 14% 20%;
-    --ring: 224 72% 52%;
+    --ring: 224 58% 40%;
 
     --coin: 38 94% 56%;
     --coin-foreground: 38 36% 90%;
 
-    --social: 224 64% 56%;
+    --social: 224 50% 48%;
     --social-foreground: 0 0% 100%;
 
     --sidebar-background: 222 20% 10%;
-    --sidebar-foreground: 220 20% 94%;
-    --sidebar-primary: 224 72% 52%;
+    --sidebar-foreground: 210 30% 94%;
+    --sidebar-primary: 224 58% 40%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 222 16% 17%;
-    --sidebar-accent-foreground: 220 20% 84%;
+    --sidebar-accent-foreground: 210 20% 84%;
     --sidebar-border: 222 14% 20%;
-    --sidebar-ring: 224 72% 52%;
+    --sidebar-ring: 224 58% 40%;
 
-    --customer: 24 92% 58%;
-    --restaurant: 224 72% 52%;
+    --customer: 22 95% 57%;
+    --restaurant: 224 58% 40%;
     --delivery: 30 82% 58%;
-    --admin: 224 64% 48%;
+    --admin: 224 50% 44%;
   }
 }
 

@@ -14,13 +14,13 @@ import {
 import { format, formatDistanceToNow } from 'date-fns';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; nextStatus?: OrderStatus; nextLabel?: string }> = {
-  placed: { label: 'New', color: 'bg-blue-500', nextStatus: 'accepted', nextLabel: 'Accept' },
-  accepted: { label: 'Accepted', color: 'bg-indigo-500', nextStatus: 'preparing', nextLabel: 'Start Preparing' },
-  preparing: { label: 'Preparing', color: 'bg-yellow-500', nextStatus: 'ready_for_pickup', nextLabel: 'Mark Ready for Pickup' },
-  ready_for_pickup: { label: 'Ready for Pickup', color: 'bg-orange-500' },
-  picked_up: { label: 'Picked Up', color: 'bg-purple-500' },
-  completed: { label: 'Completed', color: 'bg-green-500' },
-  cancelled: { label: 'Cancelled', color: 'bg-red-500' },
+  placed: { label: 'New', color: 'bg-secondary', nextStatus: 'accepted', nextLabel: 'Accept' },
+  accepted: { label: 'Accepted', color: 'bg-accent', nextStatus: 'preparing', nextLabel: 'Start Preparing' },
+  preparing: { label: 'Preparing', color: 'bg-primary', nextStatus: 'ready_for_pickup', nextLabel: 'Mark Ready for Pickup' },
+  ready_for_pickup: { label: 'Ready for Pickup', color: 'bg-primary' },
+  picked_up: { label: 'Picked Up', color: 'bg-secondary' },
+  completed: { label: 'Completed', color: 'bg-secondary' },
+  cancelled: { label: 'Cancelled', color: 'bg-destructive' },
 };
 
 const PAYMENT_LABELS: Record<string, { label: string; icon: typeof Banknote }> = {
@@ -70,8 +70,8 @@ export default function RestaurantOrders() {
               <section>
                 <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
                   <span className="relative flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
                   </span>
                   New Orders ({pendingOrders.length})
                 </h2>
