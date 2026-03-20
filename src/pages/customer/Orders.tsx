@@ -11,12 +11,12 @@ import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 
 const STATUS_CONFIG: Record<OrderStatus, { label: string; className: string }> = {
-  placed: { label: 'Placed', className: 'bg-blue-500 text-white' },
-  accepted: { label: 'Accepted', className: 'bg-indigo-500 text-white' },
-  preparing: { label: 'Preparing', className: 'bg-yellow-500 text-white' },
-  ready_for_pickup: { label: 'Ready for Pickup', className: 'bg-orange-500 text-white' },
-  picked_up: { label: 'Picked Up', className: 'bg-purple-500 text-white' },
-  completed: { label: 'Completed', className: 'bg-green-600 text-white' },
+  placed: { label: 'Placed', className: 'bg-secondary text-secondary-foreground' },
+  accepted: { label: 'Accepted', className: 'bg-accent text-accent-foreground' },
+  preparing: { label: 'Preparing', className: 'bg-primary text-primary-foreground' },
+  ready_for_pickup: { label: 'Ready for Pickup', className: 'bg-primary text-primary-foreground' },
+  picked_up: { label: 'Picked Up', className: 'bg-secondary text-secondary-foreground' },
+  completed: { label: 'Completed', className: 'bg-secondary text-secondary-foreground' },
   cancelled: { label: 'Cancelled', className: 'bg-destructive text-destructive-foreground' },
 };
 

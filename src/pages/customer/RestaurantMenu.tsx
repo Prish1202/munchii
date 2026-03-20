@@ -88,7 +88,7 @@ export default function RestaurantMenu() {
               {restaurant.address}
             </p>
             <div className="flex items-center gap-3 mt-2">
-              <Badge className="bg-green-600 text-white gap-1">
+              <Badge className="bg-secondary text-secondary-foreground gap-1">
                 <Star className="w-3 h-3 fill-current" /> 4.2
               </Badge>
               <span className="text-xs opacity-80 flex items-center gap-1">
