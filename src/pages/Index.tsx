@@ -223,20 +223,20 @@ export default function Index() {
         <div className="container flex h-16 items-center justify-between backdrop-blur-xl">
           <Link to="/" className="flex items-center gap-2.5">
             <motion.div
-              className="w-10 h-10 rounded-2xl gradient-primary flex items-center justify-center shadow-lg glow-primary"
+              className="w-10 h-10 rounded-2xl gradient-brand flex items-center justify-center shadow-lg"
               whileHover={{ scale: 1.1, rotate: 5 }}
               whileTap={{ scale: 0.95 }}
             >
               <UtensilsCrossed className="w-5 h-5 text-primary-foreground" />
             </motion.div>
-            <span className="font-display font-bold text-xl">Munchii</span>
+            <span className="font-display font-bold text-xl text-secondary">Munchii</span>
           </Link>
           <div className="flex items-center gap-2">
             <Link to="/login">
               <Button variant="ghost" className="font-medium">Login</Button>
             </Link>
             <Link to="/signup">
-              <Button className="gradient-primary border-0 font-semibold shadow-lg glow-primary">
+              <Button className="gradient-royal border-0 font-semibold shadow-lg">
                 Get Started
               </Button>
             </Link>
@@ -286,7 +286,7 @@ export default function Index() {
         <div className="container text-center relative">
           <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}>
             <motion.div
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary text-secondary-foreground text-sm font-semibold mb-8 border border-border"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 text-secondary text-sm font-semibold mb-8 border border-secondary/20"
               whileHover={{ scale: 1.05 }}
             >
               <Sparkles className="w-4 h-4 text-primary" />
