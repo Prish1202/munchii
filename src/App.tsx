@@ -38,6 +38,9 @@ import ChatView from "./pages/customer/ChatView";
 import CustomerNotifications from "./pages/customer/Notifications";
 import NotificationSettings from "./pages/customer/NotificationSettings";
 import ProfileSettings from "./pages/customer/ProfileSettings";
+import ChatSettings from "./pages/customer/ChatSettings";
+import AccountPrivacy from "./pages/customer/AccountPrivacy";
+import BlockedUsers from "./pages/customer/BlockedUsers";
 import { UsernameSetup } from "./components/customer/UsernameSetup";
 // Restaurant Pages
 import RestaurantDashboard from "./pages/restaurant/Dashboard";
@@ -109,6 +112,9 @@ const App = () => (
               <Route path="/customer/chat/:conversationId" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><ChatView /></UsernameSetup></ProtectedRoute>} />
               <Route path="/customer/notifications" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><CustomerNotifications /></UsernameSetup></ProtectedRoute>} />
               <Route path="/customer/notification-settings" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><NotificationSettings /></UsernameSetup></ProtectedRoute>} />
+              <Route path="/customer/chat-settings" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><ChatSettings /></UsernameSetup></ProtectedRoute>} />
+              <Route path="/customer/account-privacy" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><AccountPrivacy /></UsernameSetup></ProtectedRoute>} />
+              <Route path="/customer/blocked-users" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><BlockedUsers /></UsernameSetup></ProtectedRoute>} />
               <Route path="/customer/*" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><CustomerDashboard /></UsernameSetup></ProtectedRoute>} />
 
               {/* Restaurant Routes */}
