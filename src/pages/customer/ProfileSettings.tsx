@@ -222,13 +222,13 @@ export default function ProfileSettings() {
             />
           </div>
           <SettingsLink icon={Bell} label="Notifications" href="/customer/notification-settings" />
-          <SettingsLink icon={MessageSquare} label="Chat Settings" href="/customer/notification-settings" />
+          <SettingsLink icon={MessageSquare} label="Chat Settings" href="/customer/chat-settings" />
         </SettingsSection>
 
         {/* Privacy & Security */}
         <SettingsSection title="Privacy & Security" delay={0.15}>
           <SettingsLink icon={Lock} label="Change Password" href="/forgot-password" />
-          <SettingsLink icon={Eye} label="Account Privacy" href="/customer/notification-settings" />
+          <SettingsLink icon={Eye} label="Account Privacy" href="/customer/account-privacy" />
         </SettingsSection>
 
         {/* Legal & Support */}
