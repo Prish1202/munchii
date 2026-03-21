@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { LocationProvider } from "@/contexts/LocationContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 // Pages
 import Index from "./pages/Index";
@@ -64,6 +65,7 @@ import AdminPayouts from "./pages/admin/Payouts";
 const queryClient = new QueryClient();
 
 const App = () => (
+  <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
@@ -136,6 +138,7 @@ const App = () => (
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
+  </ThemeProvider>
 );
 
 export default App;

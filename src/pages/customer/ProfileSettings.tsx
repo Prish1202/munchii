@@ -6,18 +6,24 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ArrowLeft, Camera, Save, Loader2, Check, X, Shield, FileText, Users, Mail, MessageSquare, ChevronRight } from 'lucide-react';
+import {
+  ArrowLeft, Camera, Save, Loader2, Check, X,
+  Shield, FileText, Users, Mail, MessageSquare, ChevronRight,
+  Bell, Moon, Sun, LogOut, HelpCircle, Lock, Globe, Eye
+} from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import { useTheme } from 'next-themes';
 
 export default function ProfileSettings() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { data: profile } = useProfile();
   const updateProfile = useUpdateProfile();
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -32,7 +38,6 @@ export default function ProfileSettings() {
   const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
   const usernameTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
-  // Init form when profile loads
   if (profile && !initialized) {
     setForm({
       name: profile.name || '',
@@ -96,24 +101,46 @@ export default function ProfileSettings() {
     supabase.from('profiles').update({ bio: form.bio || null }).eq('id', user!.id).then(() => {});
   };
 
-  const LEGAL_LINKS = [
-    { icon: FileText, label: 'Terms of Service', href: '/terms' },
-    { icon: Users, label: 'Community Guidelines', href: '/community-guidelines' },
-    { icon: Shield, label: 'Privacy Policy', href: '/privacy' },
-  ];
+  const SettingsSection = ({ title, children, delay = 0 }: { title: string; children: React.ReactNode; delay?: number }) => (
+    <motion.div
+      className="bg-card rounded-2xl border border-border overflow-hidden"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay }}
+    >
+      <div className="px-5 pt-4 pb-2">
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{title}</h3>
+      </div>
+      {children}
+    </motion.div>
+  );
+
+  const SettingsLink = ({ icon: Icon, label, href, destructive }: { icon: any; label: string; href?: string; destructive?: boolean }) => {
+    const content = (
+      <div className={`flex items-center justify-between px-5 py-3.5 hover:bg-muted/50 transition-colors cursor-pointer ${destructive ? 'text-destructive' : ''}`}>
+        <div className="flex items-center gap-3">
+          <Icon className="w-4.5 h-4.5" />
+          <span className="text-sm font-medium">{label}</span>
+        </div>
+        {!destructive && <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+      </div>
+    );
+    if (href) return <Link to={href}>{content}</Link>;
+    return content;
+  };
 
   return (
     <DashboardLayout>
-      <div className="max-w-lg mx-auto pb-28 md:pb-6 space-y-5">
+      <div className="max-w-lg mx-auto pb-28 md:pb-6 space-y-4">
         {/* Header */}
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate('/customer/profile')} className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
+          <button onClick={() => navigate('/customer/profile')} className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="font-display font-bold text-lg">Edit Profile</h1>
+          <h1 className="font-display font-bold text-lg">Settings</h1>
         </div>
 
-        {/* Avatar */}
+        {/* Avatar + Name */}
         <motion.div className="flex flex-col items-center gap-3" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           <div className="relative group">
             <Avatar className="w-24 h-24 border-4 border-card shadow-lg">
@@ -131,96 +158,89 @@ export default function ProfileSettings() {
             </button>
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
           </div>
-          <p className="text-xs text-muted-foreground">Tap camera icon to change photo</p>
+          <div className="text-center">
+            <p className="font-display font-bold">{profile?.name}</p>
+            {profile?.username && <p className="text-sm text-muted-foreground">@{profile.username}</p>}
+          </div>
         </motion.div>
 
-        {/* Form */}
-        <motion.div className="bg-card rounded-2xl border border-border p-5 space-y-4" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Name</label>
-            <Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Your name" className="rounded-xl" />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Username</label>
-            <div className="relative">
-              <Input
-                value={form.username}
-                onChange={e => handleUsernameChange(e.target.value)}
-                placeholder="@username"
-                className={`rounded-xl pr-9 ${usernameStatus === 'taken' ? 'border-destructive focus-visible:ring-destructive' : usernameStatus === 'available' ? 'border-primary focus-visible:ring-primary' : ''}`}
-              />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                {usernameStatus === 'checking' && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
-                {usernameStatus === 'available' && <Check className="w-4 h-4 text-primary" />}
-                {usernameStatus === 'taken' && <X className="w-4 h-4 text-destructive" />}
-              </div>
+        {/* Edit Profile */}
+        <SettingsSection title="Edit Profile" delay={0.05}>
+          <div className="px-5 pb-5 space-y-4 pt-2">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Name</label>
+              <Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Your name" className="rounded-xl" />
             </div>
-            {usernameStatus === 'taken' && <p className="text-[11px] text-destructive">Username not available</p>}
-            {usernameStatus === 'available' && <p className="text-[11px] text-primary">Username available!</p>}
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Bio</label>
-            <Textarea value={form.bio} onChange={e => setForm(p => ({ ...p, bio: e.target.value }))} placeholder="Tell us about yourself..." className="rounded-xl resize-none" rows={3} maxLength={160} />
-            <p className="text-[10px] text-muted-foreground text-right">{form.bio.length}/160</p>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Campus</label>
-            <Input value={form.campus} onChange={e => setForm(p => ({ ...p, campus: e.target.value }))} placeholder="Your college/university" className="rounded-xl" />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Phone</label>
-            <Input value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} placeholder="Phone number" className="rounded-xl" />
-          </div>
-
-          <Button onClick={handleSave} className="w-full gradient-primary border-0 rounded-xl" disabled={updateProfile.isPending || usernameStatus === 'taken'}>
-            {updateProfile.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-            Save Changes
-          </Button>
-        </motion.div>
-
-        {/* Chat & Notification Settings */}
-        <motion.div className="bg-card rounded-2xl border border-border overflow-hidden" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <div className="px-5 pt-4 pb-2">
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Preferences</h3>
-          </div>
-          <Link to="/customer/notification-settings" className="flex items-center justify-between px-5 py-3 hover:bg-secondary/50 transition-colors">
-            <div className="flex items-center gap-3">
-              <MessageSquare className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Notification & Chat Settings</span>
-            </div>
-            <ChevronRight className="w-4 h-4 text-muted-foreground" />
-          </Link>
-        </motion.div>
-
-        {/* Legal & Safety */}
-        <motion.div className="bg-card rounded-2xl border border-border overflow-hidden" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-          <div className="px-5 pt-4 pb-2">
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Legal & Safety</h3>
-          </div>
-          {LEGAL_LINKS.map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.href}
-                to={item.href}
-                className="flex items-center justify-between px-5 py-3 hover:bg-secondary/50 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <Icon className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">{item.label}</span>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Username</label>
+              <div className="relative">
+                <Input
+                  value={form.username}
+                  onChange={e => handleUsernameChange(e.target.value)}
+                  placeholder="@username"
+                  className={`rounded-xl pr-9 ${usernameStatus === 'taken' ? 'border-destructive focus-visible:ring-destructive' : usernameStatus === 'available' ? 'border-primary focus-visible:ring-primary' : ''}`}
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  {usernameStatus === 'checking' && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
+                  {usernameStatus === 'available' && <Check className="w-4 h-4 text-primary" />}
+                  {usernameStatus === 'taken' && <X className="w-4 h-4 text-destructive" />}
                 </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
-              </Link>
-            );
-          })}
-        </motion.div>
+              </div>
+              {usernameStatus === 'taken' && <p className="text-[11px] text-destructive">Username not available</p>}
+              {usernameStatus === 'available' && <p className="text-[11px] text-primary">Username available!</p>}
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Bio</label>
+              <Textarea value={form.bio} onChange={e => setForm(p => ({ ...p, bio: e.target.value }))} placeholder="Tell us about yourself..." className="rounded-xl resize-none" rows={3} maxLength={160} />
+              <p className="text-[10px] text-muted-foreground text-right">{form.bio.length}/160</p>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Campus</label>
+              <Input value={form.campus} onChange={e => setForm(p => ({ ...p, campus: e.target.value }))} placeholder="Your college/university" className="rounded-xl" />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Phone</label>
+              <Input value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} placeholder="Phone number" className="rounded-xl" />
+            </div>
+            <Button onClick={handleSave} className="w-full gradient-primary border-0 rounded-xl" disabled={updateProfile.isPending || usernameStatus === 'taken'}>
+              {updateProfile.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+              Save Changes
+            </Button>
+          </div>
+        </SettingsSection>
+
+        {/* Preferences */}
+        <SettingsSection title="Preferences" delay={0.1}>
+          <div className="flex items-center justify-between px-5 py-3.5">
+            <div className="flex items-center gap-3">
+              {theme === 'dark' ? <Moon className="w-4.5 h-4.5" /> : <Sun className="w-4.5 h-4.5" />}
+              <span className="text-sm font-medium">Dark Mode</span>
+            </div>
+            <Switch
+              checked={theme === 'dark'}
+              onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+            />
+          </div>
+          <SettingsLink icon={Bell} label="Notifications" href="/customer/notification-settings" />
+          <SettingsLink icon={MessageSquare} label="Chat Settings" href="/customer/notification-settings" />
+        </SettingsSection>
+
+        {/* Privacy & Security */}
+        <SettingsSection title="Privacy & Security" delay={0.15}>
+          <SettingsLink icon={Lock} label="Change Password" href="/forgot-password" />
+          <SettingsLink icon={Eye} label="Account Privacy" href="/customer/notification-settings" />
+        </SettingsSection>
+
+        {/* Legal & Support */}
+        <SettingsSection title="Legal & Support" delay={0.2}>
+          <SettingsLink icon={FileText} label="Terms of Service" href="/terms" />
+          <SettingsLink icon={Users} label="Community Guidelines" href="/community-guidelines" />
+          <SettingsLink icon={Shield} label="Privacy Policy" href="/privacy" />
+          <SettingsLink icon={HelpCircle} label="Help & Support" href="mailto:munchii.in.prm@gmail.com" />
+        </SettingsSection>
 
         {/* Grievance Officer */}
-        <motion.div className="bg-card rounded-2xl border border-border p-5 space-y-2" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+        <motion.div className="bg-card rounded-2xl border border-border p-5 space-y-2" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
           <div className="flex items-center gap-2">
             <Mail className="w-4 h-4 text-muted-foreground" />
             <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Grievance Officer</h3>
@@ -235,6 +255,21 @@ export default function ProfileSettings() {
             We aim to acknowledge grievances within 24 hours and resolve within 15 business days.
           </p>
         </motion.div>
+
+        {/* Log Out */}
+        <motion.div
+          className="bg-card rounded-2xl border border-border overflow-hidden"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <button onClick={logout} className="flex items-center gap-3 px-5 py-3.5 w-full text-destructive hover:bg-destructive/5 transition-colors">
+            <LogOut className="w-4.5 h-4.5" />
+            <span className="text-sm font-semibold">Log Out</span>
+          </button>
+        </motion.div>
+
+        <p className="text-center text-[11px] text-muted-foreground pb-4">Munchii v1.0</p>
       </div>
     </DashboardLayout>
   );
