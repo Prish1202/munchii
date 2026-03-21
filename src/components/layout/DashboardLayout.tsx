@@ -114,9 +114,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               </Link>
             )}
             <NotificationBell />
-            <Button variant="ghost" size="icon" onClick={logout} className="rounded-2xl h-10 w-10 bg-card/70 hover:bg-card shadow-soft">
-              <LogOut className="w-4 h-4" />
-            </Button>
           </div>
         </div>
       </header>
