@@ -7,14 +7,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useMyRestaurant, useCreateRestaurant } from '@/hooks/useMenuManagement';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Store, MapPin, Bell } from 'lucide-react';
+import { ArrowLeft, Store, MapPin, Bell, LogOut, Moon, Sun } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTheme } from 'next-themes';
 
 export default function RestaurantSettings() {
   const { data: restaurant, isLoading } = useMyRestaurant();
   const createRestaurant = useCreateRestaurant();
+  const { logout } = useAuth();
+  const { theme, setTheme } = useTheme();
   const queryClient = useQueryClient();
   
   const [formData, setFormData] = useState({
@@ -210,6 +214,38 @@ export default function RestaurantSettings() {
                 <ArrowLeft className="w-4 h-4 rotate-180" />
               </Button>
             </Link>
+          </CardContent>
+        </Card>
+
+        {/* Appearance */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              {theme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+              Appearance
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">Dark Mode</p>
+                <p className="text-sm text-muted-foreground">Switch between light and dark theme</p>
+              </div>
+              <Switch
+                checked={theme === 'dark'}
+                onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Log Out */}
+        <Card>
+          <CardContent className="p-4">
+            <Button variant="outline" className="w-full text-destructive border-destructive/30 hover:bg-destructive/5" onClick={logout}>
+              <LogOut className="w-4 h-4 mr-2" />
+              Log Out
+            </Button>
           </CardContent>
         </Card>
       </div>
