@@ -7,7 +7,7 @@ import { useFollowerCounts } from '@/hooks/useFollowers';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ShoppingBag, Sparkles, Settings } from 'lucide-react';
+import { ShoppingBag, Sparkles, Settings, ClipboardList } from 'lucide-react';
 import { useCustomerOrders } from '@/hooks/useOrders';
 import { motion } from 'framer-motion';
 
@@ -20,6 +20,7 @@ export default function Profile() {
   const { data: counts } = useFollowerCounts(user?.id || '');
   const { data: orders } = useCustomerOrders();
 
+  const hasLiveOrder = orders?.some(o => !['completed', 'cancelled'].includes(o.status)) || false;
   const completedOrders = orders?.filter(o => o.status === 'completed').slice(0, 10) || [];
   const coinLevel = (wallet?.total_coins || 0) >= 500 ? 'Gold' : (wallet?.total_coins || 0) >= 100 ? 'Silver' : 'Bronze';
   const levelEmoji = coinLevel === 'Gold' ? '🥇' : coinLevel === 'Silver' ? '🥈' : '🥉';
@@ -44,9 +45,17 @@ export default function Profile() {
                   {profile?.name?.charAt(0)?.toUpperCase() || '?'}
                 </AvatarFallback>
               </Avatar>
-              <Button variant="outline" size="sm" onClick={() => navigate('/customer/profile/settings')} className="rounded-xl mb-1">
-                <Settings className="w-4 h-4 mr-1" /> Settings
-              </Button>
+              <div className="flex items-center gap-2 mb-1">
+                <Button variant="outline" size="sm" onClick={() => navigate('/customer/orders')} className="rounded-xl relative">
+                  <ClipboardList className="w-4 h-4 mr-1" /> Orders
+                  {hasLiveOrder && (
+                    <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-primary animate-pulse border-2 border-card" />
+                  )}
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => navigate('/customer/profile/settings')} className="rounded-xl">
+                  <Settings className="w-4 h-4 mr-1" /> Settings
+                </Button>
+              </div>
             </div>
 
             <div className="mt-3">
