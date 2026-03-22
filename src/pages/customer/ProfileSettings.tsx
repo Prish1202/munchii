@@ -236,6 +236,7 @@ export default function ProfileSettings() {
           <SettingsLink icon={FileText} label="Terms of Service" href="/terms" />
           <SettingsLink icon={Users} label="Community Guidelines" href="/community-guidelines" />
           <SettingsLink icon={Shield} label="Privacy Policy" href="/privacy" />
+          <SettingsLink icon={FileText} label="Cancellation & Refund Policy" href="/cancellation-refund" />
           <SettingsLink icon={HelpCircle} label="Help & Support" href="mailto:munchii.in.prm@gmail.com" />
         </SettingsSection>
 

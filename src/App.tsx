@@ -57,6 +57,7 @@ import { OnboardingGuard } from "./components/restaurant/OnboardingGuard";
 import TermsOfService from "./pages/legal/TermsOfService";
 import CommunityGuidelines from "./pages/legal/CommunityGuidelines";
 import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
+import CancellationRefundPolicy from "./pages/legal/CancellationRefundPolicy";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -92,6 +93,7 @@ const App = () => (
               <Route path="/terms" element={<TermsOfService />} />
               <Route path="/community-guidelines" element={<CommunityGuidelines />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/cancellation-refund" element={<CancellationRefundPolicy />} />
 
               {/* Customer Routes */}
               <Route path="/customer" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><CustomerDashboard /></UsernameSetup></ProtectedRoute>} />

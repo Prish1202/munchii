@@ -165,3 +165,29 @@ export function useCreateOrder() {
     },
   });
 }
+
+export function useCancelOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (orderId: string) => {
+      const { data, error } = await supabase
+        .from('orders')
+        .update({ status: 'cancelled' })
+        .eq('id', orderId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, orderId) => {
+      queryClient.invalidateQueries({ queryKey: ['customer-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+      toast.success('Order cancelled successfully');
+    },
+    onError: () => {
+      toast.error('Failed to cancel order');
+    },
+  });
+}
