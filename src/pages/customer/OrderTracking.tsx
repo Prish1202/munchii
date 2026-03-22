@@ -1,12 +1,24 @@
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
-import { useOrderItems, OrderStatus } from '@/hooks/useOrders';
+import { useOrderItems, OrderStatus, useCancelOrder } from '@/hooks/useOrders';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { toast } from 'sonner';
 import {
@@ -20,6 +32,10 @@ import {
   Wifi,
   WifiOff,
   KeyRound,
+  XCircle,
+  AlertTriangle,
+  CreditCard,
+  Info,
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -46,9 +62,16 @@ const STATUS_MESSAGES: Record<OrderStatus, string> = {
   cancelled: '❌ Order was cancelled',
 };
 
+const REFUND_TIMELINES: Record<string, string> = {
+  cod: 'No payment was collected — no refund needed.',
+  upi: '2–3 business days via UPI',
+  card: '5–7 business days to your card',
+};
+
 export default function OrderTracking() {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
+  const cancelOrder = useCancelOrder();
 
   const { data: order, isLoading } = useQuery({
     queryKey: ['order', id],
@@ -110,10 +133,12 @@ export default function OrderTracking() {
 
   const currentStatusIndex = STATUS_ORDER.indexOf(order.status as OrderStatus);
   const isCancelled = order.status === 'cancelled';
+  const canCancel = order.status === 'placed';
 
   return (
     <DashboardLayout>
       <div className="max-w-xl mx-auto pb-20 md:pb-0 space-y-5">
+        {/* Header */}
         <div>
           <Link
             to="/customer/orders"
@@ -137,7 +162,93 @@ export default function OrderTracking() {
           </p>
         </div>
 
-        {/* OTP Card - show when order is active (not completed/cancelled) */}
+        {/* Cancel Order Button - only when status is 'placed' */}
+        {canCancel && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="destructive"
+                className="w-full rounded-xl gap-2"
+                disabled={cancelOrder.isPending}
+              >
+                <XCircle className="w-4 h-4" />
+                Cancel Order
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-destructive" />
+                  Cancel this order?
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to cancel this order? Since the restaurant hasn't accepted it yet, you'll receive a full refund.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Keep Order</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => cancelOrder.mutate(id!)}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Yes, Cancel Order
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+
+        {/* Cancelled Order - Refund Details */}
+        {isCancelled && (
+          <div className="bg-destructive/5 border border-destructive/20 rounded-2xl p-5 space-y-4">
+            <div className="flex items-center gap-2">
+              <XCircle className="w-5 h-5 text-destructive" />
+              <h3 className="font-display font-semibold text-sm text-destructive">Order Cancelled</h3>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-start gap-3 bg-background/80 rounded-xl p-3">
+                <CreditCard className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium">Refund Status</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {order.payment_method === 'cod'
+                      ? 'No payment was collected — no refund needed.'
+                      : 'Your refund is being processed and will be credited to your original payment method.'}
+                  </p>
+                </div>
+              </div>
+
+              {order.payment_method !== 'cod' && (
+                <div className="flex items-start gap-3 bg-background/80 rounded-xl p-3">
+                  <Clock className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium">Estimated Refund Time</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {REFUND_TIMELINES[order.payment_method] || '3–5 business days'}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-start gap-3 bg-background/80 rounded-xl p-3">
+                <Info className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium">Refund Amount</p>
+                  <p className="text-xs text-primary font-semibold mt-0.5">
+                    ₹{Number(order.total_amount).toFixed(0)} (Full Refund)
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-muted-foreground">
+              For any refund queries, contact <a href="mailto:munchii.in.prm@gmail.com" className="text-primary hover:underline">munchii.in.prm@gmail.com</a>
+            </p>
+          </div>
+        )}
+
+        {/* OTP Card */}
         {!isCancelled && order.status !== 'completed' && (order as any).pickup_otp && (
           <div className="bg-primary/5 border-2 border-primary/30 rounded-2xl p-5 text-center space-y-2">
             <div className="flex items-center justify-center gap-2">
@@ -153,6 +264,7 @@ export default function OrderTracking() {
           </div>
         )}
 
+        {/* Progress Bar */}
         {!isCancelled && (
           <div className="bg-card rounded-2xl border border-border p-5">
             <h3 className="font-display font-semibold text-sm mb-4">Order Progress</h3>
@@ -160,6 +272,7 @@ export default function OrderTracking() {
           </div>
         )}
 
+        {/* Status Steps */}
         {!isCancelled && (
           <div className="bg-card rounded-2xl border border-border p-5">
             <h3 className="font-display font-semibold text-sm mb-5">Order Status</h3>
@@ -198,6 +311,7 @@ export default function OrderTracking() {
           </div>
         )}
 
+        {/* Restaurant Info */}
         <div className="bg-card rounded-2xl border border-border p-4 flex items-center gap-3">
           <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center">
             <Store className="w-5 h-5 text-primary" />
@@ -208,6 +322,7 @@ export default function OrderTracking() {
           </div>
         </div>
 
+        {/* Order Items */}
         <div className="bg-card rounded-2xl border border-border p-4 space-y-3">
           <h3 className="font-display font-semibold text-sm">Order Items</h3>
           {orderItems?.map((item) => (
@@ -223,6 +338,7 @@ export default function OrderTracking() {
           </div>
         </div>
 
+        {/* Order Details */}
         <div className="bg-card rounded-2xl border border-border p-4 space-y-2 text-sm">
           <h3 className="font-display font-semibold text-sm mb-1">Order Details</h3>
           <div className="flex justify-between">
@@ -239,6 +355,10 @@ export default function OrderTracking() {
               <span className="font-medium text-primary">{format(new Date(order.pickup_time), 'PPp')}</span>
             </div>
           )}
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Payment</span>
+            <span className="capitalize">{order.payment_method === 'cod' ? 'Cash on Pickup' : order.payment_method?.toUpperCase()}</span>
+          </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Type</span>
             <span>Pickup</span>
