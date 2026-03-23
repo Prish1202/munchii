@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { ROLE_ROUTES } from '@/types/auth';
 import { Button } from '@/components/ui/button';
-import { UtensilsCrossed, ArrowRight, Star, Coins, MessageCircle, Users, Shield, MapPin, Zap, Heart, Sparkles, Trophy, Gift, ChevronDown } from 'lucide-react';
+import { UtensilsCrossed, ArrowRight, Star, Coins, MessageCircle, Users, Shield, MapPin, Zap, Heart, Sparkles, Trophy, Gift, ChevronDown, IndianRupee, Store, Utensils, CreditCard } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { motion, useScroll, useTransform, useInView, useSpring, useMotionValue } from 'framer-motion';
 
@@ -600,6 +600,54 @@ export default function Index() {
               </motion.div>
             </Link>
           </motion.div>
+        </div>
+      </section>
+
+      {/* Platform Info Section */}
+      <section className="py-16 md:py-20 bg-muted/30">
+        <div className="container max-w-5xl">
+          <motion.h2
+            className="text-2xl md:text-3xl font-display font-bold text-center mb-3"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            Simple & Transparent Pricing
+          </motion.h2>
+          <motion.p
+            className="text-center text-muted-foreground mb-10 max-w-md mx-auto"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+          >
+            No hidden charges. No surprises. Just honest food ordering.
+          </motion.p>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {[
+              { icon: IndianRupee, title: 'Platform Fee', desc: 'Only ₹4/- on every order', gradient: 'gradient-primary' },
+              { icon: Store, title: 'Vendor Onboarding', desc: 'FREE onboarding for all vendors', gradient: 'gradient-royal' },
+              { icon: Utensils, title: 'Food Pricing', desc: 'Set by individual vendors on their food items', gradient: 'gradient-coin' },
+              { icon: CreditCard, title: 'Payment', desc: 'INR only via UPI / Card / Net Banking', gradient: 'gradient-social' },
+            ].map((item, i) => (
+              <motion.div
+                key={item.title}
+                className="p-6 rounded-2xl border bg-card text-center space-y-3"
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                variants={fadeUp}
+                custom={i}
+              >
+                <div className={`w-12 h-12 rounded-xl ${item.gradient} flex items-center justify-center mx-auto`}>
+                  <item.icon className="w-6 h-6 text-primary-foreground" />
+                </div>
+                <h3 className="font-display font-bold">{item.title}</h3>
+                <p className="text-sm text-muted-foreground">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
