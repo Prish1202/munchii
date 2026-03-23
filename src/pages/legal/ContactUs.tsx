@@ -1,4 +1,4 @@
-import { ArrowLeft, Mail, MapPin, Clock, Building2, Globe, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Mail, MapPin, Clock, Building2, Globe, MessageCircle, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
@@ -77,6 +77,13 @@ export default function ContactUs() {
               <div>
                 <p className="font-medium">Website</p>
                 <p className="text-muted-foreground">munchii.in</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <Phone className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+              <div>
+                <p className="font-medium">Phone</p>
+                <a href="tel:+919461456707" className="text-primary hover:underline">+91 94614 56707</a>
               </div>
             </div>
             <div className="flex items-start gap-3">
