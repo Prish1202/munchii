@@ -34,7 +34,7 @@ export default function CancellationRefundPolicy() {
               <li><strong>Order Under Preparation:</strong> Cancellation is NOT allowed. Food items are being actively prepared.</li>
               <li><strong>Order Ready for Pickup:</strong> Cancellation is NOT allowed. Your order is ready and waiting at the counter.</li>
             </ul>
-            <p className="text-muted-foreground text-sm">Note: The cancellation window is strictly time-based. MUNCHii is not responsible for missed cancellation windows due to delayed action by the User. For exceptional cases, email <a href="mailto:munchii.in.prm@gmail.com" className="text-primary hover:underline">munchii.in.prm@gmail.com</a>.</p>
+            <p className="text-muted-foreground text-sm">Note: The cancellation window is strictly time-based. MUNCHii is not responsible for missed cancellation windows due to delayed action by the User. For exceptional cases, email <a href="mailto:support.munchii.in@gmail.com" className="text-primary hover:underline">support.munchii.in@gmail.com</a>.</p>
 
             <h3 className="text-lg font-display font-semibold mt-4">2.2 How to Cancel an Order</h3>
             <p>To cancel an eligible order, follow these steps in the MUNCHii app:</p>
@@ -119,12 +119,12 @@ export default function CancellationRefundPolicy() {
                 </tbody>
               </table>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">*Exceptions may be considered at MUNCHii's sole discretion for documented extraordinary circumstances. Contact <a href="mailto:munchii.in.prm@gmail.com" className="text-primary hover:underline">munchii.in.prm@gmail.com</a> within 1 hour of the incident.</p>
+            <p className="text-xs text-muted-foreground mt-2">*Exceptions may be considered at MUNCHii's sole discretion for documented extraordinary circumstances. Contact <a href="mailto:support.munchii.in@gmail.com" className="text-primary hover:underline">support.munchii.in@gmail.com</a> within 1 hour of the incident.</p>
 
             <h3 className="text-lg font-display font-semibold mt-4">3.2 Refunds for Wrong or Missing Items</h3>
             <p>If your completed order has a wrong item delivered or a missing item, you are entitled to a refund under the following conditions:</p>
             <ul className="list-disc pl-5 space-y-1">
-              <li>You must report the issue within 1 hour of receiving your order via the MUNCHii app or by emailing <a href="mailto:munchii.in.prm@gmail.com" className="text-primary hover:underline">munchii.in.prm@gmail.com</a>.</li>
+              <li>You must report the issue within 1 hour of receiving your order via the MUNCHii app or by emailing <a href="mailto:support.munchii.in@gmail.com" className="text-primary hover:underline">support.munchii.in@gmail.com</a>.</li>
               <li>You must provide photographic evidence of the incorrect or missing item.</li>
               <li>MUNCHii support will verify the claim with the Vendor Partner.</li>
               <li>Upon verification, a full refund for the affected item(s) will be issued.</li>
@@ -205,7 +205,7 @@ export default function CancellationRefundPolicy() {
             <h2 className="text-xl font-display font-semibold">6. Dispute Resolution</h2>
             <p>If you are unsatisfied with MUNCHii's refund decision, you may escalate the dispute through the following process:</p>
             <ul className="list-disc pl-5 space-y-1">
-              <li><strong>Step 1:</strong> Contact MUNCHii support at <a href="mailto:munchii.in.prm@gmail.com" className="text-primary hover:underline">munchii.in.prm@gmail.com</a> with your Order ID, issue description, and supporting evidence</li>
+              <li><strong>Step 1:</strong> Contact MUNCHii support at <a href="mailto:support.munchii.in@gmail.com" className="text-primary hover:underline">support.munchii.in@gmail.com</a> with your Order ID, issue description, and supporting evidence</li>
               <li><strong>Step 2:</strong> Our team will respond within 48 hours with an investigation update</li>
               <li><strong>Step 3:</strong> If unresolved, you may escalate to our Grievance Officer at <a href="mailto:munchii.in.prm@gmail.com" className="text-primary hover:underline">munchii.in.prm@gmail.com</a></li>
               <li><strong>Step 4:</strong> For unresolved payment disputes, you may raise a chargeback with your bank or UPI provider</li>
@@ -231,7 +231,7 @@ export default function CancellationRefundPolicy() {
                 <tbody>
                   <tr className="border-b border-border/50">
                     <td className="p-3 font-medium">Support Email</td>
-                    <td className="p-3"><a href="mailto:munchii.in.prm@gmail.com" className="text-primary hover:underline">munchii.in.prm@gmail.com</a></td>
+                    <td className="p-3"><a href="mailto:support.munchii.in@gmail.com" className="text-primary hover:underline">support.munchii.in@gmail.com</a></td>
                   </tr>
                   <tr className="border-b border-border/50">
                     <td className="p-3 font-medium">Grievance Officer</td>

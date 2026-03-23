@@ -604,22 +604,64 @@ export default function Index() {
       </section>
 
       {/* Footer */}
-      <footer className="py-10 border-t">
-        <div className="container flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl gradient-primary flex items-center justify-center">
-              <UtensilsCrossed className="w-4 h-4 text-primary-foreground" />
+      <footer className="border-t bg-card/50">
+        <div className="container py-12 md:py-16">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
+            {/* Brand */}
+            <div className="col-span-2 md:col-span-1 space-y-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center">
+                  <UtensilsCrossed className="w-4.5 h-4.5 text-primary-foreground" />
+                </div>
+                <span className="font-display font-bold text-lg">Munchii</span>
+              </div>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Your campus food network — order, earn, share, and socialize.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Made with 🍕 in India
+              </p>
             </div>
-            <span className="font-display font-bold">Munchii</span>
+
+            {/* Legal */}
+            <div className="space-y-3">
+              <h4 className="text-sm font-display font-semibold text-foreground">Legal</h4>
+              <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+                <Link to="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
+                <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
+                <Link to="/community-guidelines" className="hover:text-foreground transition-colors">Community Guidelines</Link>
+                <Link to="/cancellation-refund" className="hover:text-foreground transition-colors">Refund Policy</Link>
+              </div>
+            </div>
+
+            {/* Company */}
+            <div className="space-y-3">
+              <h4 className="text-sm font-display font-semibold text-foreground">Company</h4>
+              <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+                <Link to="/about" className="hover:text-foreground transition-colors">About Us</Link>
+                <Link to="/contact" className="hover:text-foreground transition-colors">Contact Us</Link>
+              </div>
+            </div>
+
+            {/* Contact */}
+            <div className="space-y-3">
+              <h4 className="text-sm font-display font-semibold text-foreground">Get in Touch</h4>
+              <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+                <a href="mailto:support.munchii.in@gmail.com" className="hover:text-foreground transition-colors">support.munchii.in@gmail.com</a>
+                <p className="text-xs">Mon–Sat, 9 AM – 7 PM IST</p>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
-            <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
-            <Link to="/community-guidelines" className="hover:text-foreground transition-colors">Guidelines</Link>
+
+          {/* Bottom bar */}
+          <div className="mt-10 pt-6 border-t flex flex-col md:flex-row items-center justify-between gap-3">
+            <p className="text-xs text-muted-foreground">
+              © 2026 Munchii · Sole Proprietorship · GSTIN: 08ETJPG5027D1ZU
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Bikaner, Rajasthan, India
+            </p>
           </div>
-          <p className="text-sm text-muted-foreground">
-            © 2026 Munchii · Made with 🍕 in India
-          </p>
         </div>
       </footer>
     </div>

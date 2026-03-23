@@ -237,7 +237,9 @@ export default function ProfileSettings() {
           <SettingsLink icon={Users} label="Community Guidelines" href="/community-guidelines" />
           <SettingsLink icon={Shield} label="Privacy Policy" href="/privacy" />
           <SettingsLink icon={FileText} label="Cancellation & Refund Policy" href="/cancellation-refund" />
-          <SettingsLink icon={HelpCircle} label="Help & Support" href="mailto:munchii.in.prm@gmail.com" />
+          <SettingsLink icon={Globe} label="About Us" href="/about" />
+          <SettingsLink icon={HelpCircle} label="Contact Us" href="/contact" />
+          <SettingsLink icon={Mail} label="Help & Support" href="mailto:support.munchii.in@gmail.com" />
         </SettingsSection>
 
         {/* Grievance Officer */}

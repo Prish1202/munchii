@@ -79,7 +79,7 @@ export default function TermsOfService() {
 
           <section>
             <h2 className="text-xl font-display font-semibold">9. Contact</h2>
-            <p>For any questions regarding these Terms, contact us at <a href="mailto:munchii.in.prm@gmail.com" className="text-primary hover:underline">munchii.in.prm@gmail.com</a>.</p>
+            <p>For any questions regarding these Terms, contact us at <a href="mailto:support.munchii.in@gmail.com" className="text-primary hover:underline">support.munchii.in@gmail.com</a>.</p>
           </section>
         </div>
       </div>

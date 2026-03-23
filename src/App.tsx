@@ -58,6 +58,8 @@ import TermsOfService from "./pages/legal/TermsOfService";
 import CommunityGuidelines from "./pages/legal/CommunityGuidelines";
 import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
 import CancellationRefundPolicy from "./pages/legal/CancellationRefundPolicy";
+import AboutUs from "./pages/legal/AboutUs";
+import ContactUs from "./pages/legal/ContactUs";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -94,6 +96,8 @@ const App = () => (
               <Route path="/community-guidelines" element={<CommunityGuidelines />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/cancellation-refund" element={<CancellationRefundPolicy />} />
+              <Route path="/about" element={<AboutUs />} />
+              <Route path="/contact" element={<ContactUs />} />
 
               {/* Customer Routes */}
               <Route path="/customer" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><CustomerDashboard /></UsernameSetup></ProtectedRoute>} />

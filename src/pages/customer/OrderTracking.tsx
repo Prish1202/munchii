@@ -243,7 +243,7 @@ export default function OrderTracking() {
             </div>
 
             <p className="text-[11px] text-muted-foreground">
-              For any refund queries, contact <a href="mailto:munchii.in.prm@gmail.com" className="text-primary hover:underline">munchii.in.prm@gmail.com</a>
+              For any refund queries, contact <a href="mailto:support.munchii.in@gmail.com" className="text-primary hover:underline">support.munchii.in@gmail.com</a>
             </p>
           </div>
         )}
