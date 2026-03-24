@@ -147,13 +147,16 @@ export default function OrderTracking() {
             <ArrowLeft className="w-4 h-4 mr-1.5" />
             Back to orders
           </Link>
-          <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between">
             <h1 className="font-display font-bold text-2xl">Order #{id?.slice(-6).toUpperCase()}</h1>
             <div className="flex items-center gap-2">
               {isCancelled && <Badge variant="destructive">Cancelled</Badge>}
-              <Badge variant={isConnected ? 'default' : 'secondary'} className="gap-1 text-xs">
-                {isConnected ? <><Wifi className="w-3 h-3" /> Live</> : <><WifiOff className="w-3 h-3" /> Connecting</>}
-              </Badge>
+              {!isCancelled && order.status !== 'completed' && (
+                <Badge variant={isConnected ? 'default' : 'secondary'} className="gap-1 text-xs">
+                  {isConnected ? <><Wifi className="w-3 h-3" /> Live</> : <><WifiOff className="w-3 h-3" /> Connecting</>}
+                </Badge>
+              )}
+              {order.status === 'completed' && <Badge className="bg-secondary text-secondary-foreground">Completed</Badge>}
             </div>
           </div>
           <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
@@ -205,6 +208,11 @@ export default function OrderTracking() {
               <XCircle className="w-5 h-5 text-destructive" />
               <h3 className="font-display font-semibold text-sm text-destructive">Order Cancelled</h3>
             </div>
+            {order.payment_method !== 'cod' && (
+              <p className="text-sm text-muted-foreground">
+                We're sorry, {order.restaurant?.name || 'the restaurant'} was unable to fulfill your order. Your refund will be processed shortly.
+              </p>
+            )}
 
             <div className="space-y-3">
               <div className="flex items-start gap-3 bg-background/80 rounded-xl p-3">
@@ -300,7 +308,7 @@ export default function OrderTracking() {
                       <p className={cn('text-sm font-medium', isCompleted ? 'text-foreground' : 'text-muted-foreground')}>
                         {step.label}
                       </p>
-                      {isCurrent && (
+                      {isCurrent && order.status !== 'completed' && (
                         <p className="text-xs text-primary animate-pulse mt-0.5">In progress…</p>
                       )}
                     </div>
