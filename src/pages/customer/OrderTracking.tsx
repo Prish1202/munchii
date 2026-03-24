@@ -156,7 +156,7 @@ export default function OrderTracking() {
                   {isConnected ? <><Wifi className="w-3 h-3" /> Live</> : <><WifiOff className="w-3 h-3" /> Connecting</>}
                 </Badge>
               )}
-              {order.status === 'completed' && <Badge className="bg-green-600 text-white">Completed</Badge>}
+              {order.status === 'completed' && <Badge className="bg-secondary text-secondary-foreground">Completed</Badge>}
             </div>
           </div>
           <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
