@@ -52,7 +52,8 @@ const ORDER_STEPS: { status: OrderStatus; label: string; icon: React.ReactNode }
 
 const STATUS_ORDER: OrderStatus[] = ['placed', 'accepted', 'preparing', 'ready_for_pickup', 'picked_up', 'completed'];
 
-const STATUS_MESSAGES: Record<OrderStatus, string> = {
+const STATUS_MESSAGES: Partial<Record<OrderStatus, string>> = {
+  pending_payment: '💳 Waiting for payment...',
   placed: '🛒 Order placed!',
   accepted: '✅ Restaurant accepted your order!',
   preparing: '👨‍🍳 Your food is being prepared!',
@@ -133,7 +134,9 @@ export default function OrderTracking() {
 
   const currentStatusIndex = STATUS_ORDER.indexOf(order.status as OrderStatus);
   const isCancelled = order.status === 'cancelled';
-  const canCancel = order.status === 'placed';
+  const isPendingPayment = order.status === 'pending_payment';
+  const isCompleted = order.status === 'completed';
+  const canCancel = order.status === 'placed' || isPendingPayment;
 
   return (
     <DashboardLayout>
@@ -151,12 +154,13 @@ export default function OrderTracking() {
             <h1 className="font-display font-bold text-2xl">Order #{id?.slice(-6).toUpperCase()}</h1>
             <div className="flex items-center gap-2">
               {isCancelled && <Badge variant="destructive">Cancelled</Badge>}
-              {!isCancelled && order.status !== 'completed' && (
+              {isPendingPayment && <Badge variant="secondary">Awaiting Payment</Badge>}
+              {!isCancelled && !isCompleted && !isPendingPayment && (
                 <Badge variant={isConnected ? 'default' : 'secondary'} className="gap-1 text-xs">
                   {isConnected ? <><Wifi className="w-3 h-3" /> Live</> : <><WifiOff className="w-3 h-3" /> Connecting</>}
                 </Badge>
               )}
-              {order.status === 'completed' && <Badge className="bg-secondary text-secondary-foreground">Completed</Badge>}
+              {isCompleted && <Badge className="bg-secondary text-secondary-foreground">Completed</Badge>}
             </div>
           </div>
           <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
@@ -308,7 +312,7 @@ export default function OrderTracking() {
                       <p className={cn('text-sm font-medium', isCompleted ? 'text-foreground' : 'text-muted-foreground')}>
                         {step.label}
                       </p>
-                      {isCurrent && order.status !== 'completed' && (
+                      {isCurrent && !isCompleted && (
                         <p className="text-xs text-primary animate-pulse mt-0.5">In progress…</p>
                       )}
                     </div>

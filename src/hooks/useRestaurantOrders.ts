@@ -65,6 +65,7 @@ export function useRestaurantOrders() {
           )
         `)
         .eq('restaurant_id', restaurant!.id)
+        .neq('status', 'pending_payment' as any)
         .order('created_at', { ascending: false });
 
       if (ordersError) throw ordersError;
