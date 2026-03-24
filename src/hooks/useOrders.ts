@@ -124,6 +124,8 @@ export function useCreateOrder() {
     mutationFn: async ({ restaurantId, items, totalAmount, paymentMethod, pickupTime }: CreateOrderInput) => {
       // Generate 4-digit OTP
       const pickupOtp = String(Math.floor(1000 + Math.random() * 9000));
+      // For online payment, start as pending_payment; for COD, start as placed
+      const initialStatus = paymentMethod === 'razorpay' ? 'pending_payment' : 'placed';
 
       const { data: order, error: orderError } = await supabase
         .from('orders')
@@ -131,7 +133,7 @@ export function useCreateOrder() {
           customer_id: user!.id,
           restaurant_id: restaurantId,
           total_amount: totalAmount,
-          status: 'placed',
+          status: initialStatus as any,
           payment_method: paymentMethod,
           pickup_time: pickupTime ?? null,
           pickup_otp: pickupOtp,
