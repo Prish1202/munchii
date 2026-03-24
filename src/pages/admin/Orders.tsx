@@ -18,7 +18,7 @@ import { Search, ClipboardList, Edit } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 
-type OrderStatus = 'placed' | 'accepted' | 'preparing' | 'ready_for_pickup' | 'picked_up' | 'completed' | 'cancelled';
+type OrderStatus = 'pending_payment' | 'placed' | 'accepted' | 'preparing' | 'ready_for_pickup' | 'picked_up' | 'completed' | 'cancelled';
 
 const ORDER_STATUSES: OrderStatus[] = [
   'placed', 'accepted', 'preparing', 'ready_for_pickup', 'picked_up', 'completed', 'cancelled'
