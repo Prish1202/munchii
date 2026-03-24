@@ -11,6 +11,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 
 const STATUS_CONFIG: Record<OrderStatus, { label: string; className: string }> = {
+  pending_payment: { label: 'Awaiting Payment', className: 'bg-secondary text-secondary-foreground' },
   placed: { label: 'Placed', className: 'bg-secondary text-secondary-foreground' },
   accepted: { label: 'Accepted', className: 'bg-accent text-accent-foreground' },
   preparing: { label: 'Preparing', className: 'bg-primary text-primary-foreground' },
