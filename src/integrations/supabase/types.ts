@@ -844,6 +844,7 @@ export type Database = {
       app_role: "customer" | "restaurant" | "admin"
       coin_type: "earn" | "redeem" | "transfer"
       order_status:
+        | "pending_payment"
         | "placed"
         | "accepted"
         | "preparing"
@@ -981,6 +982,7 @@ export const Constants = {
       app_role: ["customer", "restaurant", "admin"],
       coin_type: ["earn", "redeem", "transfer"],
       order_status: [
+        "pending_payment",
         "placed",
         "accepted",
         "preparing",
