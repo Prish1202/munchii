@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useRealtimeSync } from './useRealtimeSync';
 
-export type OrderStatus = 'placed' | 'accepted' | 'preparing' | 'ready_for_pickup' | 'picked_up' | 'completed' | 'cancelled';
+export type OrderStatus = 'pending_payment' | 'placed' | 'accepted' | 'preparing' | 'ready_for_pickup' | 'picked_up' | 'completed' | 'cancelled';
 
 export interface Order {
   id: string;
@@ -32,7 +32,7 @@ export interface OrderItem {
   };
 }
 
-const STATUS_MESSAGES: Record<OrderStatus, string> = {
+const STATUS_MESSAGES: Partial<Record<OrderStatus, string>> = {
   placed: '🛒 Order placed successfully!',
   accepted: '✅ Restaurant accepted your order!',
   preparing: '👨‍🍳 Your food is being prepared!',
