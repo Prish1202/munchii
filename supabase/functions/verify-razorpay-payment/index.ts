@@ -128,16 +128,8 @@ Deno.serve(async (req) => {
       throw new Error("Failed to update payment");
     }
 
-    // Update order status to accepted (paid & ready for restaurant)
-    const { error: updateOrderErr } = await supabaseAdmin
-      .from("orders")
-      .update({ status: "accepted", updated_at: new Date().toISOString() })
-      .eq("id", payment.order_id);
-
-    if (updateOrderErr) {
-      console.error("Order update error:", updateOrderErr);
-      throw new Error("Failed to update order status");
-    }
+    // Keep order as 'placed' — restaurant must manually accept or reject
+    // No automatic status change after payment verification
 
     return new Response(
       JSON.stringify({ success: true, orderId: payment.order_id }),
