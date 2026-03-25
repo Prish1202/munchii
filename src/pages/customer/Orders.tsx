@@ -1,4 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -90,26 +91,53 @@ function OrderCard({ order, showReorder }: { order: any; showReorder?: boolean }
   const statusConfig = STATUS_CONFIG[order.status as OrderStatus];
   const { data: orderItems } = useOrderItems(order.id);
 
-  const handleReorder = (e: React.MouseEvent) => {
+  const handleReorder = async (e: React.MouseEvent) => {
     e.preventDefault();
     if (!orderItems || orderItems.length === 0) {
       toast.error('Could not load items for reorder');
       return;
     }
+
+    // Fetch current prices from menu_items
+    const menuItemIds = orderItems.map(i => i.menu_item_id).filter(Boolean);
+    const { data: currentMenuItems } = await supabase
+      .from('menu_items')
+      .select('id, name, price, available')
+      .in('id', menuItemIds);
+
+    const currentPriceMap = new Map(
+      (currentMenuItems || []).map(mi => [mi.id, mi])
+    );
+
     clearCart();
+    let unavailableItems: string[] = [];
+
     orderItems.forEach((item) => {
+      const current = currentPriceMap.get(item.menu_item_id);
+      if (!current || !current.available) {
+        unavailableItems.push(item.menu_item?.name || 'Item');
+        return;
+      }
       for (let i = 0; i < item.quantity; i++) {
         addItem({
           menuItemId: item.menu_item_id,
-          name: item.menu_item?.name || 'Item',
-          price: Number(item.price_at_time),
+          name: current.name || item.menu_item?.name || 'Item',
+          price: Number(current.price),
           restaurantId: order.restaurant_id,
           restaurantName: order.restaurant?.name || 'Restaurant',
         });
       }
     });
-    toast.success('Items added to cart!');
-    navigate('/customer/cart');
+
+    if (unavailableItems.length > 0) {
+      toast.warning(`Some items are no longer available: ${unavailableItems.join(', ')}`);
+    }
+    if (unavailableItems.length < orderItems.length) {
+      toast.success('Items added to cart with current prices!');
+      navigate('/customer/cart');
+    } else {
+      toast.error('All items from this order are currently unavailable');
+    }
   };
 
   return (

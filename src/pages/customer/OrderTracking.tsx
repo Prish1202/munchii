@@ -372,7 +372,7 @@ export default function OrderTracking() {
           )}
           <div className="flex justify-between">
             <span className="text-muted-foreground">Payment</span>
-            <span className="capitalize">{order.payment_method === 'cod' ? 'Cash on Pickup' : order.payment_method?.toUpperCase()}</span>
+            <span className="capitalize">{order.payment_method === 'cod' ? 'Cash on Pickup' : order.payment_method === 'razorpay' ? 'Paid Online' : order.payment_method?.toUpperCase()}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Type</span>
