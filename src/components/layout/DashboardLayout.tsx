@@ -54,6 +54,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Users', href: '/admin/users', icon: <Users className="w-5 h-5" /> },
     { label: 'Restaurants', href: '/admin/restaurants', icon: <Store className="w-5 h-5" /> },
     { label: 'Orders', href: '/admin/orders', icon: <ClipboardList className="w-5 h-5" /> },
+    { label: 'Payouts', href: '/admin/payouts', icon: <Settings className="w-5 h-5" /> },
   ],
 };
 
@@ -119,7 +120,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       </header>
 
       <div className="flex relative z-10">
-        <aside className="hidden md:flex w-60 flex-col border-r border-border/70 bg-sidebar/80 min-h-[calc(100vh-4rem)] p-4">
+        <aside className="hidden md:flex w-60 flex-col border-r border-border/70 bg-sidebar/80 min-h-[calc(100vh-4rem)] p-4 justify-between">
           <nav className="space-y-1.5">
             {navItems.map((item) => {
               const isActive = location.pathname === item.href;
@@ -146,6 +147,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               );
             })}
           </nav>
+
+          {!isCustomer && (
+            <button
+              onClick={logout}
+              className="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-sm font-medium text-destructive hover:bg-destructive/10 transition-all duration-200 mt-4"
+            >
+              <LogOut className="w-5 h-5" />
+              Log Out
+            </button>
+          )}
         </aside>
 
         <main className="flex-1 p-4 md:p-6 lg:p-8">
