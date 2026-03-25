@@ -73,7 +73,7 @@ export default function Checkout() {
   const grandTotal = subtotalWithFees - coinDiscount;
   const estimatedPoints = Math.round(totalAmount * 0.03);
 
-  const canPlace = phone.trim().length >= 10 && items.length > 0 && isPickupTimeValid;
+  const canPlace = phone.trim().length >= 10 && items.length > 0 && isPickupTimeValid && !!pickupTime;
 
   const handlePickupTimeChange = (nextValue: string) => {
     if (!nextValue) { setPickupTime(''); return; }
@@ -213,7 +213,7 @@ export default function Checkout() {
         <section className="bg-card rounded-2xl border border-border p-4 space-y-3">
           <div className="flex items-center gap-2 text-sm font-semibold">
             <Clock3 className="w-4 h-4 text-primary" />
-            Pickup Time (Optional)
+            Pickup Time <span className="text-destructive">*</span>
           </div>
           <div className="flex gap-2 flex-wrap">
             {[15, 30, 45, 60].map((mins) => {
@@ -249,7 +249,7 @@ export default function Checkout() {
             </p>
           )}
           <p className="text-xs text-muted-foreground">
-            Pick a quick option or set a custom time (minimum {MIN_PICKUP_LEAD_MINUTES} minutes from now).
+            Please select a pickup time (minimum {MIN_PICKUP_LEAD_MINUTES} minutes from now).
           </p>
         </section>
 
