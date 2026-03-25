@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (order.status !== "placed") {
+    if (order.status !== "pending_payment") {
       return new Response(
         JSON.stringify({ error: "Order is not in a payable state" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
