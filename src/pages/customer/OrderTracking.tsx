@@ -64,7 +64,7 @@ const STATUS_MESSAGES: Partial<Record<OrderStatus, string>> = {
 };
 
 const REFUND_TIMELINES: Record<string, string> = {
-  cod: 'No payment was collected — no refund needed.',
+  razorpay: '3–5 business days to your original payment method',
   upi: '2–3 business days via UPI',
   card: '5–7 business days to your card',
 };
@@ -205,58 +205,61 @@ export default function OrderTracking() {
           </AlertDialog>
         )}
 
-        {/* Cancelled Order - Refund Details */}
+        {/* Cancelled Order Details */}
         {isCancelled && (
           <div className="bg-destructive/5 border border-destructive/20 rounded-2xl p-5 space-y-4">
             <div className="flex items-center gap-2">
               <XCircle className="w-5 h-5 text-destructive" />
               <h3 className="font-display font-semibold text-sm text-destructive">Order Cancelled</h3>
             </div>
-            {order.payment_method !== 'cod' && (
+
+            {order.payment_method === 'cod' ? (
               <p className="text-sm text-muted-foreground">
-                We're sorry, {order.restaurant?.name || 'the restaurant'} was unable to fulfill your order. Your refund will be processed shortly.
+                This order was cancelled. No payment was collected, so no refund is needed.
               </p>
-            )}
+            ) : (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  We're sorry, {order.restaurant?.name || 'the restaurant'} was unable to fulfill your order. Your refund will be processed shortly.
+                </p>
 
-            <div className="space-y-3">
-              <div className="flex items-start gap-3 bg-background/80 rounded-xl p-3">
-                <CreditCard className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-sm font-medium">Refund Status</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {order.payment_method === 'cod'
-                      ? 'No payment was collected — no refund needed.'
-                      : 'Your refund is being processed and will be credited to your original payment method.'}
-                  </p>
-                </div>
-              </div>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3 bg-background/80 rounded-xl p-3">
+                    <CreditCard className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium">Refund Status</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Your refund is being processed and will be credited to your original payment method.
+                      </p>
+                    </div>
+                  </div>
 
-              {order.payment_method !== 'cod' && (
-                <div className="flex items-start gap-3 bg-background/80 rounded-xl p-3">
-                  <Clock className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium">Estimated Refund Time</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {REFUND_TIMELINES[order.payment_method] || '3–5 business days'}
-                    </p>
+                  <div className="flex items-start gap-3 bg-background/80 rounded-xl p-3">
+                    <Clock className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium">Estimated Refund Time</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {REFUND_TIMELINES[order.payment_method] || '3–5 business days'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3 bg-background/80 rounded-xl p-3">
+                    <Info className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium">Refund Amount</p>
+                      <p className="text-xs text-primary font-semibold mt-0.5">
+                        ₹{Number(order.total_amount).toFixed(0)} (Full Refund)
+                      </p>
+                    </div>
                   </div>
                 </div>
-              )}
 
-              <div className="flex items-start gap-3 bg-background/80 rounded-xl p-3">
-                <Info className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-sm font-medium">Refund Amount</p>
-                  <p className="text-xs text-primary font-semibold mt-0.5">
-                    ₹{Number(order.total_amount).toFixed(0)} (Full Refund)
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <p className="text-[11px] text-muted-foreground">
-              For any refund queries, contact <a href="mailto:support.munchii.in@gmail.com" className="text-primary hover:underline">support.munchii.in@gmail.com</a>
-            </p>
+                <p className="text-[11px] text-muted-foreground">
+                  For any refund queries, contact <a href="mailto:support.munchii.in@gmail.com" className="text-primary hover:underline">support.munchii.in@gmail.com</a>
+                </p>
+              </>
+            )}
           </div>
         )}
 
