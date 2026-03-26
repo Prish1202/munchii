@@ -10,7 +10,8 @@ import {
   ArrowUp,
   CheckCircle,
   XCircle,
-  Wallet
+  Wallet,
+  RotateCcw
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -175,7 +176,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Quick Links */}
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Link to="/admin/users">
             <Card className="hover:border-admin/50 transition-colors cursor-pointer">
               <CardContent className="p-4 flex items-center gap-4">
@@ -211,6 +212,19 @@ export default function AdminDashboard() {
                 <div>
                   <h3 className="font-semibold">View Payouts</h3>
                   <p className="text-sm text-muted-foreground">Track earnings and fees</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link to="/admin/refunds">
+            <Card className="hover:border-admin/50 transition-colors cursor-pointer">
+              <CardContent className="p-4 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-destructive/10 flex items-center justify-center">
+                  <RotateCcw className="w-6 h-6 text-destructive" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Manage Refunds</h3>
+                  <p className="text-sm text-muted-foreground">Handle customer refunds</p>
                 </div>
               </CardContent>
             </Card>

@@ -8,7 +8,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useAdminRestaurants, useVerifyRestaurant } from '@/hooks/useAdminData';
-import { Search, Store, Clock, CheckCircle, XCircle, ShieldCheck, Eye, Building, User, Landmark } from 'lucide-react';
+import { Search, Store, Clock, CheckCircle, XCircle, Eye, Building, User, Landmark, ShoppingBag, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -54,7 +54,6 @@ export default function AdminRestaurants() {
           <p className="text-muted-foreground">Verify and manage restaurant partners</p>
         </div>
 
-        {/* Status Cards */}
         <div className="grid gap-4 sm:grid-cols-4">
           {Object.entries(STATUS_CONFIG).map(([status, config]) => (
             <Card key={status} className="cursor-pointer hover:shadow-md transition-shadow"
@@ -74,7 +73,6 @@ export default function AdminRestaurants() {
           ))}
         </div>
 
-        {/* Filters */}
         <Card>
           <CardHeader>
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -108,6 +106,8 @@ export default function AdminRestaurants() {
                     <TableRow>
                       <TableHead>Restaurant</TableHead>
                       <TableHead>City</TableHead>
+                      <TableHead>Orders</TableHead>
+                      <TableHead>Revenue</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Registered</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
@@ -125,6 +125,13 @@ export default function AdminRestaurants() {
                             </div>
                           </TableCell>
                           <TableCell>{r.city || '-'}</TableCell>
+                          <TableCell>
+                            <div className="text-sm">
+                              <span className="font-medium">{r.completedOrders}</span>
+                              <span className="text-muted-foreground">/{r.totalOrders}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-medium">₹{r.totalRevenue?.toFixed(0) || 0}</TableCell>
                           <TableCell>
                             <Badge className={sc.color}>{sc.label}</Badge>
                           </TableCell>
@@ -157,7 +164,7 @@ export default function AdminRestaurants() {
                     })}
                     {filtered?.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                        <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                           No restaurants found
                         </TableCell>
                       </TableRow>
@@ -177,20 +184,40 @@ export default function AdminRestaurants() {
             <DialogTitle className="font-display flex items-center gap-2">
               <Store className="w-5 h-5" /> {selected?.name}
             </DialogTitle>
-            <DialogDescription>Restaurant application details</DialogDescription>
+            <DialogDescription>Restaurant details and performance</DialogDescription>
           </DialogHeader>
 
           {selected && (
             <div className="space-y-6 pt-2">
-              {/* Status */}
+              {/* Quick stats */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-secondary/50 rounded-xl p-3 text-center">
+                  <ShoppingBag className="w-4 h-4 mx-auto text-primary mb-1" />
+                  <div className="text-lg font-bold">{selected.completedOrders}/{selected.totalOrders}</div>
+                  <div className="text-[10px] text-muted-foreground">Completed/Total</div>
+                </div>
+                <div className="bg-secondary/50 rounded-xl p-3 text-center">
+                  <TrendingUp className="w-4 h-4 mx-auto text-green-500 mb-1" />
+                  <div className="text-lg font-bold">₹{selected.totalRevenue?.toFixed(0) || 0}</div>
+                  <div className="text-[10px] text-muted-foreground">Revenue</div>
+                </div>
+                <div className="bg-secondary/50 rounded-xl p-3 text-center">
+                  <XCircle className="w-4 h-4 mx-auto text-destructive mb-1" />
+                  <div className="text-lg font-bold">{selected.cancelledOrders}</div>
+                  <div className="text-[10px] text-muted-foreground">Cancelled</div>
+                </div>
+              </div>
+
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">Status:</span>
                 <Badge className={STATUS_CONFIG[selected.verification_status]?.color}>
                   {STATUS_CONFIG[selected.verification_status]?.label}
                 </Badge>
+                <Badge variant={selected.is_active ? 'default' : 'secondary'} className="ml-1">
+                  {selected.is_active ? 'Online' : 'Offline'}
+                </Badge>
               </div>
 
-              {/* Restaurant Info */}
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold flex items-center gap-2">
                   <Building className="w-4 h-4" /> Restaurant Info
@@ -211,7 +238,6 @@ export default function AdminRestaurants() {
                 </div>
               </div>
 
-              {/* Owner Info */}
               {selected.owner_details && (
                 <div className="space-y-3">
                   <h3 className="text-sm font-semibold flex items-center gap-2">
@@ -226,7 +252,6 @@ export default function AdminRestaurants() {
                 </div>
               )}
 
-              {/* Bank Info */}
               {selected.bank_details && (
                 <div className="space-y-3">
                   <h3 className="text-sm font-semibold flex items-center gap-2">
@@ -242,7 +267,6 @@ export default function AdminRestaurants() {
                 </div>
               )}
 
-              {/* Actions */}
               {selected.verification_status === 'pending' && (
                 <div className="flex gap-3 pt-2">
                   <Button className="flex-1 bg-primary hover:bg-primary/90"

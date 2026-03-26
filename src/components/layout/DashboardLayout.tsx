@@ -18,6 +18,8 @@ import {
   BarChart3,
   Users,
   Settings,
+  RotateCcw,
+  Wallet,
   UtensilsCrossed,
   MessageSquare,
   Coins,
@@ -54,7 +56,8 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Users', href: '/admin/users', icon: <Users className="w-5 h-5" /> },
     { label: 'Restaurants', href: '/admin/restaurants', icon: <Store className="w-5 h-5" /> },
     { label: 'Orders', href: '/admin/orders', icon: <ClipboardList className="w-5 h-5" /> },
-    { label: 'Payouts', href: '/admin/payouts', icon: <Settings className="w-5 h-5" /> },
+    { label: 'Payouts', href: '/admin/payouts', icon: <Wallet className="w-5 h-5" /> },
+    { label: 'Refunds', href: '/admin/refunds', icon: <RotateCcw className="w-5 h-5" /> },
   ],
 };
 
@@ -165,7 +168,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       </div>
 
       <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t border-border/80 glass-strong z-50 safe-area-bottom">
-        <div className="grid grid-cols-5 gap-1 px-2 py-2">
+        <div className={cn('grid gap-1 px-2 py-2', user.role === 'admin' ? 'grid-cols-7' : 'grid-cols-5')}>
           {navItems.map((item) => {
             const isActive = location.pathname === item.href;
             const badge = item.label === 'Chat' && totalUnread > 0 ? totalUnread : 0;

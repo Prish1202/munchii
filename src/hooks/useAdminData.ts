@@ -27,6 +27,39 @@ export function useAdminUsers() {
   });
 }
 
+export function useAdminUserDetail(userId: string | null) {
+  return useQuery({
+    queryKey: ['admin', 'user-detail', userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      if (!userId) return null;
+
+      const [profileRes, roleRes, walletRes, ordersRes, followersRes, followingRes, transactionsRes] = await Promise.all([
+        supabase.from('profiles').select('*').eq('id', userId).single(),
+        supabase.from('user_roles').select('role').eq('user_id', userId).maybeSingle(),
+        supabase.from('user_wallet').select('total_coins').eq('user_id', userId).maybeSingle(),
+        supabase.from('orders').select('id, total_amount, status, created_at, restaurant:restaurants(name)').eq('customer_id', userId).order('created_at', { ascending: false }),
+        supabase.from('followers').select('id').eq('following_id', userId),
+        supabase.from('followers').select('id').eq('follower_id', userId),
+        supabase.from('coin_transactions').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(20),
+      ]);
+
+      return {
+        profile: profileRes.data,
+        role: roleRes.data?.role || 'customer',
+        wallet: walletRes.data,
+        orders: ordersRes.data || [],
+        followersCount: followersRes.data?.length || 0,
+        followingCount: followingRes.data?.length || 0,
+        coinTransactions: transactionsRes.data || [],
+        totalOrders: ordersRes.data?.length || 0,
+        completedOrders: ordersRes.data?.filter(o => o.status === 'completed').length || 0,
+        totalSpent: ordersRes.data?.filter(o => o.status === 'completed').reduce((s, o) => s + Number(o.total_amount), 0) || 0,
+      };
+    }
+  });
+}
+
 export function useAdminOrders() {
   return useQuery({
     queryKey: ['admin', 'orders'],
@@ -53,11 +86,123 @@ export function useAdminPayouts() {
         .from('payouts')
         .select(`
           *,
-          order:orders(id, total_amount, status, restaurant:restaurants(name))
+          order:orders(id, total_amount, status, restaurant_id, restaurant:restaurants(name))
         `)
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data;
+    }
+  });
+}
+
+export function useAdminRestaurantPayoutSummary() {
+  return useQuery({
+    queryKey: ['admin', 'restaurant-payout-summary'],
+    queryFn: async () => {
+      // Get all completed orders with their restaurant info
+      const { data: completedOrders, error: ordersError } = await supabase
+        .from('orders')
+        .select('id, total_amount, restaurant_id, restaurant:restaurants(name, city)')
+        .eq('status', 'completed');
+      if (ordersError) throw ordersError;
+
+      // Get all payouts
+      const { data: payouts, error: payoutsError } = await supabase
+        .from('payouts')
+        .select('order_id, restaurant_amount, platform_fee');
+      if (payoutsError) throw payoutsError;
+
+      const paidOrderIds = new Set(payouts?.map(p => p.order_id) || []);
+
+      // Group by restaurant
+      const restaurantMap: Record<string, {
+        name: string;
+        city: string;
+        completedOrders: number;
+        totalRevenue: number;
+        totalPaid: number;
+        totalPlatformFee: number;
+        pendingAmount: number;
+      }> = {};
+
+      completedOrders?.forEach(order => {
+        const rId = order.restaurant_id || 'unknown';
+        if (!restaurantMap[rId]) {
+          restaurantMap[rId] = {
+            name: (order.restaurant as any)?.name || 'Unknown',
+            city: (order.restaurant as any)?.city || '-',
+            completedOrders: 0,
+            totalRevenue: 0,
+            totalPaid: 0,
+            totalPlatformFee: 0,
+            pendingAmount: 0,
+          };
+        }
+        const r = restaurantMap[rId];
+        r.completedOrders++;
+        const itemTotal = Math.max(Number(order.total_amount) - 4, 0);
+        const commission = Math.round(itemTotal * 0.10 * 100) / 100;
+        const restaurantShare = itemTotal - commission;
+        r.totalRevenue += Number(order.total_amount);
+
+        if (paidOrderIds.has(order.id)) {
+          const payout = payouts?.find(p => p.order_id === order.id);
+          r.totalPaid += Number(payout?.restaurant_amount || 0);
+          r.totalPlatformFee += Number(payout?.platform_fee || 0);
+        } else {
+          r.pendingAmount += restaurantShare;
+          r.totalPlatformFee += commission;
+        }
+      });
+
+      return Object.entries(restaurantMap).map(([id, data]) => ({ id, ...data }));
+    }
+  });
+}
+
+export function useAdminRefunds() {
+  return useQuery({
+    queryKey: ['admin', 'refunds'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('refunds' as any)
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []) as any[];
+    }
+  });
+}
+
+export function useUpdateRefundStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ refundId, status, adminNotes }: { refundId: string; status: string; adminNotes?: string }) => {
+      const updates: any = { status, updated_at: new Date().toISOString() };
+      if (adminNotes !== undefined) updates.admin_notes = adminNotes;
+      const { error } = await supabase
+        .from('refunds' as any)
+        .update(updates)
+        .eq('id', refundId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'refunds'] });
+    }
+  });
+}
+
+export function useCreateRefund() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ orderId, customerId, amount, reason }: { orderId: string; customerId: string; amount: number; reason: string }) => {
+      const { error } = await supabase
+        .from('refunds' as any)
+        .insert({ order_id: orderId, customer_id: customerId, amount, reason, status: 'pending' });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'refunds'] });
     }
   });
 }
@@ -88,33 +233,36 @@ export function useAdminRestaurants() {
         .order('created_at', { ascending: false });
       if (error) throw error;
 
-      // Fetch owner details and bank details for all restaurants
       const ownerIds = restaurants.map(r => r.owner_id);
       const restaurantIds = restaurants.map(r => r.id);
 
-      const { data: ownerDetails } = await supabase
-        .from('restaurant_owner_details' as any)
-        .select('*')
-        .in('user_id', ownerIds);
+      const [ownerRes, bankRes, ordersRes] = await Promise.all([
+        supabase.from('restaurant_owner_details' as any).select('*').in('user_id', ownerIds),
+        supabase.from('restaurant_bank_details' as any).select('*').in('restaurant_id', restaurantIds),
+        supabase.from('orders').select('restaurant_id, status, total_amount').in('restaurant_id', restaurantIds),
+      ]);
 
-      const { data: bankDetails } = await supabase
-        .from('restaurant_bank_details' as any)
-        .select('*')
-        .in('restaurant_id', restaurantIds);
-
-      return restaurants.map(r => ({
-        ...r,
-        verification_status: (r as any).verification_status || 'verified',
-        fssai_license: (r as any).fssai_license,
-        gst_number: (r as any).gst_number,
-        contact_phone: (r as any).contact_phone,
-        area: (r as any).area,
-        university_name: (r as any).university_name,
-        opening_hours: (r as any).opening_hours,
-        closing_hours: (r as any).closing_hours,
-        owner_details: (ownerDetails as any[])?.find((o: any) => o.user_id === r.owner_id) || null,
-        bank_details: (bankDetails as any[])?.find((b: any) => b.restaurant_id === r.id) || null,
-      }));
+      return restaurants.map(r => {
+        const rOrders = ordersRes.data?.filter(o => o.restaurant_id === r.id) || [];
+        const completedOrders = rOrders.filter(o => o.status === 'completed');
+        return {
+          ...r,
+          verification_status: (r as any).verification_status || 'verified',
+          fssai_license: (r as any).fssai_license,
+          gst_number: (r as any).gst_number,
+          contact_phone: (r as any).contact_phone,
+          area: (r as any).area,
+          university_name: (r as any).university_name,
+          opening_hours: (r as any).opening_hours,
+          closing_hours: (r as any).closing_hours,
+          owner_details: (ownerRes.data as any[])?.find((o: any) => o.user_id === r.owner_id) || null,
+          bank_details: (bankRes.data as any[])?.find((b: any) => b.restaurant_id === r.id) || null,
+          totalOrders: rOrders.length,
+          completedOrders: completedOrders.length,
+          totalRevenue: completedOrders.reduce((s, o) => s + Number(o.total_amount), 0),
+          cancelledOrders: rOrders.filter(o => o.status === 'cancelled').length,
+        };
+      });
     }
   });
 }

@@ -2,12 +2,15 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { useAdminUsers } from '@/hooks/useAdminData';
+import { useAdminUsers, useAdminUserDetail } from '@/hooks/useAdminData';
 import { useState } from 'react';
-import { Search, Users, Coffee, Shield } from 'lucide-react';
+import { Search, Users, Coffee, Shield, Eye, Heart, ShoppingBag, Coins, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import { format } from 'date-fns';
 
 const ROLE_CONFIG = {
@@ -19,10 +22,14 @@ const ROLE_CONFIG = {
 export default function AdminUsers() {
   const { data: users, isLoading } = useAdminUsers();
   const [search, setSearch] = useState('');
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const { data: userDetail, isLoading: detailLoading } = useAdminUserDetail(selectedUserId);
 
   const filteredUsers = users?.filter(user =>
     user.name.toLowerCase().includes(search.toLowerCase()) ||
-    user.phone?.includes(search)
+    user.phone?.includes(search) ||
+    user.username?.toLowerCase().includes(search.toLowerCase()) ||
+    user.city?.toLowerCase().includes(search.toLowerCase())
   );
 
   const usersByRole = users?.reduce((acc, user) => {
@@ -74,9 +81,12 @@ export default function AdminUsers() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
+                    <TableHead>Username</TableHead>
                     <TableHead>Phone</TableHead>
+                    <TableHead>Location</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Joined</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -85,14 +95,21 @@ export default function AdminUsers() {
                     return (
                       <TableRow key={user.id}>
                         <TableCell className="font-medium">{user.name}</TableCell>
+                        <TableCell className="text-muted-foreground">@{user.username || '-'}</TableCell>
                         <TableCell>{user.phone || '-'}</TableCell>
+                        <TableCell className="text-muted-foreground text-sm">{[user.city, user.state].filter(Boolean).join(', ') || '-'}</TableCell>
                         <TableCell><Badge className={roleConfig?.color}>{roleConfig?.label || user.role}</Badge></TableCell>
                         <TableCell className="text-muted-foreground">{format(new Date(user.created_at), 'MMM d, yyyy')}</TableCell>
+                        <TableCell className="text-right">
+                          <Button size="sm" variant="outline" onClick={() => setSelectedUserId(user.id)}>
+                            <Eye className="w-3.5 h-3.5 mr-1" /> View
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     );
                   })}
                   {filteredUsers?.length === 0 && (
-                    <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">No users found</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No users found</TableCell></TableRow>
                   )}
                 </TableBody>
               </Table>
@@ -100,6 +117,117 @@ export default function AdminUsers() {
           </CardContent>
         </Card>
       </div>
+
+      {/* User Detail Dialog */}
+      <Dialog open={!!selectedUserId} onOpenChange={open => !open && setSelectedUserId(null)}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5" /> {userDetail?.profile?.name || 'User Details'}
+            </DialogTitle>
+            <DialogDescription>Complete user information and activity</DialogDescription>
+          </DialogHeader>
+
+          {detailLoading ? (
+            <div className="text-center py-8 text-muted-foreground">Loading...</div>
+          ) : userDetail ? (
+            <div className="space-y-6">
+              {/* Quick Stats */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="bg-secondary/50 rounded-xl p-3 text-center">
+                  <Heart className="w-4 h-4 mx-auto text-primary mb-1" />
+                  <div className="text-lg font-bold">{userDetail.followersCount}</div>
+                  <div className="text-[10px] text-muted-foreground">Followers</div>
+                </div>
+                <div className="bg-secondary/50 rounded-xl p-3 text-center">
+                  <Users className="w-4 h-4 mx-auto text-primary mb-1" />
+                  <div className="text-lg font-bold">{userDetail.followingCount}</div>
+                  <div className="text-[10px] text-muted-foreground">Following</div>
+                </div>
+                <div className="bg-secondary/50 rounded-xl p-3 text-center">
+                  <ShoppingBag className="w-4 h-4 mx-auto text-primary mb-1" />
+                  <div className="text-lg font-bold">{userDetail.completedOrders}/{userDetail.totalOrders}</div>
+                  <div className="text-[10px] text-muted-foreground">Orders (Done/Total)</div>
+                </div>
+                <div className="bg-secondary/50 rounded-xl p-3 text-center">
+                  <Coins className="w-4 h-4 mx-auto text-primary mb-1" />
+                  <div className="text-lg font-bold">{userDetail.wallet?.total_coins || 0}</div>
+                  <div className="text-[10px] text-muted-foreground">Coins</div>
+                </div>
+              </div>
+
+              <Tabs defaultValue="info" className="w-full">
+                <TabsList className="w-full">
+                  <TabsTrigger value="info" className="flex-1">Profile</TabsTrigger>
+                  <TabsTrigger value="orders" className="flex-1">Orders</TabsTrigger>
+                  <TabsTrigger value="coins" className="flex-1">Coins</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="info" className="mt-4">
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div><span className="text-muted-foreground">Name:</span> <span className="font-medium">{userDetail.profile?.name}</span></div>
+                    <div><span className="text-muted-foreground">Username:</span> <span className="font-medium">@{userDetail.profile?.username || '-'}</span></div>
+                    <div><span className="text-muted-foreground">Phone:</span> <span className="font-medium">{userDetail.profile?.phone || '-'}</span></div>
+                    <div><span className="text-muted-foreground">Role:</span> <Badge className={ROLE_CONFIG[userDetail.role as keyof typeof ROLE_CONFIG]?.color || 'bg-muted'}>{userDetail.role}</Badge></div>
+                    <div><span className="text-muted-foreground">Area:</span> <span className="font-medium">{userDetail.profile?.campus || '-'}</span></div>
+                    <div><span className="text-muted-foreground">City:</span> <span className="font-medium">{userDetail.profile?.city || '-'}</span></div>
+                    <div><span className="text-muted-foreground">State:</span> <span className="font-medium">{userDetail.profile?.state || '-'}</span></div>
+                    <div><span className="text-muted-foreground">Bio:</span> <span className="font-medium">{userDetail.profile?.bio || '-'}</span></div>
+                    <div><span className="text-muted-foreground">Total Spent:</span> <span className="font-medium">₹{userDetail.totalSpent.toFixed(0)}</span></div>
+                    <div><span className="text-muted-foreground">Joined:</span> <span className="font-medium">{userDetail.profile?.created_at ? format(new Date(userDetail.profile.created_at), 'MMM d, yyyy') : '-'}</span></div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="orders" className="mt-4">
+                  {userDetail.orders.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-4">No orders yet</p>
+                  ) : (
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {userDetail.orders.map((order: any) => (
+                        <div key={order.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 text-sm">
+                          <div>
+                            <p className="font-medium">{order.restaurant?.name || 'Unknown'}</p>
+                            <p className="text-xs text-muted-foreground">{format(new Date(order.created_at), 'MMM d, yyyy HH:mm')}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">₹{Number(order.total_amount).toFixed(0)}</span>
+                            <Badge variant={order.status === 'completed' ? 'default' : order.status === 'cancelled' ? 'destructive' : 'secondary'} className="text-[10px]">
+                              {order.status.replace('_', ' ')}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="coins" className="mt-4">
+                  {userDetail.coinTransactions.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-4">No coin activity</p>
+                  ) : (
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {userDetail.coinTransactions.map((tx: any) => (
+                        <div key={tx.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 text-sm">
+                          <div className="flex items-center gap-2">
+                            {tx.type === 'earn' ? <ArrowDownLeft className="w-4 h-4 text-green-500" /> : <ArrowUpRight className="w-4 h-4 text-orange-500" />}
+                            <div>
+                              <p className="font-medium capitalize">{tx.type}</p>
+                              <p className="text-xs text-muted-foreground">{format(new Date(tx.created_at), 'MMM d, yyyy')}</p>
+                            </div>
+                          </div>
+                          <span className={`font-bold ${tx.type === 'earn' ? 'text-green-600' : 'text-orange-600'}`}>
+                            {tx.type === 'earn' ? '+' : '-'}{Number(tx.coins)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

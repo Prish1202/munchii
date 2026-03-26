@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<{ error: string | null }>;
-  signup: (email: string, password: string, name: string, role: UserRole, phone?: string, city?: string, state?: string) => Promise<{ error: string | null }>;
+  signup: (email: string, password: string, name: string, role: UserRole, phone?: string, city?: string, state?: string, area?: string) => Promise<{ error: string | null }>;
   logout: () => Promise<void>;
 }
 
@@ -99,14 +99,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     role: UserRole,
     phone?: string,
     city?: string,
-    state?: string
+    state?: string,
+    area?: string
   ): Promise<{ error: string | null }> => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/email-verified`,
-        data: { name, role, phone, city, state },
+        data: { name, role, phone, city, state, area },
       },
     });
     return { error: error?.message || null };
