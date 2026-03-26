@@ -18,6 +18,8 @@ import {
   BarChart3,
   Users,
   Settings,
+  RotateCcw,
+  Wallet,
   UtensilsCrossed,
   MessageSquare,
   Coins,
@@ -54,7 +56,8 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Users', href: '/admin/users', icon: <Users className="w-5 h-5" /> },
     { label: 'Restaurants', href: '/admin/restaurants', icon: <Store className="w-5 h-5" /> },
     { label: 'Orders', href: '/admin/orders', icon: <ClipboardList className="w-5 h-5" /> },
-    { label: 'Payouts', href: '/admin/payouts', icon: <Settings className="w-5 h-5" /> },
+    { label: 'Payouts', href: '/admin/payouts', icon: <Wallet className="w-5 h-5" /> },
+    { label: 'Refunds', href: '/admin/refunds', icon: <RotateCcw className="w-5 h-5" /> },
   ],
 };
 
