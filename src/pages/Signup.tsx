@@ -29,6 +29,8 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole>('customer');
   const [isLoading, setIsLoading] = useState(false);
   const { signup, isAuthenticated, user } = useAuth();
@@ -43,7 +45,7 @@ export default function SignupPage() {
   const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    const { error } = await signup(email, password, name, selectedRole, phone);
+    const { error } = await signup(email, password, name, selectedRole, phone, city, state);
     if (error) {
       if (error.includes('already registered')) {
         toast.error('This email is already registered. Please login instead.');
@@ -134,6 +136,16 @@ export default function SignupPage() {
               <div className="space-y-2">
                 <Label htmlFor="signup-phone">Mobile Number</Label>
                 <Input id="signup-phone" type="tel" placeholder="+91 9876543210" value={phone} onChange={(e) => setPhone(e.target.value)} required className="bg-background rounded-xl" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="signup-city">City <span className="text-destructive">*</span></Label>
+                  <Input id="signup-city" type="text" placeholder="e.g. Mumbai" value={city} onChange={(e) => setCity(e.target.value)} required className="bg-background rounded-xl" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-state">State <span className="text-destructive">*</span></Label>
+                  <Input id="signup-state" type="text" placeholder="e.g. Maharashtra" value={state} onChange={(e) => setState(e.target.value)} required className="bg-background rounded-xl" />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="signup-password">Password</Label>
