@@ -566,6 +566,53 @@ export type Database = {
         }
         Relationships: []
       }
+      refunds: {
+        Row: {
+          admin_notes: string | null
+          amount: number
+          created_at: string
+          customer_id: string
+          id: string
+          order_id: string
+          razorpay_refund_id: string | null
+          reason: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount: number
+          created_at?: string
+          customer_id: string
+          id?: string
+          order_id: string
+          razorpay_refund_id?: string | null
+          reason?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          amount?: number
+          created_at?: string
+          customer_id?: string
+          id?: string
+          order_id?: string
+          razorpay_refund_id?: string | null
+          reason?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refunds_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_bank_details: {
         Row: {
           account_holder_name: string | null

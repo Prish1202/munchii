@@ -29,6 +29,7 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [area, setArea] = useState('');
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole>('customer');
@@ -45,7 +46,7 @@ export default function SignupPage() {
   const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    const { error } = await signup(email, password, name, selectedRole, phone, city, state);
+    const { error } = await signup(email, password, name, selectedRole, phone, city, state, area);
     if (error) {
       if (error.includes('already registered')) {
         toast.error('This email is already registered. Please login instead.');
@@ -136,6 +137,10 @@ export default function SignupPage() {
               <div className="space-y-2">
                 <Label htmlFor="signup-phone">Mobile Number</Label>
                 <Input id="signup-phone" type="tel" placeholder="+91 9876543210" value={phone} onChange={(e) => setPhone(e.target.value)} required className="bg-background rounded-xl" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="signup-area">Area / Locality <span className="text-destructive">*</span></Label>
+                <Input id="signup-area" type="text" placeholder="e.g. Andheri West" value={area} onChange={(e) => setArea(e.target.value)} required className="bg-background rounded-xl" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
