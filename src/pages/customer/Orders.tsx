@@ -98,6 +98,20 @@ function OrderCard({ order, showReorder }: { order: any; showReorder?: boolean }
       return;
     }
 
+    // Check if restaurant is still active/open
+    if (order.restaurant_id) {
+      const { data: restaurant } = await supabase
+        .from('restaurants')
+        .select('is_active, name')
+        .eq('id', order.restaurant_id)
+        .maybeSingle();
+
+      if (!restaurant || !restaurant.is_active) {
+        toast.error(`${restaurant?.name || 'This restaurant'} is currently offline. You can't reorder right now.`);
+        return;
+      }
+    }
+
     // Fetch current prices from menu_items
     const menuItemIds = orderItems.map(i => i.menu_item_id).filter(Boolean);
     const { data: currentMenuItems } = await supabase
