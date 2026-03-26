@@ -529,10 +529,12 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           campus: string | null
+          city: string | null
           created_at: string
           id: string
           name: string
           phone: string | null
+          state: string | null
           updated_at: string
           username: string | null
         }
@@ -540,10 +542,12 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           campus?: string | null
+          city?: string | null
           created_at?: string
           id: string
           name: string
           phone?: string | null
+          state?: string | null
           updated_at?: string
           username?: string | null
         }
@@ -551,10 +555,12 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           campus?: string | null
+          city?: string | null
           created_at?: string
           id?: string
           name?: string
           phone?: string | null
+          state?: string | null
           updated_at?: string
           username?: string | null
         }
