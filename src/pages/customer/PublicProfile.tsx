@@ -63,11 +63,22 @@ export default function PublicProfile() {
     <DashboardLayout>
       <div className="max-w-lg mx-auto pb-28 md:pb-6 space-y-4">
         {/* Profile Header — Instagram style */}
-        <motion.div
+         <motion.div
           className="bg-card rounded-3xl border border-border p-5"
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
         >
+          <div className="flex items-center justify-between mb-1">
+            <div />
+            <ProfileMoreMenu
+              userId={userId!}
+              username={profile.username}
+              name={profile.name}
+              avatarUrl={profile.avatar_url}
+              createdAt={profile.created_at}
+              isOwnProfile={isOwnProfile}
+            />
+          </div>
           <div className="flex items-center gap-5">
             {/* Avatar */}
             <div className="relative">
@@ -144,14 +155,6 @@ export default function PublicProfile() {
                   </Button>
                 </>
               )}
-              <Button
-                variant="ghost"
-                className="rounded-xl text-muted-foreground hover:text-destructive"
-                onClick={() => setShowReport(true)}
-                size="sm"
-              >
-                <Flag className="w-4 h-4" />
-              </Button>
             </div>
           )}
 
@@ -214,12 +217,6 @@ export default function PublicProfile() {
         </DialogContent>
       </Dialog>
 
-      {/* Report Dialog */}
-      <ReportDialog
-        open={showReport}
-        onOpenChange={setShowReport}
-        reportedUserId={userId}
-      />
     </DashboardLayout>
   );
 }
