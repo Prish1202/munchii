@@ -5,6 +5,7 @@ import { ReactionBadges } from './EmojiReactions';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ReportDialog } from './ReportDialog';
 import { toast } from 'sonner';
+import { getChatSettings } from '@/pages/customer/ChatSettings';
 
 const QUICK_EMOJIS = ['❤️', '😂', '👍', '😮', '😢', '🔥'];
 
@@ -61,6 +62,8 @@ function parseCoinTransfer(text: string) {
 
 function CoinTransferBubble({ coins, message, time, isOwn, deliveredAt, readAt }: { coins: number; message: string; time: string; isOwn: boolean; deliveredAt?: string | null; readAt?: string | null }) {
   const label = isOwn ? 'Sent' : 'Received';
+  const settings = getChatSettings();
+  const effectiveReadAt = settings.hideBlueTick ? null : readAt;
   return (
     <div className={cn('flex', isOwn ? 'justify-end' : 'justify-start')}>
       <div className="max-w-[75%] min-w-[180px]">
@@ -76,8 +79,8 @@ function CoinTransferBubble({ coins, message, time, isOwn, deliveredAt, readAt }
               {new Date(time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
             {isOwn && (
-              <span className={cn('flex-shrink-0', readAt ? 'text-blue-400' : 'text-muted-foreground/50')}>
-                {readAt ? <CheckCheck className="w-3.5 h-3.5" /> : deliveredAt ? <CheckCheck className="w-3.5 h-3.5" /> : <Check className="w-3.5 h-3.5" />}
+              <span className={cn('flex-shrink-0', effectiveReadAt ? 'text-blue-400' : 'text-muted-foreground/50')}>
+                {effectiveReadAt ? <CheckCheck className="w-3.5 h-3.5" /> : deliveredAt ? <CheckCheck className="w-3.5 h-3.5" /> : <Check className="w-3.5 h-3.5" />}
               </span>
             )}
           </div>
@@ -106,6 +109,8 @@ export function MessageBubble({
   reactions, currentUserId, onToggleReaction, onBurstReaction, onReply,
   onForward, onUnsend, replyToText, activeMessageId, onActivate,
 }: MessageBubbleProps) {
+  const settings = getChatSettings();
+  const effectiveReadAt = settings.hideBlueTick ? null : readAt;
   const showActions = activeMessageId === messageId;
   const [showReport, setShowReport] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
@@ -241,8 +246,8 @@ export function MessageBubble({
               {new Date(time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
             {isOwn && (
-              <span className={cn('flex-shrink-0 transition-all duration-500', readAt ? 'text-blue-400 animate-[seen-pop_0.4s_ease-out]' : 'text-primary-foreground/50')}>
-                {readAt ? <CheckCheck className="w-3.5 h-3.5" /> : deliveredAt ? <CheckCheck className="w-3.5 h-3.5" /> : <Check className="w-3.5 h-3.5" />}
+              <span className={cn('flex-shrink-0 transition-all duration-500', effectiveReadAt ? 'text-blue-400 animate-[seen-pop_0.4s_ease-out]' : 'text-primary-foreground/50')}>
+                {effectiveReadAt ? <CheckCheck className="w-3.5 h-3.5" /> : deliveredAt ? <CheckCheck className="w-3.5 h-3.5" /> : <Check className="w-3.5 h-3.5" />}
               </span>
             )}
           </div>

@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { getChatSettings } from '@/pages/customer/ChatSettings';
 
 export function useTypingIndicator(conversationId: string) {
   const { user } = useAuth();
@@ -12,12 +13,16 @@ export function useTypingIndicator(conversationId: string) {
   useEffect(() => {
     if (!conversationId || !user?.id) return;
 
+    const settings = getChatSettings();
+
     const channel = supabase.channel(`typing-${conversationId}`);
     channelRef.current = channel;
 
     channel
       .on('broadcast', { event: 'typing' }, (payload) => {
         if (payload.payload?.user_id !== user.id) {
+          // If user has hidden typing indicators, don't show others' typing
+          if (settings.hideTypingIndicator) return;
           setIsOtherTyping(true);
           clearTimeout(timeoutRef.current);
           timeoutRef.current = setTimeout(() => setIsOtherTyping(false), 3000);
@@ -33,8 +38,11 @@ export function useTypingIndicator(conversationId: string) {
   }, [conversationId, user?.id]);
 
   const sendTyping = useCallback(() => {
+    // If user has hidden typing indicators, don't broadcast typing
+    const settings = getChatSettings();
+    if (settings.hideTypingIndicator) return;
+
     const now = Date.now();
-    // Throttle to once per 2 seconds
     if (now - lastBroadcastRef.current < 2000) return;
     lastBroadcastRef.current = now;
 

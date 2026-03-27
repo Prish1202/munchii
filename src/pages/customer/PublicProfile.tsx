@@ -11,9 +11,10 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { CoinTransfer } from '@/components/customer/CoinTransfer';
 import { useWallet } from '@/hooks/useWallet';
-import { ShoppingBag, UserPlus, UserMinus, Loader2, MessageSquare, Send, Grid3x3, Sparkles, Flag } from 'lucide-react';
+import { ShoppingBag, UserPlus, UserMinus, Loader2, MessageSquare, Send, Grid3x3, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ReportDialog } from '@/components/customer/ReportDialog';
+import { ProfileMoreMenu } from '@/components/customer/ProfileMoreMenu';
 
 export default function PublicProfile() {
   const { userId } = useParams<{ userId: string }>();
@@ -27,7 +28,6 @@ export default function PublicProfile() {
   const startConversation = useStartConversation();
   const { data: wallet } = useWallet();
   const [showShareCoins, setShowShareCoins] = useState(false);
-  const [showReport, setShowReport] = useState(false);
 
   const handleMessage = async () => {
     if (!userId) return;
@@ -63,11 +63,22 @@ export default function PublicProfile() {
     <DashboardLayout>
       <div className="max-w-lg mx-auto pb-28 md:pb-6 space-y-4">
         {/* Profile Header — Instagram style */}
-        <motion.div
+         <motion.div
           className="bg-card rounded-3xl border border-border p-5"
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
         >
+          <div className="flex items-center justify-between mb-1">
+            <div />
+            <ProfileMoreMenu
+              userId={userId!}
+              username={profile.username}
+              name={profile.name}
+              avatarUrl={profile.avatar_url}
+              createdAt={profile.created_at}
+              isOwnProfile={isOwnProfile}
+            />
+          </div>
           <div className="flex items-center gap-5">
             {/* Avatar */}
             <div className="relative">
@@ -144,14 +155,6 @@ export default function PublicProfile() {
                   </Button>
                 </>
               )}
-              <Button
-                variant="ghost"
-                className="rounded-xl text-muted-foreground hover:text-destructive"
-                onClick={() => setShowReport(true)}
-                size="sm"
-              >
-                <Flag className="w-4 h-4" />
-              </Button>
             </div>
           )}
 
@@ -214,12 +217,6 @@ export default function PublicProfile() {
         </DialogContent>
       </Dialog>
 
-      {/* Report Dialog */}
-      <ReportDialog
-        open={showReport}
-        onOpenChange={setShowReport}
-        reportedUserId={userId}
-      />
     </DashboardLayout>
   );
 }

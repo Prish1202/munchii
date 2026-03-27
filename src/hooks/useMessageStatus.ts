@@ -2,6 +2,7 @@ import { useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
+import { getChatSettings } from '@/pages/customer/ChatSettings';
 
 /**
  * Marks messages as READ for the current user in a specific conversation.
@@ -15,6 +16,8 @@ export function useMessageStatus(conversationId: string, messages: Array<{ id: s
   const markAsRead = useCallback(() => {
     if (!user?.id || !conversationId || !messages.length) return;
 
+    const settings = getChatSettings();
+
     const unread = messages.filter(
       (m) => m.sender_id !== user.id && !m.read_at
     );
@@ -22,6 +25,25 @@ export function useMessageStatus(conversationId: string, messages: Array<{ id: s
     if (unread.length === 0) return;
 
     const ids = unread.map((m) => m.id);
+
+    // If blue ticks are hidden, only mark as delivered but NOT read
+    if (settings.hideBlueTick) {
+      const undelivered = messages.filter(
+        (m) => m.sender_id !== user.id && !m.delivered_at
+      );
+      if (undelivered.length > 0) {
+        const deliverIds = undelivered.map((m) => m.id);
+        supabase
+          .from('messages')
+          .update({ delivered_at: new Date().toISOString() } as any)
+          .in('id', deliverIds)
+          .then(() => {
+            queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
+          });
+      }
+      return;
+    }
+
     supabase
       .from('messages')
       .update({ read_at: new Date().toISOString(), delivered_at: new Date().toISOString() } as any)
