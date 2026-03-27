@@ -5,6 +5,7 @@ import { ReactionBadges } from './EmojiReactions';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ReportDialog } from './ReportDialog';
 import { toast } from 'sonner';
+import { getChatSettings } from '@/pages/customer/ChatSettings';
 
 const QUICK_EMOJIS = ['❤️', '😂', '👍', '😮', '😢', '🔥'];
 
