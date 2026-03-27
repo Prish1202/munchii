@@ -246,8 +246,8 @@ export function MessageBubble({
               {new Date(time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
             {isOwn && (
-              <span className={cn('flex-shrink-0 transition-all duration-500', readAt ? 'text-blue-400 animate-[seen-pop_0.4s_ease-out]' : 'text-primary-foreground/50')}>
-                {readAt ? <CheckCheck className="w-3.5 h-3.5" /> : deliveredAt ? <CheckCheck className="w-3.5 h-3.5" /> : <Check className="w-3.5 h-3.5" />}
+              <span className={cn('flex-shrink-0 transition-all duration-500', effectiveReadAt ? 'text-blue-400 animate-[seen-pop_0.4s_ease-out]' : 'text-primary-foreground/50')}>
+                {effectiveReadAt ? <CheckCheck className="w-3.5 h-3.5" /> : deliveredAt ? <CheckCheck className="w-3.5 h-3.5" /> : <Check className="w-3.5 h-3.5" />}
               </span>
             )}
           </div>
