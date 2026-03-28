@@ -137,7 +137,7 @@ export function useConversations() {
               .select('*', { count: 'exact', head: true })
               .eq('conversation_id', conv.id)
               .neq('sender_id', user!.id)
-              .is('read_at', null),
+              .is('delivered_at', null),
           ]);
 
           conv.unread_count = count || 0;

@@ -7,10 +7,10 @@ import { Button } from '@/components/ui/button';
 import { ReportDialog } from '@/components/customer/ReportDialog';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { useConversations, useStartConversation } from '@/hooks/useChat';
-import { useSendMessage, useRecipientPublicKey, usePublicKey } from '@/hooks/useChat';
+import { useConversations } from '@/hooks/useChat';
+import { usePublicKey } from '@/hooks/useChat';
+import { useIsBlocked, useToggleBlock } from '@/hooks/useBlockedUsers';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
 
 interface ProfileMoreMenuProps {
   userId: string;
@@ -25,10 +25,10 @@ export function ProfileMoreMenu({ userId, username, name, avatarUrl, createdAt, 
   const [showAbout, setShowAbout] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [showShare, setShowShare] = useState(false);
-  const navigate = useNavigate();
   const { data: conversations } = useConversations();
-  const startConversation = useStartConversation();
   const { data: senderPublicKey } = usePublicKey();
+  const { data: isBlocked } = useIsBlocked(userId);
+  const toggleBlock = useToggleBlock();
 
   const profileUrl = `${window.location.origin}/user/${userId}`;
 
@@ -93,7 +93,12 @@ export function ProfileMoreMenu({ userId, username, name, avatarUrl, createdAt, 
   };
 
   const handleBlock = () => {
-    toast.info('Block feature coming soon');
+    const confirmed = window.confirm(
+      isBlocked ? `Unblock ${name}?` : `Block ${name}? They won't be able to see your profile or message you.`
+    );
+    if (confirmed) {
+      toggleBlock.mutate({ targetUserId: userId, isBlocked: !!isBlocked });
+    }
   };
 
   return (
@@ -119,7 +124,7 @@ export function ProfileMoreMenu({ userId, username, name, avatarUrl, createdAt, 
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleBlock} className="gap-2.5 py-2.5 text-destructive focus:text-destructive">
-                <Ban className="w-4 h-4" /> Block
+                <Ban className="w-4 h-4" /> {isBlocked ? 'Unblock' : 'Block'}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setShowReport(true)} className="gap-2.5 py-2.5 text-destructive focus:text-destructive">
                 <Flag className="w-4 h-4" /> Report
