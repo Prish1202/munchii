@@ -274,6 +274,15 @@ export function MessageBubble({
           </button>
         </div>
 
+        {/* Full-screen backdrop to dismiss action menu */}
+        {showActions && (
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => onActivate?.(null)}
+            onTouchStart={() => onActivate?.(null)}
+          />
+        )}
+
         {/* Long-press action sheet with emoji row */}
         {showActions && (
           <div
