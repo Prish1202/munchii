@@ -909,6 +909,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_blocked_between: {
+        Args: { _user_a: string; _user_b: string }
+        Returns: boolean
+      }
+      is_blocked_by: {
+        Args: { _target_user_id: string; _viewer_user_id: string }
+        Returns: boolean
+      }
       transfer_coins: {
         Args: { _coins: number; _recipient_id: string; _sender_id: string }
         Returns: undefined
