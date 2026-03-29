@@ -5,13 +5,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useProfile, useUserStats } from '@/hooks/useProfile';
 import { useFollowerCounts, useIsFollowing, useToggleFollow } from '@/hooks/useFollowers';
 import { useStartConversation } from '@/hooks/useChat';
+import { useIsBlocked, useToggleBlock } from '@/hooks/useBlockedUsers';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { CoinTransfer } from '@/components/customer/CoinTransfer';
 import { useWallet } from '@/hooks/useWallet';
-import { ShoppingBag, UserPlus, UserMinus, Loader2, MessageSquare, Send, Grid3x3, Sparkles } from 'lucide-react';
+import { ShoppingBag, UserPlus, UserMinus, Loader2, MessageSquare, Send, Grid3x3, Sparkles, Ban } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ReportDialog } from '@/components/customer/ReportDialog';
 import { ProfileMoreMenu } from '@/components/customer/ProfileMoreMenu';
@@ -28,6 +29,8 @@ export default function PublicProfile() {
   const startConversation = useStartConversation();
   const { data: wallet } = useWallet();
   const [showShareCoins, setShowShareCoins] = useState(false);
+  const { data: isBlocked } = useIsBlocked(userId || '');
+  const toggleBlock = useToggleBlock();
 
   const handleMessage = async () => {
     if (!userId) return;
@@ -125,34 +128,48 @@ export default function PublicProfile() {
           {/* Action buttons */}
           {!isOwnProfile && userId && (
             <div className="flex gap-2 mt-4">
-              <Button
-                className="flex-1 rounded-xl"
-                variant={isFollowing ? 'outline' : 'default'}
-                onClick={() => toggleFollow.mutate({ targetUserId: userId, isFollowing: !!isFollowing })}
-                disabled={toggleFollow.isPending}
-                size="sm"
-              >
-                {isFollowing ? <><UserMinus className="w-4 h-4 mr-1.5" /> Unfollow</> : <><UserPlus className="w-4 h-4 mr-1.5" /> Follow</>}
-              </Button>
-              {isFollowing && (
+              {isBlocked ? (
+                <Button
+                  className="flex-1 rounded-xl"
+                  variant="destructive"
+                  onClick={() => toggleBlock.mutate({ targetUserId: userId, isBlocked: true })}
+                  disabled={toggleBlock.isPending}
+                  size="sm"
+                >
+                  <Ban className="w-4 h-4 mr-1.5" /> Unblock
+                </Button>
+              ) : (
                 <>
                   <Button
-                    variant="outline"
                     className="flex-1 rounded-xl"
-                    onClick={handleMessage}
-                    disabled={startConversation.isPending}
+                    variant={isFollowing ? 'outline' : 'default'}
+                    onClick={() => toggleFollow.mutate({ targetUserId: userId, isFollowing: !!isFollowing })}
+                    disabled={toggleFollow.isPending}
                     size="sm"
                   >
-                    <MessageSquare className="w-4 h-4 mr-1.5" /> Message
+                    {isFollowing ? <><UserMinus className="w-4 h-4 mr-1.5" /> Unfollow</> : <><UserPlus className="w-4 h-4 mr-1.5" /> Follow</>}
                   </Button>
-                  <Button
-                    variant="outline"
-                    className="rounded-xl"
-                    onClick={() => setShowShareCoins(true)}
-                    size="sm"
-                  >
-                    <Send className="w-4 h-4" />
-                  </Button>
+                  {isFollowing && (
+                    <>
+                      <Button
+                        variant="outline"
+                        className="flex-1 rounded-xl"
+                        onClick={handleMessage}
+                        disabled={startConversation.isPending}
+                        size="sm"
+                      >
+                        <MessageSquare className="w-4 h-4 mr-1.5" /> Message
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="rounded-xl"
+                        onClick={() => setShowShareCoins(true)}
+                        size="sm"
+                      >
+                        <Send className="w-4 h-4" />
+                      </Button>
+                    </>
+                  )}
                 </>
               )}
             </div>

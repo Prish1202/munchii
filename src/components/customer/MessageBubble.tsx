@@ -283,11 +283,11 @@ export function MessageBubble({
           />
         )}
 
-        {/* Long-press action sheet with emoji row */}
+        {/* Long-press action sheet with emoji row — render above bubble */}
         {showActions && (
           <div
             data-message-actions
-            className={cn('absolute z-50 top-full mt-2 min-w-[220px] rounded-2xl border border-border bg-popover p-1.5 shadow-xl animate-scale-in', isOwn ? 'right-0' : 'left-0')}
+            className={cn('absolute z-50 bottom-full mb-2 min-w-[220px] rounded-2xl border border-border bg-popover p-1.5 shadow-xl animate-scale-in', isOwn ? 'right-0' : 'left-0')}
           >
             {/* Emoji row */}
             <div className="flex items-center justify-around px-1 py-1.5 border-b border-border/50 mb-1">

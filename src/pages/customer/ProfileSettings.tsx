@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile, useUpdateProfile } from '@/hooks/useProfile';
@@ -34,20 +34,22 @@ export default function ProfileSettings() {
     campus: '',
     phone: '',
   });
-  const [initialized, setInitialized] = useState(false);
+  const [initialized, setInitialized] = useState<string | null>(null);
   const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
   const usernameTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
-  if (profile && !initialized) {
-    setForm({
-      name: profile.name || '',
-      username: profile.username || '',
-      bio: (profile as any).bio || '',
-      campus: profile.campus || '',
-      phone: profile.phone || '',
-    });
-    setInitialized(true);
-  }
+  useEffect(() => {
+    if (profile && initialized !== profile.id) {
+      setForm({
+        name: profile.name || '',
+        username: profile.username || '',
+        bio: (profile as any).bio || '',
+        campus: profile.campus || '',
+        phone: profile.phone || '',
+      });
+      setInitialized(profile.id);
+    }
+  }, [profile, initialized]);
 
   const checkUsername = useCallback(async (username: string) => {
     if (!username || username === profile?.username) { setUsernameStatus('idle'); return; }
