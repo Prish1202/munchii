@@ -17,7 +17,9 @@ export default function RestaurantMenu() {
   const { id } = useParams<{ id: string }>();
   const { data: restaurant, isLoading: loadingRestaurant } = useRestaurant(id!);
   const { data: menuItems, isLoading: loadingMenu } = useMenuItems(id!);
+  const { data: categories } = useMenuCategories(id!);
   const { items: cartItems, addItem, updateQuantity, totalItems, totalAmount, restaurantId } = useCart();
+  const [activeCategory, setActiveCategory] = useState<string>('all');
 
   const getCartQuantity = (menuItemId: string) => {
     const item = cartItems.find(i => i.menuItemId === menuItemId);
