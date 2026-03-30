@@ -8,13 +8,18 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { 
   useMyRestaurant, 
   useMyMenuItems, 
   useCreateMenuItem, 
   useUpdateMenuItem,
-  useDeleteMenuItem 
+  useDeleteMenuItem,
+  useMyMenuCategories,
+  useCreateMenuCategory,
+  useDeleteMenuCategory,
 } from '@/hooks/useMenuManagement';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -25,7 +30,9 @@ import {
   Trash2,
   UtensilsCrossed,
   ImagePlus,
-  Percent
+  Percent,
+  FolderPlus,
+  X
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -33,15 +40,21 @@ export default function MenuManagement() {
   const { user } = useAuth();
   const { data: restaurant } = useMyRestaurant();
   const { data: menuItems, isLoading } = useMyMenuItems();
+  const { data: categories } = useMyMenuCategories();
   const createItem = useCreateMenuItem();
   const updateItem = useUpdateMenuItem();
   const deleteItem = useDeleteMenuItem();
+  const createCategory = useCreateMenuCategory();
+  const deleteCategory = useDeleteMenuCategory();
   
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<{ id: string; name: string; price: number; description?: string; discount_percent?: number; image_url?: string } | null>(null);
-  const [newItem, setNewItem] = useState({ name: '', price: '', description: '', discount_percent: '', image_url: '' });
+  const [editingItem, setEditingItem] = useState<{ id: string; name: string; price: number; description?: string; discount_percent?: number; image_url?: string; category_id?: string | null } | null>(null);
+  const [newItem, setNewItem] = useState({ name: '', price: '', description: '', discount_percent: '', image_url: '', category_id: '' });
   const [uploading, setUploading] = useState(false);
   const [editUploading, setEditUploading] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [showCategoryDialog, setShowCategoryDialog] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<string>('all');
   const addFileRef = useRef<HTMLInputElement>(null);
   const editFileRef = useRef<HTMLInputElement>(null);
 
@@ -87,9 +100,10 @@ export default function MenuManagement() {
       image_url: newItem.image_url,
       description: newItem.description.trim() || undefined,
       discount_percent: newItem.discount_percent ? parseFloat(newItem.discount_percent) : undefined,
+      category_id: newItem.category_id || undefined,
     });
     
-    setNewItem({ name: '', price: '', description: '', discount_percent: '', image_url: '' });
+    setNewItem({ name: '', price: '', description: '', discount_percent: '', image_url: '', category_id: '' });
     setIsAddOpen(false);
   };
 
@@ -104,6 +118,7 @@ export default function MenuManagement() {
       image_url: editingItem.image_url,
       description: editingItem.description,
       discount_percent: editingItem.discount_percent,
+      category_id: editingItem.category_id,
     });
     
     setEditingItem(null);
@@ -117,6 +132,30 @@ export default function MenuManagement() {
     if (confirm('Are you sure you want to delete this item?')) {
       await deleteItem.mutateAsync(id);
     }
+  };
+
+  const handleAddCategory = async () => {
+    if (!newCategoryName.trim()) return;
+    await createCategory.mutateAsync(newCategoryName.trim());
+    setNewCategoryName('');
+    setShowCategoryDialog(false);
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    if (confirm('Delete this category? Items in it will become uncategorized.')) {
+      await deleteCategory.mutateAsync(id);
+    }
+  };
+
+  const filteredItems = menuItems?.filter(item => {
+    if (activeCategory === 'all') return true;
+    if (activeCategory === 'uncategorized') return !item.category_id;
+    return item.category_id === activeCategory;
+  });
+
+  const getCategoryName = (categoryId: string | null) => {
+    if (!categoryId) return null;
+    return categories?.find(c => c.id === categoryId)?.name || null;
   };
 
   if (!restaurant) {
@@ -146,59 +185,111 @@ export default function MenuManagement() {
             <p className="text-muted-foreground">Add, edit, or disable menu items</p>
           </div>
 
-          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-            <DialogTrigger asChild>
-              <Button className="gradient-primary text-primary-foreground rounded-xl">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Item
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle className="font-display">Add Menu Item</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleAddItem} className="space-y-4">
-                {/* Image Upload */}
-                <div className="space-y-2">
-                  <Label>Food Image <span className="text-destructive">*</span></Label>
-                  <input ref={addFileRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'add')} />
-                  {newItem.image_url ? (
-                    <div className="relative rounded-xl overflow-hidden">
-                      <img src={newItem.image_url} alt="Preview" className="w-full h-40 object-cover" />
-                      <button type="button" onClick={() => addFileRef.current?.click()} className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-sm font-medium opacity-0 hover:opacity-100 transition-opacity">
-                        Change Image
-                      </button>
-                    </div>
-                  ) : (
-                    <button type="button" onClick={() => addFileRef.current?.click()} disabled={uploading} className="w-full h-40 border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary hover:text-primary transition-colors">
-                      <ImagePlus className="w-8 h-8" />
-                      <span className="text-sm">{uploading ? 'Uploading...' : 'Upload Food Image'}</span>
-                    </button>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="name">Item Name <span className="text-destructive">*</span></Label>
-                  <Input id="name" placeholder="e.g., Butter Chicken" value={newItem.name} onChange={(e) => setNewItem(prev => ({ ...prev, name: e.target.value }))} required className="rounded-xl" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="price">Price (₹) <span className="text-destructive">*</span></Label>
-                  <Input id="price" type="number" placeholder="e.g., 350" min="0" step="0.01" value={newItem.price} onChange={(e) => setNewItem(prev => ({ ...prev, price: e.target.value }))} required className="rounded-xl" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description <span className="text-muted-foreground text-xs">(optional)</span></Label>
-                  <Textarea id="description" placeholder="Describe the dish..." value={newItem.description} onChange={(e) => setNewItem(prev => ({ ...prev, description: e.target.value }))} className="rounded-xl resize-none" rows={2} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="discount">Discount % <span className="text-muted-foreground text-xs">(optional)</span></Label>
-                  <Input id="discount" type="number" placeholder="e.g., 10" min="0" max="100" value={newItem.discount_percent} onChange={(e) => setNewItem(prev => ({ ...prev, discount_percent: e.target.value }))} className="rounded-xl" />
-                </div>
-                <Button type="submit" className="w-full rounded-xl gradient-primary text-primary-foreground" disabled={createItem.isPending || uploading}>
-                  {createItem.isPending ? 'Adding...' : 'Add Item'}
+          <div className="flex gap-2">
+            <Button variant="outline" className="rounded-xl" onClick={() => setShowCategoryDialog(true)}>
+              <FolderPlus className="w-4 h-4 mr-2" />
+              Category
+            </Button>
+            <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+              <DialogTrigger asChild>
+                <Button className="gradient-primary text-primary-foreground rounded-xl">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Item
                 </Button>
-              </form>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="font-display">Add Menu Item</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleAddItem} className="space-y-4">
+                  {/* Image Upload */}
+                  <div className="space-y-2">
+                    <Label>Food Image <span className="text-destructive">*</span></Label>
+                    <input ref={addFileRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'add')} />
+                    {newItem.image_url ? (
+                      <div className="relative rounded-xl overflow-hidden">
+                        <img src={newItem.image_url} alt="Preview" className="w-full h-40 object-cover" />
+                        <button type="button" onClick={() => addFileRef.current?.click()} className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-sm font-medium opacity-0 hover:opacity-100 transition-opacity">
+                          Change Image
+                        </button>
+                      </div>
+                    ) : (
+                      <button type="button" onClick={() => addFileRef.current?.click()} disabled={uploading} className="w-full h-40 border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary hover:text-primary transition-colors">
+                        <ImagePlus className="w-8 h-8" />
+                        <span className="text-sm">{uploading ? 'Uploading...' : 'Upload Food Image'}</span>
+                      </button>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Item Name <span className="text-destructive">*</span></Label>
+                    <Input id="name" placeholder="e.g., Butter Chicken" value={newItem.name} onChange={(e) => setNewItem(prev => ({ ...prev, name: e.target.value }))} required className="rounded-xl" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="price">Price (₹) <span className="text-destructive">*</span></Label>
+                    <Input id="price" type="number" placeholder="e.g., 350" min="0" step="0.01" value={newItem.price} onChange={(e) => setNewItem(prev => ({ ...prev, price: e.target.value }))} required className="rounded-xl" />
+                  </div>
+                  {categories && categories.length > 0 && (
+                    <div className="space-y-2">
+                      <Label>Category</Label>
+                      <Select value={newItem.category_id} onValueChange={(v) => setNewItem(prev => ({ ...prev, category_id: v }))}>
+                        <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select category" /></SelectTrigger>
+                        <SelectContent>
+                          {categories.map(cat => (
+                            <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Description <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                    <Textarea id="description" placeholder="Describe the dish..." value={newItem.description} onChange={(e) => setNewItem(prev => ({ ...prev, description: e.target.value }))} className="rounded-xl resize-none" rows={2} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="discount">Discount % <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                    <Input id="discount" type="number" placeholder="e.g., 10" min="0" max="100" value={newItem.discount_percent} onChange={(e) => setNewItem(prev => ({ ...prev, discount_percent: e.target.value }))} className="rounded-xl" />
+                  </div>
+                  <Button type="submit" className="w-full rounded-xl gradient-primary text-primary-foreground" disabled={createItem.isPending || uploading}>
+                    {createItem.isPending ? 'Adding...' : 'Add Item'}
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
+
+        {/* Category filter pills */}
+        {categories && categories.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            <button
+              onClick={() => setActiveCategory('all')}
+              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${activeCategory === 'all' ? 'bg-primary text-primary-foreground' : 'bg-card border border-border text-muted-foreground hover:text-foreground'}`}
+            >
+              All Items
+            </button>
+            {categories.map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${activeCategory === cat.id ? 'bg-primary text-primary-foreground' : 'bg-card border border-border text-muted-foreground hover:text-foreground'}`}
+              >
+                {cat.name}
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleDeleteCategory(cat.id); }}
+                  className="ml-1 hover:text-destructive"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </button>
+            ))}
+            <button
+              onClick={() => setActiveCategory('uncategorized')}
+              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${activeCategory === 'uncategorized' ? 'bg-primary text-primary-foreground' : 'bg-card border border-border text-muted-foreground hover:text-foreground'}`}
+            >
+              Uncategorized
+            </button>
+          </div>
+        )}
 
         {/* Menu Items */}
         {isLoading ? (
@@ -207,7 +298,7 @@ export default function MenuManagement() {
               <Skeleton key={i} className="h-28 w-full rounded-2xl" />
             ))}
           </div>
-        ) : menuItems?.length === 0 ? (
+        ) : filteredItems?.length === 0 ? (
           <Card className="rounded-2xl">
             <CardContent className="p-8 text-center">
               <UtensilsCrossed className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
@@ -221,106 +312,162 @@ export default function MenuManagement() {
           </Card>
         ) : (
           <div className="space-y-3">
-            {menuItems?.map((item) => (
-              <Card key={item.id} className={`rounded-2xl ${!item.available ? 'opacity-60' : ''}`}>
-                <CardContent className="p-3">
-                  <div className="flex gap-3">
-                    {/* Image */}
-                    {(item as any).image_url && (
-                      <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0">
-                        <img src={(item as any).image_url} alt={item.name} className="w-full h-full object-cover" />
-                      </div>
-                    )}
-                    
-                    <div className="flex-1 min-w-0 flex items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold truncate">{item.name}</h3>
-                          {!item.available && (
-                            <span className="text-xs bg-muted px-2 py-0.5 rounded-lg">Disabled</span>
-                          )}
-                          {(item as any).discount_percent > 0 && (
-                            <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-lg font-medium flex items-center gap-0.5">
-                              <Percent className="w-3 h-3" />{(item as any).discount_percent}% off
-                            </span>
-                          )}
+            {filteredItems?.map((item) => {
+              const catName = getCategoryName(item.category_id);
+              return (
+                <Card key={item.id} className={`rounded-2xl ${!item.available ? 'opacity-60' : ''}`}>
+                  <CardContent className="p-3">
+                    <div className="flex gap-3">
+                      {item.image_url && (
+                        <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0">
+                          <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
                         </div>
-                        {(item as any).description && (
-                          <p className="text-xs text-muted-foreground truncate mt-0.5">{(item as any).description}</p>
-                        )}
-                        <p className="text-primary font-medium mt-0.5">₹{Number(item.price).toFixed(2)}</p>
-                      </div>
-
-                      <div className="flex items-center gap-2 shrink-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs text-muted-foreground hidden sm:inline">Available</span>
-                          <Switch checked={item.available} onCheckedChange={() => handleToggleAvailable(item.id, item.available)} />
+                      )}
+                      
+                      <div className="flex-1 min-w-0 flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-semibold truncate">{item.name}</h3>
+                            {!item.available && (
+                              <span className="text-xs bg-muted px-2 py-0.5 rounded-lg">Disabled</span>
+                            )}
+                            {item.discount_percent > 0 && (
+                              <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-lg font-medium flex items-center gap-0.5">
+                                <Percent className="w-3 h-3" />{item.discount_percent}% off
+                              </span>
+                            )}
+                          </div>
+                          {catName && (
+                            <Badge variant="secondary" className="text-[10px] mt-0.5">{catName}</Badge>
+                          )}
+                          {item.description && (
+                            <p className="text-xs text-muted-foreground truncate mt-0.5">{item.description}</p>
+                          )}
+                          <p className="text-primary font-medium mt-0.5">₹{Number(item.price).toFixed(2)}</p>
                         </div>
 
-                        <Dialog open={editingItem?.id === item.id} onOpenChange={(open) => !open && setEditingItem(null)}>
-                          <DialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="rounded-xl" onClick={() => setEditingItem({ id: item.id, name: item.name, price: Number(item.price), description: (item as any).description || '', discount_percent: (item as any).discount_percent || 0, image_url: (item as any).image_url || '' })}>
-                              <Pencil className="w-4 h-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-md">
-                            <DialogHeader>
-                              <DialogTitle className="font-display">Edit Menu Item</DialogTitle>
-                            </DialogHeader>
-                            <form onSubmit={handleUpdateItem} className="space-y-4">
-                              {/* Image */}
-                              <div className="space-y-2">
-                                <Label>Food Image</Label>
-                                <input ref={editFileRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'edit')} />
-                                {editingItem?.image_url ? (
-                                  <div className="relative rounded-xl overflow-hidden">
-                                    <img src={editingItem.image_url} alt="Preview" className="w-full h-40 object-cover" />
-                                    <button type="button" onClick={() => editFileRef.current?.click()} className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-sm font-medium opacity-0 hover:opacity-100 transition-opacity">
-                                      {editUploading ? 'Uploading...' : 'Change Image'}
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <button type="button" onClick={() => editFileRef.current?.click()} disabled={editUploading} className="w-full h-32 border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary transition-colors">
-                                    <ImagePlus className="w-6 h-6" />
-                                    <span className="text-sm">{editUploading ? 'Uploading...' : 'Upload Image'}</span>
-                                  </button>
-                                )}
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="edit-name">Item Name</Label>
-                                <Input id="edit-name" value={editingItem?.name || ''} onChange={(e) => setEditingItem(prev => prev ? { ...prev, name: e.target.value } : null)} required className="rounded-xl" />
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="edit-price">Price (₹)</Label>
-                                <Input id="edit-price" type="number" min="0" step="0.01" value={editingItem?.price || ''} onChange={(e) => setEditingItem(prev => prev ? { ...prev, price: parseFloat(e.target.value) } : null)} required className="rounded-xl" />
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="edit-desc">Description</Label>
-                                <Textarea id="edit-desc" value={editingItem?.description || ''} onChange={(e) => setEditingItem(prev => prev ? { ...prev, description: e.target.value } : null)} className="rounded-xl resize-none" rows={2} />
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="edit-discount">Discount %</Label>
-                                <Input id="edit-discount" type="number" min="0" max="100" value={editingItem?.discount_percent || ''} onChange={(e) => setEditingItem(prev => prev ? { ...prev, discount_percent: parseFloat(e.target.value) || 0 } : null)} className="rounded-xl" />
-                              </div>
-                              <Button type="submit" className="w-full rounded-xl gradient-primary text-primary-foreground" disabled={updateItem.isPending || editUploading}>
-                                {updateItem.isPending ? 'Saving...' : 'Save Changes'}
+                        <div className="flex items-center gap-2 shrink-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs text-muted-foreground hidden sm:inline">Available</span>
+                            <Switch checked={item.available} onCheckedChange={() => handleToggleAvailable(item.id, item.available)} />
+                          </div>
+
+                          <Dialog open={editingItem?.id === item.id} onOpenChange={(open) => !open && setEditingItem(null)}>
+                            <DialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="rounded-xl" onClick={() => setEditingItem({ id: item.id, name: item.name, price: Number(item.price), description: item.description || '', discount_percent: item.discount_percent || 0, image_url: item.image_url || '', category_id: item.category_id })}>
+                                <Pencil className="w-4 h-4" />
                               </Button>
-                            </form>
-                          </DialogContent>
-                        </Dialog>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+                              <DialogHeader>
+                                <DialogTitle className="font-display">Edit Menu Item</DialogTitle>
+                              </DialogHeader>
+                              <form onSubmit={handleUpdateItem} className="space-y-4">
+                                <div className="space-y-2">
+                                  <Label>Food Image</Label>
+                                  <input ref={editFileRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'edit')} />
+                                  {editingItem?.image_url ? (
+                                    <div className="relative rounded-xl overflow-hidden">
+                                      <img src={editingItem.image_url} alt="Preview" className="w-full h-40 object-cover" />
+                                      <button type="button" onClick={() => editFileRef.current?.click()} className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-sm font-medium opacity-0 hover:opacity-100 transition-opacity">
+                                        {editUploading ? 'Uploading...' : 'Change Image'}
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <button type="button" onClick={() => editFileRef.current?.click()} disabled={editUploading} className="w-full h-32 border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary transition-colors">
+                                      <ImagePlus className="w-6 h-6" />
+                                      <span className="text-sm">{editUploading ? 'Uploading...' : 'Upload Image'}</span>
+                                    </button>
+                                  )}
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor="edit-name">Item Name</Label>
+                                  <Input id="edit-name" value={editingItem?.name || ''} onChange={(e) => setEditingItem(prev => prev ? { ...prev, name: e.target.value } : null)} required className="rounded-xl" />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor="edit-price">Price (₹)</Label>
+                                  <Input id="edit-price" type="number" min="0" step="0.01" value={editingItem?.price || ''} onChange={(e) => setEditingItem(prev => prev ? { ...prev, price: parseFloat(e.target.value) } : null)} required className="rounded-xl" />
+                                </div>
+                                {categories && categories.length > 0 && (
+                                  <div className="space-y-2">
+                                    <Label>Category</Label>
+                                    <Select value={editingItem?.category_id || 'none'} onValueChange={(v) => setEditingItem(prev => prev ? { ...prev, category_id: v === 'none' ? null : v } : null)}>
+                                      <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="none">No Category</SelectItem>
+                                        {categories.map(cat => (
+                                          <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                )}
+                                <div className="space-y-2">
+                                  <Label htmlFor="edit-desc">Description</Label>
+                                  <Textarea id="edit-desc" value={editingItem?.description || ''} onChange={(e) => setEditingItem(prev => prev ? { ...prev, description: e.target.value } : null)} className="rounded-xl resize-none" rows={2} />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor="edit-discount">Discount %</Label>
+                                  <Input id="edit-discount" type="number" min="0" max="100" value={editingItem?.discount_percent || ''} onChange={(e) => setEditingItem(prev => prev ? { ...prev, discount_percent: parseFloat(e.target.value) || 0 } : null)} className="rounded-xl" />
+                                </div>
+                                <Button type="submit" className="w-full rounded-xl gradient-primary text-primary-foreground" disabled={updateItem.isPending || editUploading}>
+                                  {updateItem.isPending ? 'Saving...' : 'Save Changes'}
+                                </Button>
+                              </form>
+                            </DialogContent>
+                          </Dialog>
 
-                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive rounded-xl" onClick={() => handleDelete(item.id)} disabled={deleteItem.isPending}>
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                          <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive rounded-xl" onClick={() => handleDelete(item.id)} disabled={deleteItem.isPending}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>
+
+      {/* Add Category Dialog */}
+      <Dialog open={showCategoryDialog} onOpenChange={setShowCategoryDialog}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-display">Manage Categories</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Input
+                placeholder="Category name..."
+                value={newCategoryName}
+                onChange={e => setNewCategoryName(e.target.value)}
+                className="rounded-xl"
+                onKeyDown={e => e.key === 'Enter' && handleAddCategory()}
+              />
+              <Button onClick={handleAddCategory} disabled={createCategory.isPending} className="rounded-xl">
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
+            {categories && categories.length > 0 && (
+              <div className="space-y-2">
+                {categories.map(cat => (
+                  <div key={cat.id} className="flex items-center justify-between bg-secondary/50 rounded-xl px-3 py-2">
+                    <span className="text-sm font-medium">{cat.name}</span>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteCategory(cat.id)}>
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {(!categories || categories.length === 0) && (
+              <p className="text-sm text-muted-foreground text-center py-4">No categories yet. Add one above!</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

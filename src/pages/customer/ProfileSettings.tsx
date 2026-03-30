@@ -18,6 +18,37 @@ import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { useTheme } from 'next-themes';
 
+// Moved OUTSIDE the component to avoid re-creating component types on every render
+function SettingsSection({ title, children, delay = 0 }: { title: string; children: React.ReactNode; delay?: number }) {
+  return (
+    <motion.div
+      className="bg-card rounded-2xl border border-border overflow-hidden"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay }}
+    >
+      <div className="px-5 pt-4 pb-2">
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{title}</h3>
+      </div>
+      {children}
+    </motion.div>
+  );
+}
+
+function SettingsLink({ icon: Icon, label, href, destructive }: { icon: any; label: string; href?: string; destructive?: boolean }) {
+  const content = (
+    <div className={`flex items-center justify-between px-5 py-3.5 hover:bg-muted/50 transition-colors cursor-pointer ${destructive ? 'text-destructive' : ''}`}>
+      <div className="flex items-center gap-3">
+        <Icon className="w-4.5 h-4.5" />
+        <span className="text-sm font-medium">{label}</span>
+      </div>
+      {!destructive && <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+    </div>
+  );
+  if (href) return <Link to={href}>{content}</Link>;
+  return content;
+}
+
 export default function ProfileSettings() {
   const { user, logout } = useAuth();
   const { data: profile } = useProfile();
@@ -101,34 +132,6 @@ export default function ProfileSettings() {
       phone: form.phone || null,
     } as any);
     supabase.from('profiles').update({ bio: form.bio || null }).eq('id', user!.id).then(() => {});
-  };
-
-  const SettingsSection = ({ title, children, delay = 0 }: { title: string; children: React.ReactNode; delay?: number }) => (
-    <motion.div
-      className="bg-card rounded-2xl border border-border overflow-hidden"
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay }}
-    >
-      <div className="px-5 pt-4 pb-2">
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{title}</h3>
-      </div>
-      {children}
-    </motion.div>
-  );
-
-  const SettingsLink = ({ icon: Icon, label, href, destructive }: { icon: any; label: string; href?: string; destructive?: boolean }) => {
-    const content = (
-      <div className={`flex items-center justify-between px-5 py-3.5 hover:bg-muted/50 transition-colors cursor-pointer ${destructive ? 'text-destructive' : ''}`}>
-        <div className="flex items-center gap-3">
-          <Icon className="w-4.5 h-4.5" />
-          <span className="text-sm font-medium">{label}</span>
-        </div>
-        {!destructive && <ChevronRight className="w-4 h-4 text-muted-foreground" />}
-      </div>
-    );
-    if (href) return <Link to={href}>{content}</Link>;
-    return content;
   };
 
   return (

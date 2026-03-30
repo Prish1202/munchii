@@ -169,9 +169,42 @@ export type Database = {
         }
         Relationships: []
       }
+      menu_categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          restaurant_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          restaurant_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          restaurant_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_categories_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menu_items: {
         Row: {
           available: boolean
+          category_id: string | null
           created_at: string
           description: string | null
           discount_percent: number | null
@@ -184,6 +217,7 @@ export type Database = {
         }
         Insert: {
           available?: boolean
+          category_id?: string | null
           created_at?: string
           description?: string | null
           discount_percent?: number | null
@@ -196,6 +230,7 @@ export type Database = {
         }
         Update: {
           available?: boolean
+          category_id?: string | null
           created_at?: string
           description?: string | null
           discount_percent?: number | null
@@ -207,6 +242,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "menu_items_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "menu_categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "menu_items_restaurant_id_fkey"
             columns: ["restaurant_id"]
@@ -515,7 +557,10 @@ export type Database = {
           created_at: string
           id: string
           order_id: string
+          payout_notes: string | null
+          payout_status: string
           platform_fee: number
+          processed_at: string | null
           razorpay_transfer_id: string | null
           restaurant_amount: number
         }
@@ -523,7 +568,10 @@ export type Database = {
           created_at?: string
           id?: string
           order_id: string
+          payout_notes?: string | null
+          payout_status?: string
           platform_fee: number
+          processed_at?: string | null
           razorpay_transfer_id?: string | null
           restaurant_amount: number
         }
@@ -531,7 +579,10 @@ export type Database = {
           created_at?: string
           id?: string
           order_id?: string
+          payout_notes?: string | null
+          payout_status?: string
           platform_fee?: number
+          processed_at?: string | null
           razorpay_transfer_id?: string | null
           restaurant_amount?: number
         }

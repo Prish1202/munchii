@@ -1,9 +1,10 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { useRestaurant, useMenuItems } from '@/hooks/useRestaurants';
+import { useRestaurant, useMenuItems, useMenuCategories } from '@/hooks/useRestaurants';
 import { useCart } from '@/contexts/CartContext';
 import { ArrowLeft, MapPin, Plus, Minus, ShoppingCart, Star, Clock, Percent } from 'lucide-react';
 import { toast } from 'sonner';
@@ -16,7 +17,9 @@ export default function RestaurantMenu() {
   const { id } = useParams<{ id: string }>();
   const { data: restaurant, isLoading: loadingRestaurant } = useRestaurant(id!);
   const { data: menuItems, isLoading: loadingMenu } = useMenuItems(id!);
+  const { data: categories } = useMenuCategories(id!);
   const { items: cartItems, addItem, updateQuantity, totalItems, totalAmount, restaurantId } = useCart();
+  const [activeCategory, setActiveCategory] = useState<string>('all');
 
   const getCartQuantity = (menuItemId: string) => {
     const item = cartItems.find(i => i.menuItemId === menuItemId);
@@ -100,19 +103,40 @@ export default function RestaurantMenu() {
 
         <h2 className="font-display font-semibold text-lg mb-4">Menu</h2>
 
+        {/* Category filter */}
+        {categories && categories.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-hide mb-2">
+            <button
+              onClick={() => setActiveCategory('all')}
+              className={cn('px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors', activeCategory === 'all' ? 'bg-primary text-primary-foreground' : 'bg-card border border-border text-muted-foreground')}
+            >
+              All
+            </button>
+            {categories.map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className={cn('px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors', activeCategory === cat.id ? 'bg-primary text-primary-foreground' : 'bg-card border border-border text-muted-foreground')}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+        )}
+
         {loadingMenu ? (
           <div className="space-y-4">
             {Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} className="h-28 w-full rounded-xl" />
             ))}
           </div>
-        ) : menuItems?.length === 0 ? (
+        ) : menuItems?.filter(item => activeCategory === 'all' || (item as any).category_id === activeCategory).length === 0 ? (
           <div className="text-center py-12 bg-card rounded-2xl border border-border">
             <p className="text-muted-foreground">No menu items available right now.</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {menuItems?.map((item: any) => {
+            {menuItems?.filter(item => activeCategory === 'all' || (item as any).category_id === activeCategory).map((item: any) => {
               const quantity = getCartQuantity(item.id);
               const image = item.image_url || FALLBACK_IMAGE;
               const discount = item.discount_percent || 0;

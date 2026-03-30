@@ -2,10 +2,11 @@ import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRestaurantOrders } from '@/hooks/useRestaurantOrders';
-import { useMyRestaurant } from '@/hooks/useMenuManagement';
+import { useMyRestaurant, useMyPayoutSummary } from '@/hooks/useMenuManagement';
 import { 
   TrendingUp, 
   DollarSign, 
@@ -15,13 +16,16 @@ import {
   Store,
   AlertCircle,
   IndianRupee,
-  Percent
+  Percent,
+  Wallet,
+  CalendarClock
 } from 'lucide-react';
 
 export default function RestaurantDashboard() {
   const { user } = useAuth();
   const { data: restaurant, isLoading: loadingRestaurant } = useMyRestaurant();
   const { data: orders, isLoading: loadingOrders } = useRestaurantOrders();
+  const { data: payoutSummary } = useMyPayoutSummary();
 
   const pendingOrders = orders?.filter(o => o.status === 'placed') || [];
   const activeOrders = orders?.filter(o => ['accepted', 'preparing', 'ready'].includes(o.status)) || [];
@@ -39,7 +43,6 @@ export default function RestaurantDashboard() {
       return sum + itemTotal * 0.9;
     }, 0);
 
-  // Total earnings: item total (order - ₹5) minus 10% commission
   const totalEarnings = completedOrders.reduce((sum, o) => {
     const itemTotal = Math.max(Number(o.total_amount) - platformFee, 0);
     return sum + itemTotal * 0.9;
@@ -206,6 +209,45 @@ export default function RestaurantDashboard() {
                 <p className="text-sm opacity-90">Your Net Earnings</p>
                 <p className="text-2xl font-display font-bold mt-1">₹{totalEarnings.toFixed(0)}</p>
                 <p className="text-xs opacity-80 mt-1">After 10% commission</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Payout Section */}
+        <Card className="rounded-2xl">
+          <CardHeader>
+            <CardTitle className="font-display flex items-center gap-2">
+              <Wallet className="w-5 h-5 text-primary" />
+              Payout Summary
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="p-4 rounded-xl bg-secondary">
+                <p className="text-sm text-muted-foreground">Total Earned</p>
+                <p className="text-2xl font-display font-bold mt-1">₹{(payoutSummary?.totalEarned || 0).toFixed(0)}</p>
+              </div>
+              <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
+                <p className="text-sm text-primary">Paid Out</p>
+                <p className="text-2xl font-display font-bold mt-1 text-primary">₹{(payoutSummary?.totalPaid || 0).toFixed(0)}</p>
+              </div>
+              <div className="p-4 rounded-xl bg-accent/5 border border-accent/10">
+                <div className="flex items-center gap-1">
+                  <CalendarClock className="w-3.5 h-3.5 text-accent" />
+                  <p className="text-sm text-accent">Pending Payout</p>
+                </div>
+                <p className="text-2xl font-display font-bold mt-1 text-accent">₹{(payoutSummary?.pendingAmount || 0).toFixed(0)}</p>
+                <p className="text-xs text-muted-foreground mt-1">Processed weekly</p>
+              </div>
+            </div>
+            <div className="mt-4 p-3 rounded-xl bg-muted/50 border border-border">
+              <div className="flex items-start gap-2">
+                <CalendarClock className="w-4 h-4 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium">Weekly Payouts</p>
+                  <p className="text-xs text-muted-foreground">All earnings are processed and transferred to your bank account every week. Ensure your bank details are up-to-date in Settings.</p>
+                </div>
               </div>
             </div>
           </CardContent>
