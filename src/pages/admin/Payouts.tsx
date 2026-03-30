@@ -2,17 +2,36 @@ import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { useAdminPayouts, useAdminRestaurantPayoutSummary } from '@/hooks/useAdminData';
-import { Wallet, Store, TrendingUp, AlertCircle } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
+import { Wallet, Store, TrendingUp, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
+
+const PAYOUT_STATUS_CONFIG: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+  pending: { label: 'Pending', variant: 'outline' },
+  processing: { label: 'Processing', variant: 'secondary' },
+  completed: { label: 'Completed', variant: 'default' },
+  failed: { label: 'Failed', variant: 'destructive' },
+};
 
 export default function AdminPayouts() {
   const { data: payouts, isLoading } = useAdminPayouts();
   const { data: restaurantSummary, isLoading: summaryLoading } = useAdminRestaurantPayoutSummary();
+  const queryClient = useQueryClient();
+
+  const [editingPayout, setEditingPayout] = useState<any>(null);
+  const [newPayoutStatus, setNewPayoutStatus] = useState('');
+  const [payoutNotes, setPayoutNotes] = useState('');
 
   const totals = payouts?.reduce((acc, p) => ({
     restaurant: acc.restaurant + Number(p.restaurant_amount),
@@ -20,6 +39,29 @@ export default function AdminPayouts() {
   }), { restaurant: 0, platform: 0 }) || { restaurant: 0, platform: 0 };
 
   const totalPending = restaurantSummary?.reduce((s, r) => s + r.pendingAmount, 0) || 0;
+
+  const handleUpdatePayoutStatus = async () => {
+    if (!editingPayout || !newPayoutStatus) return;
+    try {
+      const updates: any = { payout_status: newPayoutStatus };
+      if (payoutNotes) updates.payout_notes = payoutNotes;
+      if (newPayoutStatus === 'completed') updates.processed_at = new Date().toISOString();
+
+      const { error } = await supabase
+        .from('payouts')
+        .update(updates)
+        .eq('id', editingPayout.id);
+
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ['admin', 'payouts'] });
+      toast.success('Payout status updated');
+      setEditingPayout(null);
+      setPayoutNotes('');
+      setNewPayoutStatus('');
+    } catch {
+      toast.error('Failed to update payout status');
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -154,23 +196,38 @@ export default function AdminPayouts() {
                       <TableRow>
                         <TableHead>Order ID</TableHead>
                         <TableHead>Restaurant</TableHead>
-                        <TableHead>Order Total</TableHead>
                         <TableHead>Restaurant Payout</TableHead>
                         <TableHead>Platform Fee</TableHead>
+                        <TableHead>Status</TableHead>
                         <TableHead>Date</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {payouts?.map((payout) => (
-                        <TableRow key={payout.id}>
-                          <TableCell className="font-mono text-xs">{payout.order_id.slice(0, 8)}...</TableCell>
-                          <TableCell>{payout.order?.restaurant?.name || '-'}</TableCell>
-                          <TableCell>₹{Number(payout.order?.total_amount || 0).toFixed(2)}</TableCell>
-                          <TableCell className="text-cafe font-medium">₹{Number(payout.restaurant_amount).toFixed(2)}</TableCell>
-                          <TableCell className="text-primary font-medium">₹{Number(payout.platform_fee).toFixed(2)}</TableCell>
-                          <TableCell className="text-muted-foreground">{format(new Date(payout.created_at), 'MMM d, yyyy')}</TableCell>
-                        </TableRow>
-                      ))}
+                      {payouts?.map((payout) => {
+                        const sc = PAYOUT_STATUS_CONFIG[(payout as any).payout_status] || PAYOUT_STATUS_CONFIG.pending;
+                        return (
+                          <TableRow key={payout.id}>
+                            <TableCell className="font-mono text-xs">{payout.order_id.slice(0, 8)}...</TableCell>
+                            <TableCell>{payout.order?.restaurant?.name || '-'}</TableCell>
+                            <TableCell className="text-cafe font-medium">₹{Number(payout.restaurant_amount).toFixed(2)}</TableCell>
+                            <TableCell className="text-primary font-medium">₹{Number(payout.platform_fee).toFixed(2)}</TableCell>
+                            <TableCell>
+                              <Badge variant={sc.variant}>{sc.label}</Badge>
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">{format(new Date(payout.created_at), 'MMM d, yyyy')}</TableCell>
+                            <TableCell className="text-right">
+                              <Button size="sm" variant="outline" onClick={() => {
+                                setEditingPayout(payout);
+                                setNewPayoutStatus((payout as any).payout_status || 'pending');
+                                setPayoutNotes((payout as any).payout_notes || '');
+                              }}>
+                                Manage
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 )}
@@ -179,6 +236,42 @@ export default function AdminPayouts() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Edit Payout Status Dialog */}
+      <Dialog open={!!editingPayout} onOpenChange={() => setEditingPayout(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Manage Payout</DialogTitle>
+            <DialogDescription>
+              Update payout status for order {editingPayout?.order_id?.slice(0, 8)}... — ₹{Number(editingPayout?.restaurant_amount || 0).toFixed(2)} to restaurant
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-1 block">Status</label>
+              <Select value={newPayoutStatus} onValueChange={setNewPayoutStatus}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="processing">Processing</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="failed">Failed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Notes</label>
+              <Textarea value={payoutNotes} onChange={e => setPayoutNotes(e.target.value)} placeholder="Add notes about this payout..." />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingPayout(null)}>Cancel</Button>
+            <Button onClick={handleUpdatePayoutStatus} className="bg-admin hover:bg-admin/90">
+              Update Payout
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

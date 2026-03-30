@@ -114,9 +114,17 @@ export function MessageBubble({
   const showActions = activeMessageId === messageId;
   const [showReport, setShowReport] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
+  const [menuDirection, setMenuDirection] = useState<'above' | 'below'>('above');
   const isMobile = useIsMobile();
+  const bubbleRef = useRef<HTMLDivElement>(null);
 
   const activateThis = useCallback(() => {
+    // Determine menu direction based on bubble position
+    if (bubbleRef.current) {
+      const rect = bubbleRef.current.getBoundingClientRect();
+      // If top of bubble is less than 200px from viewport top, show menu below
+      setMenuDirection(rect.top < 200 ? 'below' : 'above');
+    }
     onActivate?.(messageId);
     if (navigator.vibrate) navigator.vibrate(10);
   }, [onActivate, messageId]);
@@ -218,6 +226,7 @@ export function MessageBubble({
       )}
 
       <div
+        ref={bubbleRef}
         className="relative max-w-[75%]"
         style={{
           transform: swipeActive ? `translateX(${swipeOffset}px)` : undefined,
@@ -283,11 +292,15 @@ export function MessageBubble({
           />
         )}
 
-        {/* Long-press action sheet with emoji row — render above bubble */}
+        {/* Long-press action sheet — dynamically positioned above or below bubble */}
         {showActions && (
           <div
             data-message-actions
-            className={cn('absolute z-50 bottom-full mb-2 min-w-[220px] rounded-2xl border border-border bg-popover p-1.5 shadow-xl animate-scale-in', isOwn ? 'right-0' : 'left-0')}
+            className={cn(
+              'absolute z-50 min-w-[220px] rounded-2xl border border-border bg-popover p-1.5 shadow-xl animate-scale-in',
+              isOwn ? 'right-0' : 'left-0',
+              menuDirection === 'above' ? 'bottom-full mb-2' : 'top-full mt-2'
+            )}
           >
             {/* Emoji row */}
             <div className="flex items-center justify-around px-1 py-1.5 border-b border-border/50 mb-1">
