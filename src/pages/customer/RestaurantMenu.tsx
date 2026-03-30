@@ -1,9 +1,10 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { useRestaurant, useMenuItems } from '@/hooks/useRestaurants';
+import { useRestaurant, useMenuItems, useMenuCategories } from '@/hooks/useRestaurants';
 import { useCart } from '@/contexts/CartContext';
 import { ArrowLeft, MapPin, Plus, Minus, ShoppingCart, Star, Clock, Percent } from 'lucide-react';
 import { toast } from 'sonner';
