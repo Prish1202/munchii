@@ -18,6 +18,34 @@ export interface MenuItem {
   price: number;
   available: boolean;
   created_at: string;
+  image_url?: string | null;
+  description?: string | null;
+  discount_percent?: number | null;
+  category_id?: string | null;
+}
+
+export interface MenuCategory {
+  id: string;
+  restaurant_id: string;
+  name: string;
+  sort_order: number;
+}
+
+export function useMenuCategories(restaurantId: string) {
+  return useQuery({
+    queryKey: ['menu-categories', restaurantId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('menu_categories')
+        .select('*')
+        .eq('restaurant_id', restaurantId)
+        .order('sort_order', { ascending: true });
+
+      if (error) throw error;
+      return data as MenuCategory[];
+    },
+    enabled: !!restaurantId,
+  });
 }
 
 export function useRestaurants(city?: string | null) {
