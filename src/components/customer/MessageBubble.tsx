@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Check, CheckCheck, SmilePlus, Coins, Reply, Flag, Copy, Forward, Trash2 } from 'lucide-react';
 import { ReactionBadges } from './EmojiReactions';
+import { ProfilePreviewCard, parseProfileLink } from './ProfilePreviewCard';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ReportDialog } from './ReportDialog';
 import { toast } from 'sonner';
@@ -249,7 +250,13 @@ export function MessageBubble({
           )}
         >
           {replyToText && <ReplyQuote text={replyToText} isOwn={isOwn} />}
-          <p className="whitespace-pre-wrap break-words">{text}</p>
+          {(() => {
+            const profileId = parseProfileLink(text);
+            if (profileId) {
+              return <ProfilePreviewCard userId={profileId} />;
+            }
+            return <p className="whitespace-pre-wrap break-words">{text}</p>;
+          })()}
           <div className={cn('flex items-center gap-1 mt-1', isOwn ? 'justify-end' : '')}>
             <span className={cn('text-[10px]', isOwn ? 'text-primary-foreground/60' : 'text-muted-foreground')}>
               {new Date(time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
