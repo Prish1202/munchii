@@ -162,8 +162,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           )}
         </aside>
 
-        <main className="flex-1 p-4 md:p-6 lg:p-8">
-          <div className="animate-fade-in">{children}</div>
+        <main className="flex-1 min-w-0 overflow-x-hidden p-4 md:p-6 lg:p-8 pb-24 md:pb-8">
+          <div className="animate-fade-in max-w-full">{children}</div>
         </main>
       </div>
 
