@@ -27,7 +27,7 @@ export function ProfilePreviewCard({ userId }: ProfilePreviewCardProps) {
 
   return (
     <button
-      onClick={() => navigate(`/customer/profile/${profile.id}`)}
+      onClick={() => navigate(`/customer/user/${profile.id}`)}
       className="w-full max-w-[240px] flex items-center gap-3 p-3 rounded-2xl bg-card border border-border shadow-soft hover:bg-muted/50 transition-colors text-left"
     >
       <Avatar className="w-10 h-10 shrink-0">
