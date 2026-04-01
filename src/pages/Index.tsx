@@ -326,7 +326,7 @@ export default function Index() {
             className="mt-10 flex flex-wrap items-center justify-center gap-4"
             initial="hidden" animate="visible" variants={fadeUp} custom={3}
           >
-            <Link to="/signup">
+            <Link to="/signup/customer">
               <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.98 }}>
                 <Button size="lg" className="gradient-primary border-0 text-base font-semibold shadow-xl glow-primary gap-2 h-14 px-8 rounded-2xl">
                   Order Now <ArrowRight className="w-5 h-5" />
