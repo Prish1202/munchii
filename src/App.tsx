@@ -51,6 +51,7 @@ import RestaurantSettings from "./pages/restaurant/Settings";
 import RestaurantNotifications from "./pages/restaurant/Notifications";
 import RestaurantNotificationSettings from "./pages/restaurant/NotificationSettings";
 import RestaurantOnboarding from "./pages/restaurant/Onboarding";
+import RestaurantPayouts from "./pages/restaurant/Payouts";
 import { OnboardingGuard } from "./components/restaurant/OnboardingGuard";
 
 // Legal Pages
