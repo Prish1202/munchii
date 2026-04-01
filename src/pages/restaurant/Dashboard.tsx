@@ -217,10 +217,17 @@ export default function RestaurantDashboard() {
         {/* Payout Section */}
         <Card className="rounded-2xl">
           <CardHeader>
-            <CardTitle className="font-display flex items-center gap-2">
-              <Wallet className="w-5 h-5 text-primary" />
-              Payout Summary
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="font-display flex items-center gap-2">
+                <Wallet className="w-5 h-5 text-primary" />
+                Payout Summary
+              </CardTitle>
+              <Link to="/restaurant/payouts">
+                <Button variant="outline" size="sm" className="rounded-xl text-xs">
+                  View All <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                </Button>
+              </Link>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 sm:grid-cols-3">
@@ -239,15 +246,6 @@ export default function RestaurantDashboard() {
                 </div>
                 <p className="text-2xl font-display font-bold mt-1 text-accent">₹{(payoutSummary?.pendingAmount || 0).toFixed(0)}</p>
                 <p className="text-xs text-muted-foreground mt-1">Processed weekly</p>
-              </div>
-            </div>
-            <div className="mt-4 p-3 rounded-xl bg-muted/50 border border-border">
-              <div className="flex items-start gap-2">
-                <CalendarClock className="w-4 h-4 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium">Weekly Payouts</p>
-                  <p className="text-xs text-muted-foreground">All earnings are processed and transferred to your bank account every week. Ensure your bank details are up-to-date in Settings.</p>
-                </div>
               </div>
             </div>
           </CardContent>
