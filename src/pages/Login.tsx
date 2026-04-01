@@ -125,11 +125,17 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            <div className="text-center text-sm text-muted-foreground pt-2">
-              Don't have an account?{' '}
-              <Link to="/signup" className="text-primary hover:underline font-medium">
-                Sign up
-              </Link>
+            <div className="text-center text-sm text-muted-foreground pt-2 space-y-1">
+              <p>Don't have an account?</p>
+              <div className="flex items-center justify-center gap-3">
+                <Link to="/signup/customer" className="text-primary hover:underline font-medium">
+                  Sign up as Customer
+                </Link>
+                <span className="text-muted-foreground">•</span>
+                <Link to="/signup/restaurant" className="text-primary hover:underline font-medium">
+                  Register Restaurant
+                </Link>
+              </div>
             </div>
           </CardContent>
         </Card>

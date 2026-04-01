@@ -12,7 +12,8 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 // Pages
 import Index from "./pages/Index";
 import Login from "./pages/Login";
-import Signup from "./pages/Signup";
+import CustomerSignup from "./pages/signup/CustomerSignup";
+import RestaurantSignup from "./pages/signup/RestaurantSignup";
 import ConfirmEmail from "./pages/ConfirmEmail";
 import EmailVerified from "./pages/EmailVerified";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -86,7 +87,9 @@ const App = () => (
               {/* Public Routes */}
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
+              <Route path="/signup" element={<CustomerSignup />} />
+              <Route path="/signup/customer" element={<CustomerSignup />} />
+              <Route path="/signup/restaurant" element={<RestaurantSignup />} />
               <Route path="/confirm-email" element={<ConfirmEmail />} />
               <Route path="/email-verified" element={<EmailVerified />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />

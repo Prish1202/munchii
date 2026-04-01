@@ -235,7 +235,7 @@ export default function Index() {
             <Link to="/login">
               <Button variant="ghost" className="font-medium">Login</Button>
             </Link>
-            <Link to="/signup">
+            <Link to="/signup/customer">
               <Button className="gradient-royal border-0 font-semibold shadow-lg">
                 Get Started
               </Button>
@@ -326,14 +326,14 @@ export default function Index() {
             className="mt-10 flex flex-wrap items-center justify-center gap-4"
             initial="hidden" animate="visible" variants={fadeUp} custom={3}
           >
-            <Link to="/signup">
+            <Link to="/signup/customer">
               <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.98 }}>
                 <Button size="lg" className="gradient-primary border-0 text-base font-semibold shadow-xl glow-primary gap-2 h-14 px-8 rounded-2xl">
                   Order Now <ArrowRight className="w-5 h-5" />
                 </Button>
               </motion.div>
             </Link>
-            <Link to="/signup">
+            <Link to="/signup/restaurant">
               <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.98 }}>
                 <Button size="lg" variant="outline" className="text-base font-semibold gap-2 h-14 px-8 rounded-2xl border-2 border-secondary text-secondary hover:bg-secondary/10">
                   Partner with us <UtensilsCrossed className="w-4 h-4" />
@@ -592,7 +592,7 @@ export default function Index() {
             viewport={{ once: true }}
             transition={{ delay: 0.4 }}
           >
-            <Link to="/signup">
+            <Link to="/signup/customer">
               <motion.div whileHover={{ scale: 1.08, y: -3 }} whileTap={{ scale: 0.95 }}>
                 <Button size="lg" variant="secondary" className="mt-10 gap-2 text-base font-bold h-14 px-8 rounded-2xl shadow-xl">
                   Order Now <ArrowRight className="w-5 h-5" />
