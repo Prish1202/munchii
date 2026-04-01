@@ -592,7 +592,7 @@ export default function Index() {
             viewport={{ once: true }}
             transition={{ delay: 0.4 }}
           >
-            <Link to="/signup">
+            <Link to="/signup/customer">
               <motion.div whileHover={{ scale: 1.08, y: -3 }} whileTap={{ scale: 0.95 }}>
                 <Button size="lg" variant="secondary" className="mt-10 gap-2 text-base font-bold h-14 px-8 rounded-2xl shadow-xl">
                   Order Now <ArrowRight className="w-5 h-5" />
