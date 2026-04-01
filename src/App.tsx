@@ -87,7 +87,9 @@ const App = () => (
               {/* Public Routes */}
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
+              <Route path="/signup" element={<CustomerSignup />} />
+              <Route path="/signup/customer" element={<CustomerSignup />} />
+              <Route path="/signup/restaurant" element={<RestaurantSignup />} />
               <Route path="/confirm-email" element={<ConfirmEmail />} />
               <Route path="/email-verified" element={<EmailVerified />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
