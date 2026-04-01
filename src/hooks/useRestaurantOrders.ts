@@ -53,20 +53,33 @@ export function useRestaurantOrders() {
   const ordersQuery = useQuery({
     queryKey: ['restaurant-orders', restaurant?.id],
     queryFn: async () => {
-      const { data: ordersData, error: ordersError } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          order_items(
-            id,
-            quantity,
-            price_at_time,
-            menu_item:menu_items(name)
-          )
-        `)
-        .eq('restaurant_id', restaurant!.id)
-        .neq('status', 'pending_payment' as any)
-        .order('created_at', { ascending: false });
+      // Fetch all orders using pagination to bypass 1000-row limit
+      let allOrders: any[] = [];
+      let from = 0;
+      const pageSize = 500;
+      while (true) {
+        const { data: batch, error } = await supabase
+          .from('orders')
+          .select(`
+            *,
+            order_items(
+              id,
+              quantity,
+              price_at_time,
+              menu_item:menu_items(name)
+            )
+          `)
+          .eq('restaurant_id', restaurant!.id)
+          .neq('status', 'pending_payment' as any)
+          .order('created_at', { ascending: false })
+          .range(from, from + pageSize - 1);
+        if (error) throw error;
+        allOrders = allOrders.concat(batch || []);
+        if (!batch || batch.length < pageSize) break;
+        from += pageSize;
+      }
+      const ordersData = allOrders;
+      const ordersError = null;
 
       if (ordersError) throw ordersError;
 

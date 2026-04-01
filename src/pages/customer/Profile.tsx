@@ -22,8 +22,7 @@ export default function Profile() {
 
   const hasLiveOrder = orders?.some(o => !['completed', 'cancelled'].includes(o.status)) || false;
   const completedOrders = orders?.filter(o => o.status === 'completed').slice(0, 10) || [];
-  const coinLevel = (wallet?.total_coins || 0) >= 500 ? 'Gold' : (wallet?.total_coins || 0) >= 100 ? 'Silver' : 'Bronze';
-  const levelEmoji = coinLevel === 'Gold' ? '🥇' : coinLevel === 'Silver' ? '🥈' : '🥉';
+
 
   return (
     <DashboardLayout>
