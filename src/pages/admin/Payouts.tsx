@@ -164,14 +164,21 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <button onClick={onBack} className="p-2 rounded-xl hover:bg-muted transition-colors">
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        <div>
-          <h2 className="text-xl font-bold">{restaurantName}</h2>
-          <p className="text-sm text-muted-foreground">Detailed earnings & payout management</p>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3">
+          <button onClick={onBack} className="p-2 rounded-xl hover:bg-muted transition-colors">
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <h2 className="text-xl font-bold">{restaurantName}</h2>
+            <p className="text-sm text-muted-foreground">Detailed earnings & payout management</p>
+          </div>
         </div>
+        {weeklySummary.pending > 0 && (
+          <Button onClick={handleCreatePayoutsForUnpaid} size="sm" className="rounded-xl">
+            Create Payouts for Unpaid (₹{weeklySummary.pending.toFixed(0)})
+          </Button>
+        )}
       </div>
 
       {/* Summary Cards */}
