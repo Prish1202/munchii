@@ -12,7 +12,8 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 // Pages
 import Index from "./pages/Index";
 import Login from "./pages/Login";
-import Signup from "./pages/Signup";
+import CustomerSignup from "./pages/signup/CustomerSignup";
+import RestaurantSignup from "./pages/signup/RestaurantSignup";
 import ConfirmEmail from "./pages/ConfirmEmail";
 import EmailVerified from "./pages/EmailVerified";
 import ForgotPassword from "./pages/ForgotPassword";
