@@ -132,6 +132,7 @@ const App = () => (
               <Route path="/restaurant/orders/:orderId" element={<ProtectedRoute allowedRoles={['restaurant']}><OnboardingGuard><RestaurantOrderDetail /></OnboardingGuard></ProtectedRoute>} />
               <Route path="/restaurant/menu" element={<ProtectedRoute allowedRoles={['restaurant']}><OnboardingGuard><MenuManagement /></OnboardingGuard></ProtectedRoute>} />
               <Route path="/restaurant/settings" element={<ProtectedRoute allowedRoles={['restaurant']}><OnboardingGuard><RestaurantSettings /></OnboardingGuard></ProtectedRoute>} />
+              <Route path="/restaurant/payouts" element={<ProtectedRoute allowedRoles={['restaurant']}><OnboardingGuard><RestaurantPayouts /></OnboardingGuard></ProtectedRoute>} />
               <Route path="/restaurant/notifications" element={<ProtectedRoute allowedRoles={['restaurant']}><RestaurantNotifications /></ProtectedRoute>} />
               <Route path="/restaurant/notification-settings" element={<ProtectedRoute allowedRoles={['restaurant']}><RestaurantNotificationSettings /></ProtectedRoute>} />
               <Route path="/restaurant/*" element={<ProtectedRoute allowedRoles={['restaurant']}><OnboardingGuard><RestaurantDashboard /></OnboardingGuard></ProtectedRoute>} />
