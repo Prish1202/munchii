@@ -69,14 +69,11 @@ export default function Profile() {
               {profile?.bio && (
                 <p className="text-sm text-foreground/80 mt-1">{profile.bio}</p>
               )}
-              <div className="flex items-center gap-2 mt-1.5">
-                {profile?.campus && (
+              {profile?.campus && (
+                <div className="flex items-center gap-2 mt-1.5">
                   <Badge variant="secondary" className="text-xs rounded-lg">🎓 {profile.campus}</Badge>
-                )}
-                <Badge variant="secondary" className="text-xs rounded-lg bg-coin/10 text-coin-foreground border-coin/20">
-                  {coinLevel} Member
-                </Badge>
-              </div>
+                </div>
+              )}
 
               <div className="flex gap-5 mt-3 text-sm">
                 <Link to="/customer/profile/followers" className="hover:text-primary transition-colors">
