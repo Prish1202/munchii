@@ -60,7 +60,7 @@ export default function Profile() {
             <div className="mt-3">
               <div className="flex items-center gap-2">
                 <h1 className="font-display font-bold text-xl">{profile?.name}</h1>
-                <span className="text-sm">{levelEmoji}</span>
+                
               </div>
               {profile?.username && (
                 <p className="text-sm text-muted-foreground">@{profile.username}</p>
