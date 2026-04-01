@@ -27,7 +27,7 @@ export function ProfilePreviewCard({ userId }: ProfilePreviewCardProps) {
 
   return (
     <button
-      onClick={() => navigate(`/customer/profile/${profile.id}`)}
+      onClick={() => navigate(`/customer/user/${profile.id}`)}
       className="w-full max-w-[240px] flex items-center gap-3 p-3 rounded-2xl bg-card border border-border shadow-soft hover:bg-muted/50 transition-colors text-left"
     >
       <Avatar className="w-10 h-10 shrink-0">
@@ -48,10 +48,11 @@ export function ProfilePreviewCard({ userId }: ProfilePreviewCardProps) {
 
 // Detect if text is a profile link
 export function parseProfileLink(text: string): string | null {
-  // Match /customer/profile/<uuid> pattern
+  // Match /customer/user/<uuid> or /customer/profile/<uuid> pattern
   const patterns = [
+    /\/customer\/user\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i,
     /\/customer\/profile\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i,
-    /foodyzone\.lovable\.app\/customer\/profile\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i,
+    /foodyzone\.lovable\.app\/customer\/user\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i,
   ];
   for (const pattern of patterns) {
     const match = text.match(pattern);

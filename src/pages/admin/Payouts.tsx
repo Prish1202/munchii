@@ -133,16 +133,52 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
     }
   };
 
+  // Create payouts for all unpaid completed orders
+  const handleCreatePayoutsForUnpaid = async () => {
+    if (!orders) return;
+    const unpaidOrders = orders.filter(o => !paidOrderIds.has(o.id));
+    if (unpaidOrders.length === 0) {
+      toast.info('No unpaid orders to process');
+      return;
+    }
+    try {
+      const payoutRows = unpaidOrders.map(order => {
+        const itemTotal = Math.max(Number(order.total_amount) - platformFee, 0);
+        const comm = Math.round(itemTotal * 0.10 * 100) / 100;
+        const net = itemTotal - comm;
+        return {
+          order_id: order.id,
+          restaurant_amount: net,
+          platform_fee: comm,
+          payout_status: 'pending',
+        };
+      });
+      const { error } = await supabase.from('payouts').insert(payoutRows);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ['admin'] });
+      toast.success(`Created ${payoutRows.length} payout records`);
+    } catch {
+      toast.error('Failed to create payout records');
+    }
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <button onClick={onBack} className="p-2 rounded-xl hover:bg-muted transition-colors">
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        <div>
-          <h2 className="text-xl font-bold">{restaurantName}</h2>
-          <p className="text-sm text-muted-foreground">Detailed earnings & payout management</p>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3">
+          <button onClick={onBack} className="p-2 rounded-xl hover:bg-muted transition-colors">
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <h2 className="text-xl font-bold">{restaurantName}</h2>
+            <p className="text-sm text-muted-foreground">Detailed earnings & payout management</p>
+          </div>
         </div>
+        {weeklySummary.pending > 0 && (
+          <Button onClick={handleCreatePayoutsForUnpaid} size="sm" className="rounded-xl">
+            Create Payouts for Unpaid (₹{weeklySummary.pending.toFixed(0)})
+          </Button>
+        )}
       </div>
 
       {/* Summary Cards */}

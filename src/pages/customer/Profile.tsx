@@ -22,8 +22,7 @@ export default function Profile() {
 
   const hasLiveOrder = orders?.some(o => !['completed', 'cancelled'].includes(o.status)) || false;
   const completedOrders = orders?.filter(o => o.status === 'completed').slice(0, 10) || [];
-  const coinLevel = (wallet?.total_coins || 0) >= 500 ? 'Gold' : (wallet?.total_coins || 0) >= 100 ? 'Silver' : 'Bronze';
-  const levelEmoji = coinLevel === 'Gold' ? '🥇' : coinLevel === 'Silver' ? '🥈' : '🥉';
+
 
   return (
     <DashboardLayout>
@@ -61,7 +60,7 @@ export default function Profile() {
             <div className="mt-3">
               <div className="flex items-center gap-2">
                 <h1 className="font-display font-bold text-xl">{profile?.name}</h1>
-                <span className="text-sm">{levelEmoji}</span>
+                
               </div>
               {profile?.username && (
                 <p className="text-sm text-muted-foreground">@{profile.username}</p>
@@ -69,14 +68,11 @@ export default function Profile() {
               {profile?.bio && (
                 <p className="text-sm text-foreground/80 mt-1">{profile.bio}</p>
               )}
-              <div className="flex items-center gap-2 mt-1.5">
-                {profile?.campus && (
+              {profile?.campus && (
+                <div className="flex items-center gap-2 mt-1.5">
                   <Badge variant="secondary" className="text-xs rounded-lg">🎓 {profile.campus}</Badge>
-                )}
-                <Badge variant="secondary" className="text-xs rounded-lg bg-coin/10 text-coin-foreground border-coin/20">
-                  {coinLevel} Member
-                </Badge>
-              </div>
+                </div>
+              )}
 
               <div className="flex gap-5 mt-3 text-sm">
                 <Link to="/customer/profile/followers" className="hover:text-primary transition-colors">
