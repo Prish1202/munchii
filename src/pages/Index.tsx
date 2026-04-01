@@ -235,7 +235,7 @@ export default function Index() {
             <Link to="/login">
               <Button variant="ghost" className="font-medium">Login</Button>
             </Link>
-            <Link to="/signup">
+            <Link to="/signup/customer">
               <Button className="gradient-royal border-0 font-semibold shadow-lg">
                 Get Started
               </Button>
