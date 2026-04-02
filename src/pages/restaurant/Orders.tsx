@@ -108,7 +108,7 @@ export default function RestaurantOrders() {
               <section>
                 <h2 className="text-lg font-semibold mb-4">Recent Completed ({completedOrders.length})</h2>
                 <div className="space-y-4">
-                  {completedOrders.slice(0, 5).map((order) => (<OrderCard key={order.id} order={order} compact />))}
+                  {completedOrders.map((order) => (<OrderCard key={order.id} order={order} compact />))}
                 </div>
               </section>
             )}
