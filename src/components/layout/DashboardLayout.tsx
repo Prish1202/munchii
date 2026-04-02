@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
@@ -24,7 +24,8 @@ import {
   MessageSquare,
   Coins,
   Search,
-  Sparkles
+  Sparkles,
+  BellRing
 } from 'lucide-react';
 import { UserRole } from '@/types/auth';
 import { NotificationBell } from '@/components/NotificationBell';
@@ -71,13 +72,34 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { data: wallet } = useWallet();
   const { data: conversations } = useConversations();
   const location = useLocation();
-  usePushNotifications();
+  const [dismissNotificationsPrompt, setDismissNotificationsPrompt] = useState(false);
+  const {
+    permissionPromptCopy,
+    requestPermission,
+    shouldPromptForPermission,
+    shouldShowBlockedNotice,
+  } = usePushNotifications();
 
   if (!user) return null;
 
   const navItems = NAV_ITEMS[user.role];
   const isCustomer = user.role === 'customer';
   const totalUnread = conversations?.reduce((sum, c) => sum + (c.unread_count || 0), 0) || 0;
+  const notificationSettingsHref =
+    user.role === 'customer'
+      ? '/customer/notification-settings'
+      : user.role === 'restaurant'
+        ? '/restaurant/notification-settings'
+        : null;
+  const showNotificationPrompt = !dismissNotificationsPrompt && shouldPromptForPermission;
+  const showBlockedNotice = !dismissNotificationsPrompt && shouldShowBlockedNotice;
+
+  const handleEnableNotifications = async () => {
+    const nextPermission = await requestPermission();
+    if (nextPermission === 'granted') {
+      setDismissNotificationsPrompt(true);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background relative">
@@ -163,7 +185,57 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </aside>
 
         <main className="flex-1 min-w-0 overflow-x-hidden p-4 md:p-6 lg:p-8 pb-24 md:pb-8">
-          <div className="animate-fade-in max-w-full">{children}</div>
+          <div className="animate-fade-in max-w-full space-y-4">
+            {(showNotificationPrompt || showBlockedNotice) && (
+              <div className="rounded-3xl border border-border bg-card p-4 shadow-soft">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-muted flex items-center justify-center shrink-0">
+                      <BellRing className="w-4.5 h-4.5 text-primary" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm font-semibold">
+                        {showBlockedNotice ? 'Browser notifications are blocked' : 'Turn on browser notifications'}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {showBlockedNotice
+                          ? 'Enable notifications in your browser settings to keep receiving important updates.'
+                          : permissionPromptCopy}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setDismissNotificationsPrompt(true)}
+                      className="rounded-full"
+                    >
+                      {showBlockedNotice ? 'Dismiss' : 'Not now'}
+                    </Button>
+
+                    {showNotificationPrompt && (
+                      <Button size="sm" onClick={handleEnableNotifications} className="rounded-full">
+                        Enable now
+                      </Button>
+                    )}
+
+                    {showBlockedNotice && notificationSettingsHref && (
+                      <Link
+                        to={notificationSettingsHref}
+                        className="inline-flex items-center justify-center rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-soft transition-opacity hover:opacity-90"
+                      >
+                        Notification settings
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {children}
+          </div>
         </main>
       </div>
 

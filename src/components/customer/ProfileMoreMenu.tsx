@@ -30,7 +30,7 @@ export function ProfileMoreMenu({ userId, username, name, avatarUrl, createdAt, 
   const { data: isBlocked } = useIsBlocked(userId);
   const toggleBlock = useToggleBlock();
 
-  const profileUrl = `${window.location.origin}/user/${userId}`;
+  const profileUrl = `${window.location.origin}/customer/user/${userId}`;
 
   const handleCopyUrl = async () => {
     try {

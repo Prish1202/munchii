@@ -50,16 +50,14 @@ export function ProfilePreviewCard({ userId }: ProfilePreviewCardProps) {
 export function parseProfileLink(text: string): string | null {
   const trimmed = text.trim();
   const uuidPattern = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
+  const profilePathPattern = '(?:customer/(?:user|profile)|user)';
   const patterns = [
     // Full URLs
-    new RegExp(`https?://[^/]+/customer/user/(${uuidPattern})`, 'i'),
-    new RegExp(`https?://[^/]+/customer/profile/(${uuidPattern})`, 'i'),
+    new RegExp(`https?://[^\\s]+/${profilePathPattern}/(${uuidPattern})(?:[/?#][^\\s]*)?`, 'i'),
     // Relative paths (the whole message is just the path)
-    new RegExp(`^/?customer/user/(${uuidPattern})$`, 'i'),
-    new RegExp(`^/?customer/profile/(${uuidPattern})$`, 'i'),
+    new RegExp(`^/?${profilePathPattern}/(${uuidPattern})(?:[/?#][^\\s]*)?$`, 'i'),
     // Just the path anywhere in text
-    new RegExp(`/customer/user/(${uuidPattern})`, 'i'),
-    new RegExp(`/customer/profile/(${uuidPattern})`, 'i'),
+    new RegExp(`/${profilePathPattern}/(${uuidPattern})(?:[/?#][^\\s]*)?`, 'i'),
   ];
   for (const pattern of patterns) {
     const match = trimmed.match(pattern);
