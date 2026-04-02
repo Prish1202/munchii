@@ -46,16 +46,23 @@ export function ProfilePreviewCard({ userId }: ProfilePreviewCardProps) {
   );
 }
 
-// Detect if text is a profile link
+// Detect if text contains a profile link
 export function parseProfileLink(text: string): string | null {
-  // Match /customer/user/<uuid> or /customer/profile/<uuid> pattern
+  const trimmed = text.trim();
+  const uuidPattern = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
   const patterns = [
-    /\/customer\/user\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i,
-    /\/customer\/profile\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i,
-    /foodyzone\.lovable\.app\/customer\/user\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i,
+    // Full URLs
+    new RegExp(`https?://[^/]+/customer/user/(${uuidPattern})`, 'i'),
+    new RegExp(`https?://[^/]+/customer/profile/(${uuidPattern})`, 'i'),
+    // Relative paths (the whole message is just the path)
+    new RegExp(`^/?customer/user/(${uuidPattern})$`, 'i'),
+    new RegExp(`^/?customer/profile/(${uuidPattern})$`, 'i'),
+    // Just the path anywhere in text
+    new RegExp(`/customer/user/(${uuidPattern})`, 'i'),
+    new RegExp(`/customer/profile/(${uuidPattern})`, 'i'),
   ];
   for (const pattern of patterns) {
-    const match = text.match(pattern);
+    const match = trimmed.match(pattern);
     if (match) return match[1];
   }
   return null;
