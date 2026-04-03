@@ -103,6 +103,8 @@ export default function ProfileSettings() {
     usernameTimerRef.current = setTimeout(() => checkUsername(cleaned), 400);
   };
 
+  const { upload: b2Upload } = useB2Upload();
+
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user?.id) return;
@@ -110,13 +112,9 @@ export default function ProfileSettings() {
 
     setUploading(true);
     try {
-      const ext = file.name.split('.').pop();
-      const path = `${user.id}/avatar.${ext}`;
-      const { error: uploadError } = await supabase.storage.from('avatars').upload(path, file, { upsert: true });
-      if (uploadError) throw uploadError;
-      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
-      const avatarUrl = `${publicUrl}?t=${Date.now()}`;
-      await updateProfile.mutateAsync({ avatar_url: avatarUrl });
+      const result = await b2Upload(file, `avatars/${user.id}`);
+      if (!result) throw new Error('Upload failed');
+      await updateProfile.mutateAsync({ avatar_url: result.publicUrl });
       toast.success('Profile picture updated!');
     } catch (err: any) {
       toast.error(err.message || 'Upload failed');
