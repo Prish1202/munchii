@@ -173,6 +173,42 @@ export default function ChatView() {
     }
   };
 
+  const handleVoiceRecording = useCallback(async (blob: Blob, _duration: number) => {
+    if (!recipientPublicKey || !senderPublicKey || !conversationId) return;
+    const file = new File([blob], `voice-${Date.now()}.webm`, { type: 'audio/webm' });
+    const result = await b2Upload(file, `chat/${conversationId}/voice`);
+    if (!result) return;
+    await sendMessage.mutateAsync({
+      conversationId,
+      recipientPublicKey,
+      senderPublicKey,
+      plaintext: '🎙️ Voice message',
+      replyToId: null,
+      mediaUrl: result.publicUrl,
+      mediaType: 'voice',
+      mediaFilename: file.name,
+    });
+  }, [recipientPublicKey, senderPublicKey, conversationId, b2Upload, sendMessage]);
+
+  const handleMediaFile = useCallback(async (file: File) => {
+    if (!recipientPublicKey || !senderPublicKey || !conversationId) return;
+    let mediaType = 'file';
+    if (file.type.startsWith('image/')) mediaType = 'image';
+    else if (file.type.startsWith('video/')) mediaType = 'video';
+    const result = await b2Upload(file, `chat/${mediaType}`);
+    if (!result) return;
+    await sendMessage.mutateAsync({
+      conversationId,
+      recipientPublicKey,
+      senderPublicKey,
+      plaintext: '📎 Media',
+      replyToId: null,
+      mediaUrl: result.publicUrl,
+      mediaType,
+      mediaFilename: file.name,
+    });
+  }, [recipientPublicKey, senderPublicKey, conversationId, b2Upload, sendMessage]);
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
