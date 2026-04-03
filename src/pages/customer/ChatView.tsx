@@ -394,6 +394,9 @@ export default function ChatView() {
                       replyToIsOwn={replyToData ? replyToData.senderId === user?.id : undefined}
                       activeMessageId={activeMessageId}
                       onActivate={handleActivateMessage}
+                      mediaUrl={msg.media_url}
+                      mediaType={msg.media_type}
+                      mediaFilename={msg.media_filename}
                     />
                   </div>
                 );
