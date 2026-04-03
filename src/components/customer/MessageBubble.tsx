@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import { Check, CheckCheck, SmilePlus, Coins, Reply, Flag, Copy, Forward, Trash2 } from 'lucide-react';
 import { ReactionBadges } from './EmojiReactions';
 import { ProfilePreviewCard, parseProfileLink } from './ProfilePreviewCard';
+import { MediaPreview } from './MediaPreview';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ReportDialog } from './ReportDialog';
 import { toast } from 'sonner';
