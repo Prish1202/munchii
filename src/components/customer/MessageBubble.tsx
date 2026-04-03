@@ -29,6 +29,9 @@ interface MessageBubbleProps {
   replyToIsOwn?: boolean;
   activeMessageId?: string | null;
   onActivate?: (messageId: string | null) => void;
+  mediaUrl?: string | null;
+  mediaType?: string | null;
+  mediaFilename?: string | null;
 }
 
 function useLongPress(callback: () => void, ms = 500) {
