@@ -35,6 +35,9 @@ export interface Message {
   reply_to_id?: string | null;
   created_at: string;
   decrypted?: string;
+  media_url?: string | null;
+  media_type?: string | null;
+  media_filename?: string | null;
 }
 
 // Fetch & store public key for the current user
