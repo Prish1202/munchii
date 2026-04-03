@@ -113,6 +113,7 @@ export function MessageBubble({
   isOwn, text, time, messageId, deliveredAt, readAt,
   reactions, currentUserId, onToggleReaction, onBurstReaction, onReply,
   onForward, onUnsend, replyToText, activeMessageId, onActivate,
+  mediaUrl, mediaType, mediaFilename,
 }: MessageBubbleProps) {
   const settings = getChatSettings();
   const effectiveReadAt = settings.hideBlueTick ? null : readAt;
