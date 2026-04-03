@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { useB2Upload } from '@/hooks/useB2Upload';
 import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/card';
