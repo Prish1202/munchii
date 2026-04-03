@@ -521,7 +521,7 @@ export default function ChatView() {
             <p className="text-sm text-muted-foreground">This user hasn't set up encryption yet.</p>
           </div>
         ) : (
-          <div className="flex items-center gap-2 px-3 py-2.5 border-t border-border bg-card/80 backdrop-blur-lg safe-area-bottom shrink-0">
+          <div className="flex items-center gap-1.5 px-3 py-2.5 border-t border-border bg-card/80 backdrop-blur-lg safe-area-bottom shrink-0">
             <Button
               variant="ghost"
               size="icon"
@@ -531,6 +531,7 @@ export default function ChatView() {
             >
               <Coins className="w-5 h-5 text-primary" />
             </Button>
+            <MediaAttachment onFileSelect={handleMediaFile} disabled={isMediaUploading} />
             <Textarea
               ref={textareaRef}
               placeholder="Type a message..."
@@ -549,9 +550,18 @@ export default function ChatView() {
               maxLength={2000}
               rows={1}
             />
-            <Button size="icon" onClick={handleSend} disabled={!text.trim() || sendMessage.isPending} className="flex-shrink-0 h-9 w-9 rounded-full">
-              {sendMessage.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-            </Button>
+            {text.trim() ? (
+              <Button size="icon" onClick={handleSend} disabled={!text.trim() || sendMessage.isPending} className="flex-shrink-0 h-9 w-9 rounded-full">
+                {sendMessage.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              </Button>
+            ) : (
+              <VoiceRecorder onRecordingComplete={handleVoiceRecording} disabled={isMediaUploading || !recipientPublicKey} />
+            )}
+            {isMediaUploading && (
+              <div className="flex items-center gap-1">
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+              </div>
+            )}
           </div>
         )}
       </motion.div>
