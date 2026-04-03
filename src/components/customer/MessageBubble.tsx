@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import { Check, CheckCheck, SmilePlus, Coins, Reply, Flag, Copy, Forward, Trash2 } from 'lucide-react';
 import { ReactionBadges } from './EmojiReactions';
 import { ProfilePreviewCard, parseProfileLink } from './ProfilePreviewCard';
+import { MediaPreview } from './MediaPreview';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ReportDialog } from './ReportDialog';
 import { toast } from 'sonner';
@@ -28,6 +29,9 @@ interface MessageBubbleProps {
   replyToIsOwn?: boolean;
   activeMessageId?: string | null;
   onActivate?: (messageId: string | null) => void;
+  mediaUrl?: string | null;
+  mediaType?: string | null;
+  mediaFilename?: string | null;
 }
 
 function useLongPress(callback: () => void, ms = 500) {
@@ -109,6 +113,7 @@ export function MessageBubble({
   isOwn, text, time, messageId, deliveredAt, readAt,
   reactions, currentUserId, onToggleReaction, onBurstReaction, onReply,
   onForward, onUnsend, replyToText, activeMessageId, onActivate,
+  mediaUrl, mediaType, mediaFilename,
 }: MessageBubbleProps) {
   const settings = getChatSettings();
   const effectiveReadAt = settings.hideBlueTick ? null : readAt;
@@ -250,7 +255,14 @@ export function MessageBubble({
           )}
         >
           {replyToText && <ReplyQuote text={replyToText} isOwn={isOwn} />}
-          {(() => {
+          {mediaUrl && mediaType ? (
+            <div className="mb-1">
+              <MediaPreview mediaUrl={mediaUrl} mediaType={mediaType} fileName={mediaFilename || undefined} isOwn={isOwn} />
+              {text && text !== '📎 Media' && text !== '🎙️ Voice message' && (
+                <p className="whitespace-pre-wrap break-words mt-1.5">{text}</p>
+              )}
+            </div>
+          ) : (() => {
             const profileId = parseProfileLink(text);
             if (profileId) {
               return <ProfilePreviewCard userId={profileId} />;

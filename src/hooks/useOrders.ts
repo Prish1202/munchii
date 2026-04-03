@@ -70,6 +70,12 @@ export function useCustomerOrders() {
     if (newStatus && STATUS_MESSAGES[newStatus]) {
       toast.info(STATUS_MESSAGES[newStatus]);
     }
+    // Send order completion email
+    if (newStatus === 'completed' && payload.new?.id) {
+      supabase.functions.invoke('send-order-completion-email', {
+        body: { orderId: payload.new.id },
+      }).catch(console.error);
+    }
   }, [queryClient, user?.id]);
 
   const handleInsert = useCallback(() => {

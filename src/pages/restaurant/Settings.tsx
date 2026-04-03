@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { useB2Upload } from '@/hooks/useB2Upload';
 import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -46,19 +47,17 @@ export default function RestaurantSettings() {
     },
   });
 
+  const { upload: b2Upload } = useB2Upload();
+
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !restaurant) return;
     if (file.size > 5 * 1024 * 1024) { toast.error('Image must be under 5MB'); return; }
     setUploading(true);
     try {
-      const ext = file.name.split('.').pop();
-      const path = `${restaurant.id}/thumbnail.${ext}`;
-      const { error: uploadError } = await supabase.storage.from('menu-images').upload(path, file, { upsert: true });
-      if (uploadError) throw uploadError;
-      const { data: { publicUrl } } = supabase.storage.from('menu-images').getPublicUrl(path);
-      const photoUrl = `${publicUrl}?t=${Date.now()}`;
-      await updateRestaurant.mutateAsync({ photo_url: photoUrl });
+      const result = await b2Upload(file, `restaurant-photos/${restaurant.id}`);
+      if (!result) throw new Error('Upload failed');
+      await updateRestaurant.mutateAsync({ photo_url: result.publicUrl });
       toast.success('Photo updated!');
     } catch (err: any) {
       toast.error(err.message || 'Upload failed');

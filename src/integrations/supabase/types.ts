@@ -298,6 +298,9 @@ export type Database = {
           encrypted_for_sender: string | null
           encrypted_message: string
           id: string
+          media_filename: string | null
+          media_type: string | null
+          media_url: string | null
           read_at: string | null
           reply_to_id: string | null
           sender_id: string
@@ -309,6 +312,9 @@ export type Database = {
           encrypted_for_sender?: string | null
           encrypted_message: string
           id?: string
+          media_filename?: string | null
+          media_type?: string | null
+          media_url?: string | null
           read_at?: string | null
           reply_to_id?: string | null
           sender_id: string
@@ -320,6 +326,9 @@ export type Database = {
           encrypted_for_sender?: string | null
           encrypted_message?: string
           id?: string
+          media_filename?: string | null
+          media_type?: string | null
+          media_url?: string | null
           read_at?: string | null
           reply_to_id?: string | null
           sender_id?: string

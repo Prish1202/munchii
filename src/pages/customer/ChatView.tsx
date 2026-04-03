@@ -5,6 +5,8 @@ import { MessageBubble } from '@/components/customer/MessageBubble';
 import { TypingIndicator } from '@/components/customer/TypingIndicator';
 import { DateSeparator } from '@/components/customer/DateSeparator';
 import { OnlineIndicator } from '@/components/customer/OnlineIndicator';
+import { VoiceRecorder } from '@/components/customer/VoiceRecorder';
+import { MediaAttachment } from '@/components/customer/MediaAttachment';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMessages, useSendMessage, useRecipientPublicKey, usePublicKey, useConversations, useDeleteMessage } from '@/hooks/useChat';
 import { useWallet } from '@/hooks/useWallet';
@@ -12,6 +14,7 @@ import { useTypingIndicator } from '@/hooks/useTypingIndicator';
 import { useMessageStatus } from '@/hooks/useMessageStatus';
 import { usePresence } from '@/hooks/usePresence';
 import { useReactions } from '@/hooks/useReactions';
+import { useB2Upload } from '@/hooks/useB2Upload';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -44,6 +47,7 @@ export default function ChatView() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { data: wallet } = useWallet();
   const { isOtherTyping, sendTyping } = useTypingIndicator(conversationId || '');
+  const { upload: b2Upload, isUploading: isMediaUploading } = useB2Upload();
 
   const { data: conversation } = useQuery({
     queryKey: ['conversation-detail', conversationId],
@@ -168,6 +172,42 @@ export default function ChatView() {
       setOptimisticMessages(prev => prev.filter(m => m.text !== msgText));
     }
   };
+
+  const handleVoiceRecording = useCallback(async (blob: Blob, _duration: number) => {
+    if (!recipientPublicKey || !senderPublicKey || !conversationId) return;
+    const file = new File([blob], `voice-${Date.now()}.webm`, { type: 'audio/webm' });
+    const result = await b2Upload(file, `chat/${conversationId}/voice`);
+    if (!result) return;
+    await sendMessage.mutateAsync({
+      conversationId,
+      recipientPublicKey,
+      senderPublicKey,
+      plaintext: '🎙️ Voice message',
+      replyToId: null,
+      mediaUrl: result.publicUrl,
+      mediaType: 'voice',
+      mediaFilename: file.name,
+    });
+  }, [recipientPublicKey, senderPublicKey, conversationId, b2Upload, sendMessage]);
+
+  const handleMediaFile = useCallback(async (file: File) => {
+    if (!recipientPublicKey || !senderPublicKey || !conversationId) return;
+    let mediaType = 'file';
+    if (file.type.startsWith('image/')) mediaType = 'image';
+    else if (file.type.startsWith('video/')) mediaType = 'video';
+    const result = await b2Upload(file, `chat/${mediaType}`);
+    if (!result) return;
+    await sendMessage.mutateAsync({
+      conversationId,
+      recipientPublicKey,
+      senderPublicKey,
+      plaintext: '📎 Media',
+      replyToId: null,
+      mediaUrl: result.publicUrl,
+      mediaType,
+      mediaFilename: file.name,
+    });
+  }, [recipientPublicKey, senderPublicKey, conversationId, b2Upload, sendMessage]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -354,6 +394,9 @@ export default function ChatView() {
                       replyToIsOwn={replyToData ? replyToData.senderId === user?.id : undefined}
                       activeMessageId={activeMessageId}
                       onActivate={handleActivateMessage}
+                      mediaUrl={msg.media_url}
+                      mediaType={msg.media_type}
+                      mediaFilename={msg.media_filename}
                     />
                   </div>
                 );
@@ -478,7 +521,7 @@ export default function ChatView() {
             <p className="text-sm text-muted-foreground">This user hasn't set up encryption yet.</p>
           </div>
         ) : (
-          <div className="flex items-center gap-2 px-3 py-2.5 border-t border-border bg-card/80 backdrop-blur-lg safe-area-bottom shrink-0">
+          <div className="flex items-center gap-1.5 px-3 py-2.5 border-t border-border bg-card/80 backdrop-blur-lg safe-area-bottom shrink-0">
             <Button
               variant="ghost"
               size="icon"
@@ -488,6 +531,7 @@ export default function ChatView() {
             >
               <Coins className="w-5 h-5 text-primary" />
             </Button>
+            <MediaAttachment onFileSelect={handleMediaFile} disabled={isMediaUploading} />
             <Textarea
               ref={textareaRef}
               placeholder="Type a message..."
@@ -506,9 +550,18 @@ export default function ChatView() {
               maxLength={2000}
               rows={1}
             />
-            <Button size="icon" onClick={handleSend} disabled={!text.trim() || sendMessage.isPending} className="flex-shrink-0 h-9 w-9 rounded-full">
-              {sendMessage.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-            </Button>
+            {text.trim() ? (
+              <Button size="icon" onClick={handleSend} disabled={!text.trim() || sendMessage.isPending} className="flex-shrink-0 h-9 w-9 rounded-full">
+                {sendMessage.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              </Button>
+            ) : (
+              <VoiceRecorder onRecordingComplete={handleVoiceRecording} disabled={isMediaUploading || !recipientPublicKey} />
+            )}
+            {isMediaUploading && (
+              <div className="flex items-center gap-1">
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+              </div>
+            )}
           </div>
         )}
       </motion.div>

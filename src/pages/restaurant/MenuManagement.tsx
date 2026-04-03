@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { useB2Upload } from '@/hooks/useB2Upload';
 import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -58,13 +59,12 @@ export default function MenuManagement() {
   const addFileRef = useRef<HTMLInputElement>(null);
   const editFileRef = useRef<HTMLInputElement>(null);
 
+  const { upload: b2Upload } = useB2Upload();
+
   const uploadImage = async (file: File): Promise<string> => {
-    const ext = file.name.split('.').pop();
-    const path = `${user!.id}/${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from('menu-images').upload(path, file);
-    if (error) throw error;
-    const { data } = supabase.storage.from('menu-images').getPublicUrl(path);
-    return data.publicUrl;
+    const result = await b2Upload(file, 'menu-images');
+    if (!result) throw new Error('Upload failed');
+    return result.publicUrl;
   };
 
   const handleImageUpload = async (file: File, target: 'add' | 'edit') => {
