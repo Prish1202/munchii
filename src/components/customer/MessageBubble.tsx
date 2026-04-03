@@ -255,7 +255,14 @@ export function MessageBubble({
           )}
         >
           {replyToText && <ReplyQuote text={replyToText} isOwn={isOwn} />}
-          {(() => {
+          {mediaUrl && mediaType ? (
+            <div className="mb-1">
+              <MediaPreview mediaUrl={mediaUrl} mediaType={mediaType} fileName={mediaFilename || undefined} isOwn={isOwn} />
+              {text && text !== '📎 Media' && text !== '🎙️ Voice message' && (
+                <p className="whitespace-pre-wrap break-words mt-1.5">{text}</p>
+              )}
+            </div>
+          ) : (() => {
             const profileId = parseProfileLink(text);
             if (profileId) {
               return <ProfilePreviewCard userId={profileId} />;
