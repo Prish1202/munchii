@@ -348,24 +348,35 @@ export function useSendMessage() {
       senderPublicKey,
       plaintext,
       replyToId,
+      mediaUrl,
+      mediaType,
+      mediaFilename,
     }: {
       conversationId: string;
       recipientPublicKey: string;
       senderPublicKey: string;
       plaintext: string;
       replyToId?: string | null;
+      mediaUrl?: string;
+      mediaType?: string;
+      mediaFilename?: string;
     }) => {
       const [encryptedForRecipient, encryptedForSender] = await Promise.all([
         encryptMessage(plaintext, recipientPublicKey),
         encryptMessage(plaintext, senderPublicKey),
       ]);
-      const { error } = await supabase.from('messages').insert({
+      const insertPayload: any = {
         conversation_id: conversationId,
         sender_id: user!.id,
         encrypted_message: encryptedForRecipient,
         encrypted_for_sender: encryptedForSender,
         reply_to_id: replyToId || null,
-      } as any);
+      };
+      if (mediaUrl) insertPayload.media_url = mediaUrl;
+      if (mediaType) insertPayload.media_type = mediaType;
+      if (mediaFilename) insertPayload.media_filename = mediaFilename;
+
+      const { error } = await supabase.from('messages').insert(insertPayload);
       if (error) throw error;
     },
     onSuccess: (_, vars) => {
