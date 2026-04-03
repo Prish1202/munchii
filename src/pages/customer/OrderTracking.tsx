@@ -97,6 +97,12 @@ export default function OrderTracking() {
     if (newStatus && STATUS_MESSAGES[newStatus]) {
       toast.info(STATUS_MESSAGES[newStatus]);
     }
+    // Trigger order completion email
+    if (newStatus === 'completed' && id) {
+      supabase.functions.invoke('send-order-completion-email', {
+        body: { orderId: id },
+      }).catch(console.error);
+    }
   }, [id, queryClient]);
 
   const { isConnected } = useRealtimeSync({
