@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
+import { resolveStorageUrl } from '@/lib/utils';
 
 interface CoinTransferProps {
   availableCoins: number;
@@ -160,7 +161,7 @@ export function CoinTransfer({ availableCoins, prefillUsername }: CoinTransferPr
               >
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">
                   {profile.avatar_url ? (
-                    <img src={profile.avatar_url} className="w-8 h-8 rounded-full object-cover" alt="" />
+                    <img src={resolveStorageUrl(profile.avatar_url)} className="w-8 h-8 rounded-full object-cover" alt="" />
                   ) : (
                     profile.name?.charAt(0)?.toUpperCase() || '?'
                   )}

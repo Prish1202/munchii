@@ -89,6 +89,9 @@ export default function PublicProfile() {
             <div className="relative">
               <div className="w-20 h-20 rounded-full p-[3px] gradient-primary">
                 <Avatar className="w-full h-full border-2 border-background">
+                  {profile.avatar_url && (
+                    <AvatarImage src={resolveStorageUrl(profile.avatar_url) || undefined} alt={profile.name} />
+                  )}
                   <AvatarFallback className="bg-primary/10 text-primary text-2xl font-display font-bold">
                     {profile.name?.charAt(0)?.toUpperCase() || '?'}
                   </AvatarFallback>
