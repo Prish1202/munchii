@@ -148,7 +148,7 @@ export default function ProfileSettings() {
         <motion.div className="flex flex-col items-center gap-3" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           <div className="relative group">
             <Avatar className="w-24 h-24 border-4 border-card shadow-lg">
-              {profile?.avatar_url ? <AvatarImage src={profile.avatar_url} alt={profile.name} /> : null}
+              {profile?.avatar_url ? <AvatarImage src={resolveStorageUrl(profile.avatar_url) || undefined} alt={profile.name} /> : null}
               <AvatarFallback className="gradient-primary text-primary-foreground text-3xl font-display font-bold">
                 {profile?.name?.charAt(0)?.toUpperCase() || '?'}
               </AvatarFallback>

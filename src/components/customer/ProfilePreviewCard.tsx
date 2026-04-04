@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useNavigate } from 'react-router-dom';
 import { User } from 'lucide-react';
+import { resolveStorageUrl } from '@/lib/utils';
 
 interface ProfilePreviewCardProps {
   userId: string;
@@ -31,7 +32,7 @@ export function ProfilePreviewCard({ userId }: ProfilePreviewCardProps) {
       className="w-full max-w-[240px] flex items-center gap-3 p-3 rounded-2xl bg-card border border-border shadow-soft hover:bg-muted/50 transition-colors text-left"
     >
       <Avatar className="w-10 h-10 shrink-0">
-        {profile.avatar_url ? <AvatarImage src={profile.avatar_url} alt={profile.name} /> : null}
+        {profile.avatar_url ? <AvatarImage src={resolveStorageUrl(profile.avatar_url) || undefined} alt={profile.name} /> : null}
         <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
           {profile.name?.charAt(0)?.toUpperCase() || '?'}
         </AvatarFallback>
