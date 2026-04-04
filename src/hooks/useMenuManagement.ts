@@ -223,6 +223,37 @@ export function useReorderCategories() {
   });
 }
 
+// Aliases for backward compat
+export const useCreateMenuItem = useAddMenuItem;
+export const useMyMenuCategories = useMenuCategories;
+export const useCreateMenuCategory = useAddCategory;
+export const useDeleteMenuCategory = useDeleteCategory;
+
+// Create restaurant hook used by Settings
+export function useCreateRestaurant() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: { name: string; address: string; city?: string; area?: string; university_name?: string }) => {
+      const { error } = await supabase.from('restaurants').insert({
+        owner_id: user!.id,
+        name: data.name,
+        address: data.address,
+        city: data.city || null,
+        area: data.area || null,
+        university_name: data.university_name || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-restaurant'] });
+      toast.success('Restaurant created');
+    },
+    onError: () => toast.error('Failed to create restaurant'),
+  });
+}
+
 // Restaurant payout hooks
 export function useMyPayouts() {
   const { data: restaurant } = useMyRestaurant();
