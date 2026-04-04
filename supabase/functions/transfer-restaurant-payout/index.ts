@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,8 +12,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // This function is called internally when order is completed
-    // It can be triggered by a database webhook or called from admin
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -74,67 +72,75 @@ Deno.serve(async (req) => {
     const itemTotal = Math.max(order.total_amount - platformFee, 0);
     const commission = Math.round(itemTotal * 0.10 * 100) / 100;
     const restaurantAmount = itemTotal - commission;
+    const isCod = order.payment_method === "cod";
 
     let razorpayTransferId: string | null = null;
+    let payoutNotes = "";
 
-    // Only do Razorpay Route transfer for online payments
-    if (order.payment_method !== "cod") {
-      const { data: payment } = await supabaseAdmin
-        .from("payments")
-        .select("razorpay_payment_id")
-        .eq("order_id", orderId)
-        .eq("status", "paid")
-        .single();
+    if (isCod) {
+      // COD: Restaurant already collected full amount from customer.
+      // We record a NEGATIVE payout (deduction) — ₹4 platform fee + 10% commission
+      // will be deducted from their next online payout settlement.
+      const deductionAmount = platformFee + commission;
+      payoutNotes = `COD order — Restaurant collected ₹${order.total_amount}. Deduction of ₹${platformFee} (platform fee) + ₹${commission.toFixed(0)} (10% commission) = ₹${deductionAmount.toFixed(0)} from next payout.`;
 
-      if (payment?.razorpay_payment_id) {
-        const RAZORPAY_KEY_ID = Deno.env.get("RAZORPAY_KEY_ID");
-        const RAZORPAY_KEY_SECRET = Deno.env.get("RAZORPAY_KEY_SECRET");
+      const { error: payoutErr } = await supabaseAdmin.from("payouts").insert({
+        order_id: orderId,
+        restaurant_amount: -deductionAmount, // Negative: deduction from next payout
+        platform_fee: deductionAmount,
+        payout_notes: payoutNotes,
+        payout_status: "pending",
+      });
 
-        if (RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET) {
-          // Fetch restaurant's linked Razorpay account (if using Route)
-          // For now, we log the transfer details. 
-          // In production, you'd create a Razorpay Route transfer here:
-          // POST /v1/payments/{payment_id}/transfers
-          
-          const { data: bankDetails } = await supabaseAdmin
-            .from("restaurant_bank_details")
-            .select("*")
-            .eq("restaurant_id", order.restaurant_id)
-            .single();
+      if (payoutErr) {
+        console.error("Payout insert error:", payoutErr);
+        throw new Error("Failed to record COD deduction");
+      }
 
-          console.log("Restaurant payout details:", {
-            orderId,
-            restaurantAmount,
-            commission,
-            platformFee,
-            paymentId: payment.razorpay_payment_id,
-            bankDetails: bankDetails ? "found" : "not found",
-          });
+      return new Response(
+        JSON.stringify({
+          success: true,
+          type: "cod_deduction",
+          deductionAmount,
+          platformFee,
+          commission,
+          payoutNotes,
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-          // TODO: When restaurant has Razorpay linked account, uncomment:
-          // const transferRes = await fetch(
-          //   `https://api.razorpay.com/v1/payments/${payment.razorpay_payment_id}/transfers`,
-          //   {
-          //     method: "POST",
-          //     headers: {
-          //       "Content-Type": "application/json",
-          //       Authorization: "Basic " + btoa(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`),
-          //     },
-          //     body: JSON.stringify({
-          //       transfers: [{
-          //         account: restaurantLinkedAccountId,
-          //         amount: Math.round(restaurantAmount * 100),
-          //         currency: "INR",
-          //         notes: { order_id: orderId },
-          //       }],
-          //     }),
-          //   }
-          // );
-          // const transferData = await transferRes.json();
-          // razorpayTransferId = transferData.items?.[0]?.id;
-        }
+    // Online payment: credit restaurant amount
+    const { data: payment } = await supabaseAdmin
+      .from("payments")
+      .select("razorpay_payment_id")
+      .eq("order_id", orderId)
+      .eq("status", "paid")
+      .single();
+
+    if (payment?.razorpay_payment_id) {
+      const RAZORPAY_KEY_ID = Deno.env.get("RAZORPAY_KEY_ID");
+      const RAZORPAY_KEY_SECRET = Deno.env.get("RAZORPAY_KEY_SECRET");
+
+      if (RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET) {
+        const { data: bankDetails } = await supabaseAdmin
+          .from("restaurant_bank_details")
+          .select("*")
+          .eq("restaurant_id", order.restaurant_id)
+          .single();
+
+        console.log("Restaurant payout details:", {
+          orderId,
+          restaurantAmount,
+          commission,
+          platformFee,
+          paymentId: payment.razorpay_payment_id,
+          bankDetails: bankDetails ? "found" : "not found",
+        });
       }
     }
+
+    payoutNotes = `Online order — ₹${restaurantAmount.toFixed(0)} credited (₹${platformFee} platform fee + ₹${commission.toFixed(0)} commission deducted from ₹${order.total_amount}).`;
 
     // Record payout
     const { error: payoutErr } = await supabaseAdmin.from("payouts").insert({
@@ -142,6 +148,8 @@ Deno.serve(async (req) => {
       restaurant_amount: restaurantAmount,
       platform_fee: commission + platformFee,
       razorpay_transfer_id: razorpayTransferId,
+      payout_notes: payoutNotes,
+      payout_status: "pending",
     });
 
     if (payoutErr) {
@@ -152,6 +160,7 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
+        type: "online_credit",
         restaurantAmount,
         commission,
         platformFee,
