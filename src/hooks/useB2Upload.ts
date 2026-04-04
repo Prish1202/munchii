@@ -22,54 +22,53 @@ export function useB2Upload() {
     try {
       const ext = file.name.split('.').pop() || 'bin';
       const fileName = customFileName || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-      const filePath = `${folder}/${fileName}`;
+      const normalizedFolder = folder.replace(/^\/+|\/+$/g, '');
+      const filePath = normalizedFolder ? `${normalizedFolder}/${fileName}` : fileName;
+      const contentType = file.type || 'application/octet-stream';
 
-      // Get upload URL from edge function
-      const { data: signedData, error: signError } = await supabase.functions.invoke('b2-signed-url', {
-        body: {
-          action: 'upload',
-          filePath,
-          contentType: file.type || 'application/octet-stream',
-        },
-      });
+      const { data: { session } } = await supabase.auth.getSession();
 
-      if (signError || !signedData?.uploadUrl) {
-        throw new Error(signError?.message || 'Failed to get upload URL');
+      if (!session?.access_token) {
+        throw new Error('Please sign in again and try uploading.');
       }
 
-      // Read file as ArrayBuffer
-      const arrayBuffer = await file.arrayBuffer();
+      setProgress(20);
 
-      // Compute SHA1 hash
-      const hashBuffer = await crypto.subtle.digest('SHA-1', arrayBuffer);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const sha1 = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-      setProgress(30);
-
-      // Upload directly to B2
-      const uploadResp = await fetch(signedData.uploadUrl, {
+      const uploadResp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/b2-signed-url`, {
         method: 'POST',
         headers: {
-          Authorization: signedData.authorizationToken,
-          'Content-Type': file.type || 'application/octet-stream',
-          'X-Bz-File-Name': encodeURIComponent(filePath),
-          'X-Bz-Content-Sha1': sha1,
+          Authorization: `Bearer ${session.access_token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          'Content-Type': contentType,
+          'x-b2-file-path': filePath,
+          'x-b2-content-type': contentType,
         },
-        body: arrayBuffer,
+        body: file,
       });
 
+      const responseText = await uploadResp.text();
+      let responseData: Partial<UploadResult> & { error?: string } | null = null;
+
+      try {
+        responseData = responseText ? JSON.parse(responseText) : null;
+      } catch {
+        responseData = null;
+      }
+
       if (!uploadResp.ok) {
-        const errText = await uploadResp.text();
-        throw new Error(`Upload failed: ${errText}`);
+        throw new Error(responseData?.error || responseText || 'Upload failed');
+      }
+
+      if (!responseData?.publicUrl) {
+        throw new Error('Upload completed but no file URL was returned');
       }
 
       setProgress(85);
       setProgress(100);
 
       return {
-        publicUrl: signedData.publicUrl,
-        filePath,
+        publicUrl: responseData.publicUrl,
+        filePath: responseData.filePath || filePath,
       };
     } catch (err: any) {
       console.error('B2 upload error:', err);
