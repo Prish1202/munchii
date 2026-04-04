@@ -2,14 +2,23 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.89.0'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, apikey, content-type, range, ' +
+    'x-supabase-client-platform, x-supabase-client-platform-version, ' +
+    'x-supabase-client-runtime, x-supabase-client-runtime-version, ' +
+    'x-b2-file-path, x-b2-content-type',
+  'Access-Control-Expose-Headers':
+    'Content-Type, Content-Length, Content-Range, Accept-Ranges, ETag, Last-Modified',
 }
 
 const B2_KEY_ID = Deno.env.get('B2_KEY_ID')
 const B2_APP_KEY = Deno.env.get('B2_APP_KEY')
 const B2_BUCKET_NAME = Deno.env.get('B2_BUCKET_NAME') || 'Munchii'
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
-const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') || Deno.env.get('SUPABASE_PUBLISHABLE_KEY')
+const SUPABASE_ANON_KEY =
+  Deno.env.get('SUPABASE_ANON_KEY') || Deno.env.get('SUPABASE_PUBLISHABLE_KEY')
+
+/* ── helpers ─────────────────────────────────────────────── */
 
 let authCache: {
   accountId: string
@@ -23,37 +32,51 @@ let authCache: {
 function encodeUrlPath(path: string) {
   return path
     .split('/')
-    .map((segment) => encodeURIComponent(segment))
+    .map((s) => encodeURIComponent(s))
     .join('/')
 }
 
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  })
+}
+
+function proxyUrl(filePath: string) {
+  return SUPABASE_URL
+    ? `${SUPABASE_URL}/functions/v1/b2-signed-url?filePath=${encodeURIComponent(filePath)}`
+    : filePath
+}
+
+async function sha1Hex(buf: ArrayBuffer) {
+  const hash = await crypto.subtle.digest('SHA-1', buf)
+  return Array.from(new Uint8Array(hash))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+}
+
+/* ── B2 auth / bucket ───────────────────────────────────── */
+
 async function getB2Auth() {
   if (authCache && Date.now() < authCache.expires) return authCache
+  if (!B2_KEY_ID || !B2_APP_KEY) throw new Error('Missing B2 credentials')
 
-  if (!B2_KEY_ID || !B2_APP_KEY) {
-    throw new Error('Missing Backblaze B2 credentials')
-  }
+  const resp = await fetch(
+    'https://api.backblazeb2.com/b2api/v2/b2_authorize_account',
+    { headers: { Authorization: 'Basic ' + btoa(`${B2_KEY_ID}:${B2_APP_KEY}`) } },
+  )
+  if (!resp.ok) throw new Error(`B2 auth failed: ${await resp.text()}`)
 
-  const resp = await fetch('https://api.backblazeb2.com/b2api/v2/b2_authorize_account', {
-    headers: {
-      Authorization: 'Basic ' + btoa(`${B2_KEY_ID}:${B2_APP_KEY}`),
-    },
-  })
-
-  if (!resp.ok) {
-    throw new Error(`B2 auth failed: ${await resp.text()}`)
-  }
-
-  const data = await resp.json()
+  const d = await resp.json()
   authCache = {
-    accountId: data.accountId,
-    apiUrl: data.apiUrl,
-    authToken: data.authorizationToken,
+    accountId: d.accountId,
+    apiUrl: d.apiUrl,
+    authToken: d.authorizationToken,
     bucketId: null,
-    downloadUrl: data.downloadUrl,
-    expires: Date.now() + 23 * 60 * 60 * 1000,
+    downloadUrl: d.downloadUrl,
+    expires: Date.now() + 23 * 3600_000,
   }
-
   return authCache
 }
 
@@ -61,80 +84,97 @@ async function getBucketId() {
   const auth = await getB2Auth()
   if (auth.bucketId) return auth.bucketId
 
-  const listResp = await fetch(`${auth.apiUrl}/b2api/v2/b2_list_buckets`, {
+  const r = await fetch(`${auth.apiUrl}/b2api/v2/b2_list_buckets`, {
     method: 'POST',
-    headers: {
-      Authorization: auth.authToken,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      accountId: auth.accountId,
-      bucketName: B2_BUCKET_NAME,
-    }),
+    headers: { Authorization: auth.authToken, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ accountId: auth.accountId, bucketName: B2_BUCKET_NAME }),
   })
+  if (!r.ok) throw new Error(`list_buckets: ${await r.text()}`)
 
-  if (!listResp.ok) {
-    throw new Error(`Could not list buckets: ${await listResp.text()}`)
-  }
-
-  const data = await listResp.json()
-  const bucket = data.buckets?.find((entry: { bucketId?: string; bucketName?: string }) => entry.bucketName === B2_BUCKET_NAME)
-
-  if (!bucket?.bucketId) {
-    throw new Error(`Bucket "${B2_BUCKET_NAME}" not found`)
-  }
+  const bucket = (await r.json()).buckets?.find(
+    (b: { bucketName?: string }) => b.bucketName === B2_BUCKET_NAME,
+  )
+  if (!bucket?.bucketId) throw new Error(`Bucket "${B2_BUCKET_NAME}" not found`)
 
   authCache = { ...auth, bucketId: bucket.bucketId }
-  return bucket.bucketId
+  return bucket.bucketId as string
 }
 
 async function getUploadUrl() {
   const auth = await getB2Auth()
   const bucketId = await getBucketId()
-
-  const uploadResp = await fetch(`${auth.apiUrl}/b2api/v2/b2_get_upload_url`, {
+  const r = await fetch(`${auth.apiUrl}/b2api/v2/b2_get_upload_url`, {
     method: 'POST',
-    headers: {
-      Authorization: auth.authToken,
-      'Content-Type': 'application/json',
-    },
+    headers: { Authorization: auth.authToken, 'Content-Type': 'application/json' },
     body: JSON.stringify({ bucketId }),
   })
-
-  if (!uploadResp.ok) {
-    throw new Error(`Could not get upload URL: ${await uploadResp.text()}`)
-  }
-
-  return await uploadResp.json()
+  if (!r.ok) throw new Error(`get_upload_url: ${await r.text()}`)
+  return await r.json()
 }
 
-async function getDownloadAuth(filePrefix: string, validDurationInSeconds = 3600) {
-  const auth = await getB2Auth()
-  const bucketId = await getBucketId()
+/* ── server-side upload relay ────────────────────────────── */
 
-  const downloadResp = await fetch(`${auth.apiUrl}/b2api/v2/b2_get_download_authorization`, {
+async function uploadToB2(filePath: string, contentType: string, buf: ArrayBuffer) {
+  const up = await getUploadUrl()
+  const r = await fetch(up.uploadUrl, {
     method: 'POST',
     headers: {
-      Authorization: auth.authToken,
-      'Content-Type': 'application/json',
+      Authorization: up.authorizationToken,
+      'Content-Type': contentType,
+      'X-Bz-File-Name': encodeUrlPath(filePath),
+      'X-Bz-Content-Sha1': await sha1Hex(buf),
     },
-    body: JSON.stringify({
-      bucketId,
-      fileNamePrefix: filePrefix,
-      validDurationInSeconds,
-    }),
+    body: new Uint8Array(buf),
   })
-
-  if (!downloadResp.ok) {
-    throw new Error(`Could not get download auth: ${await downloadResp.text()}`)
-  }
-
-  const downloadData = await downloadResp.json()
-  return {
-    downloadUrl: `${auth.downloadUrl}/file/${B2_BUCKET_NAME}/${encodeUrlPath(filePrefix)}`,
-    authorizationToken: downloadData.authorizationToken,
-  }
+  if (!r.ok) throw new Error(`B2 upload: ${await r.text()}`)
+  return proxyUrl(filePath)
 }
+
+/* ── download proxy (public, no auth needed) ─────────────── */
+
+async function proxyDownload(req: Request, filePath: string) {
+  const auth = await getB2Auth()
+  const hdrs = new Headers({ Authorization: auth.authToken })
+  const range = req.headers.get('range')
+  if (range) hdrs.set('Range', range)
+
+  const upstream = await fetch(
+    `${auth.downloadUrl}/file/${B2_BUCKET_NAME}/${encodeUrlPath(filePath)}`,
+    { method: req.method, headers: hdrs },
+  )
+  if (!upstream.ok && upstream.status !== 206) {
+    return json({ error: `File not found: ${filePath}` }, 404)
+  }
+
+  const out = new Headers(corsHeaders)
+  for (const h of [
+    'content-type', 'content-length', 'content-range',
+    'accept-ranges', 'etag', 'last-modified',
+  ]) {
+    const v = upstream.headers.get(h)
+    if (v) out.set(h, v)
+  }
+  out.set('cache-control', 'public, max-age=31536000, immutable')
+
+  return new Response(req.method === 'HEAD' ? null : upstream.body, {
+    status: upstream.status,
+    headers: out,
+  })
+}
+
+/* ── Supabase user auth ──────────────────────────────────── */
+
+async function getUser(req: Request) {
+  const auth = req.headers.get('Authorization')
+  if (!auth) return null
+  const sb = createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!, {
+    global: { headers: { Authorization: auth } },
+  })
+  const { data: { user }, error } = await sb.auth.getUser()
+  return error ? null : user
+}
+
+/* ── main handler ────────────────────────────────────────── */
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -143,90 +183,51 @@ Deno.serve(async (req) => {
 
   try {
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !B2_KEY_ID || !B2_APP_KEY) {
-      console.error('Missing environment variables', {
-        hasSupabaseUrl: !!SUPABASE_URL,
-        hasSupabaseAnonKey: !!SUPABASE_ANON_KEY,
-        hasB2KeyId: !!B2_KEY_ID,
-        hasB2AppKey: !!B2_APP_KEY,
-      })
-
-      return new Response(JSON.stringify({ error: 'Server configuration error' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      console.error('Missing env vars')
+      return json({ error: 'Server configuration error' }, 500)
     }
 
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+    const url = new URL(req.url)
+    const qFilePath = url.searchParams.get('filePath')
+
+    // ── GET/HEAD ?filePath=… → proxy download (public, no auth) ──
+    if ((req.method === 'GET' || req.method === 'HEAD') && qFilePath) {
+      return await proxyDownload(req, qFilePath)
     }
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      global: { headers: { Authorization: authHeader } },
-    })
+    // ── POST with x-b2-file-path header → server-side upload relay ──
+    const headerPath = req.headers.get('x-b2-file-path')
+    if (req.method === 'POST' && headerPath) {
+      const user = await getUser(req)
+      if (!user) return json({ error: 'Unauthorized' }, 401)
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      const buf = await req.arrayBuffer()
+      if (!buf.byteLength) return json({ error: 'Empty file body' }, 400)
+
+      const ct =
+        req.headers.get('x-b2-content-type') ||
+        req.headers.get('content-type') ||
+        'application/octet-stream'
+
+      const publicUrl = await uploadToB2(headerPath, ct, buf)
+      return json({ publicUrl, filePath: headerPath, contentType: ct })
     }
+
+    // ── Legacy JSON body actions (kept for backward compat) ──
+    const user = await getUser(req)
+    if (!user) return json({ error: 'Unauthorized' }, 401)
 
     const body = await req.json().catch(() => null)
-    const action = body?.action
-    const filePath = body?.filePath
-    const contentType = body?.contentType
-    const filePrefix = body?.filePrefix
-
-    if (action === 'upload') {
-      if (!filePath || !contentType) {
-        return new Response(JSON.stringify({ error: 'filePath and contentType are required' }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      }
-
-      const [uploadData, auth] = await Promise.all([getUploadUrl(), getB2Auth()])
-
-      return new Response(JSON.stringify({
-        uploadUrl: uploadData.uploadUrl,
-        authorizationToken: uploadData.authorizationToken,
-        filePath,
-        contentType,
-        publicUrl: `${auth.downloadUrl}/file/${B2_BUCKET_NAME}/${encodeUrlPath(filePath)}`,
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+    if (body?.action === 'upload' && body.filePath && body.contentType) {
+      return json({ publicUrl: proxyUrl(body.filePath), filePath: body.filePath, contentType: body.contentType })
+    }
+    if (body?.action === 'download' && body.filePrefix) {
+      return json({ proxyUrl: proxyUrl(body.filePrefix) })
     }
 
-    if (action === 'download') {
-      if (!filePrefix) {
-        return new Response(JSON.stringify({ error: 'filePrefix is required' }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      }
-
-      const downloadData = await getDownloadAuth(filePrefix)
-
-      return new Response(JSON.stringify(downloadData), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
-    return new Response(JSON.stringify({ error: 'Invalid action. Use "upload" or "download"' }), {
-      status: 400,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return json({ error: 'Invalid request' }, 400)
   } catch (err) {
-    console.error('B2 signed URL error:', err)
-    return new Response(JSON.stringify({ error: err instanceof Error ? err.message : 'Internal server error' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    console.error('b2-signed-url error:', err)
+    return json({ error: err instanceof Error ? err.message : 'Internal error' }, 500)
   }
 })

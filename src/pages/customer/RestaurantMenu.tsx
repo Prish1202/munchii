@@ -9,6 +9,7 @@ import { useCart } from '@/contexts/CartContext';
 import { ArrowLeft, MapPin, Plus, Minus, ShoppingCart, Star, Clock, Percent } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { resolveStorageUrl } from '@/lib/utils';
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&fit=crop';
 const HERO_IMAGE = 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&h=400&fit=crop';
@@ -138,7 +139,7 @@ export default function RestaurantMenu() {
           <div className="space-y-3">
             {menuItems?.filter(item => activeCategory === 'all' || (item as any).category_id === activeCategory).map((item: any) => {
               const quantity = getCartQuantity(item.id);
-              const image = item.image_url || FALLBACK_IMAGE;
+              const image = resolveStorageUrl(item.image_url) || FALLBACK_IMAGE;
               const discount = item.discount_percent || 0;
               const discountedPrice = discount > 0 ? item.price * (1 - discount / 100) : item.price;
               return (

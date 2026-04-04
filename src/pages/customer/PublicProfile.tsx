@@ -8,7 +8,7 @@ import { useStartConversation } from '@/hooks/useChat';
 import { useIsBlocked, useToggleBlock } from '@/hooks/useBlockedUsers';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { CoinTransfer } from '@/components/customer/CoinTransfer';
 import { useWallet } from '@/hooks/useWallet';
@@ -16,6 +16,8 @@ import { ShoppingBag, UserPlus, UserMinus, Loader2, MessageSquare, Send, Grid3x3
 import { motion } from 'framer-motion';
 import { ReportDialog } from '@/components/customer/ReportDialog';
 import { ProfileMoreMenu } from '@/components/customer/ProfileMoreMenu';
+import { resolveStorageUrl } from '@/lib/utils';
+          {/* Avatar with resolved URL */}
 
 export default function PublicProfile() {
   const { userId } = useParams<{ userId: string }>();
@@ -87,6 +89,9 @@ export default function PublicProfile() {
             <div className="relative">
               <div className="w-20 h-20 rounded-full p-[3px] gradient-primary">
                 <Avatar className="w-full h-full border-2 border-background">
+                  {profile.avatar_url && (
+                    <AvatarImage src={resolveStorageUrl(profile.avatar_url) || undefined} alt={profile.name} />
+                  )}
                   <AvatarFallback className="bg-primary/10 text-primary text-2xl font-display font-bold">
                     {profile.name?.charAt(0)?.toUpperCase() || '?'}
                   </AvatarFallback>
