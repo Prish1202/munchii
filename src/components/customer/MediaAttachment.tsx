@@ -24,10 +24,21 @@ export function MediaAttachment({ onFileSelect, disabled }: MediaAttachmentProps
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > MAX_FILE_SIZE) {
-      alert('File size must be under 20MB');
+      alert('File size must be under 50MB');
       return;
     }
-    onFileSelect(file);
+
+    // Compress video if it's a video file and > 10MB
+    if (file.type.startsWith('video/') && file.size > 10 * 1024 * 1024) {
+      try {
+        const compressed = await compressVideo(file);
+        onFileSelect(compressed);
+      } catch {
+        onFileSelect(file); // fallback to original
+      }
+    } else {
+      onFileSelect(file);
+    }
     e.target.value = '';
   };
 
