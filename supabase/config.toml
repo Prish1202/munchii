@@ -14,3 +14,9 @@ verify_jwt = false
 
 [functions.send-abuse-report-email]
 verify_jwt = false
+
+[functions.b2-signed-url]
+verify_jwt = false
+
+[functions.send-order-completion-email]
+verify_jwt = false
