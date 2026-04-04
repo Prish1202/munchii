@@ -18,6 +18,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { useTheme } from 'next-themes';
+import { resolveStorageUrl } from '@/lib/utils';
 
 // Moved OUTSIDE the component to avoid re-creating component types on every render
 function SettingsSection({ title, children, delay = 0 }: { title: string; children: React.ReactNode; delay?: number }) {
