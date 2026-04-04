@@ -53,7 +53,6 @@ export function useB2Upload() {
         headers: {
           Authorization: signedData.authorizationToken,
           'Content-Type': file.type || 'application/octet-stream',
-          'Content-Length': String(file.size),
           'X-Bz-File-Name': encodeURIComponent(filePath),
           'X-Bz-Content-Sha1': sha1,
         },
@@ -65,6 +64,7 @@ export function useB2Upload() {
         throw new Error(`Upload failed: ${errText}`);
       }
 
+      setProgress(85);
       setProgress(100);
 
       return {
