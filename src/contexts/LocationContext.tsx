@@ -39,6 +39,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
 
   const setCity = useCallback((city: string) => {
     const normalized = city.trim();
+    localStorage.setItem(CITY_STORAGE_KEY, normalized);
     sessionStorage.setItem(CITY_STORAGE_KEY, normalized);
     setState({ city: normalized, isDetecting: false, error: null });
   }, []);
