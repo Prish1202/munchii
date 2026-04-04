@@ -16,6 +16,8 @@ import { ShoppingBag, UserPlus, UserMinus, Loader2, MessageSquare, Send, Grid3x3
 import { motion } from 'framer-motion';
 import { ReportDialog } from '@/components/customer/ReportDialog';
 import { ProfileMoreMenu } from '@/components/customer/ProfileMoreMenu';
+import { resolveStorageUrl } from '@/lib/utils';
+          {/* Avatar with resolved URL */}
 
 export default function PublicProfile() {
   const { userId } = useParams<{ userId: string }>();

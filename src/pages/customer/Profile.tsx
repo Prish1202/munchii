@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ShoppingBag, Sparkles, Settings, ClipboardList } from 'lucide-react';
 import { useCustomerOrders } from '@/hooks/useOrders';
 import { motion } from 'framer-motion';
+import { resolveStorageUrl } from '@/lib/utils';
 
 export default function Profile() {
   const { user } = useAuth();
@@ -38,7 +39,7 @@ export default function Profile() {
             <div className="-mt-10 flex items-end justify-between">
               <Avatar className="w-20 h-20 border-4 border-card shadow-lg">
                 {profile?.avatar_url ? (
-                  <AvatarImage src={profile.avatar_url} alt={profile.name} />
+                  <AvatarImage src={resolveStorageUrl(profile.avatar_url) || undefined} alt={profile.name} />
                 ) : null}
                 <AvatarFallback className="gradient-primary text-primary-foreground text-2xl font-display font-bold">
                   {profile?.name?.charAt(0)?.toUpperCase() || '?'}
