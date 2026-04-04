@@ -175,7 +175,9 @@ export default function ChatView() {
 
   const handleVoiceRecording = useCallback(async (blob: Blob, _duration: number) => {
     if (!recipientPublicKey || !senderPublicKey || !conversationId) return;
-    const file = new File([blob], `voice-${Date.now()}.webm`, { type: 'audio/webm' });
+    const mimeType = blob.type || 'audio/webm';
+    const extension = mimeType.includes('mp4') ? 'm4a' : mimeType.split('/')[1]?.split(';')[0] || 'webm';
+    const file = new File([blob], `voice-${Date.now()}.${extension}`, { type: mimeType });
     const result = await b2Upload(file, `chat/${conversationId}/voice`);
     if (!result) return;
     await sendMessage.mutateAsync({
@@ -195,7 +197,7 @@ export default function ChatView() {
     let mediaType = 'file';
     if (file.type.startsWith('image/')) mediaType = 'image';
     else if (file.type.startsWith('video/')) mediaType = 'video';
-    const result = await b2Upload(file, `chat/${mediaType}`);
+    const result = await b2Upload(file, `chat/${conversationId}/${mediaType}`);
     if (!result) return;
     await sendMessage.mutateAsync({
       conversationId,
@@ -531,7 +533,7 @@ export default function ChatView() {
             >
               <Coins className="w-5 h-5 text-primary" />
             </Button>
-            <MediaAttachment onFileSelect={handleMediaFile} disabled={isMediaUploading} />
+            <MediaAttachment onFileSelect={handleMediaFile} disabled={isMediaUploading || sendMessage.isPending} />
             <Textarea
               ref={textareaRef}
               placeholder="Type a message..."
@@ -555,7 +557,7 @@ export default function ChatView() {
                 {sendMessage.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               </Button>
             ) : (
-              <VoiceRecorder onRecordingComplete={handleVoiceRecording} disabled={isMediaUploading || !recipientPublicKey} />
+              <VoiceRecorder onRecordingComplete={handleVoiceRecording} disabled={isMediaUploading || sendMessage.isPending || !recipientPublicKey} />
             )}
             {isMediaUploading && (
               <div className="flex items-center gap-1">
