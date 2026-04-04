@@ -13,7 +13,7 @@ interface MediaAttachmentProps {
   disabled?: boolean;
 }
 
-const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
 export function MediaAttachment({ onFileSelect, disabled }: MediaAttachmentProps) {
   const imageInputRef = useRef<HTMLInputElement>(null);
