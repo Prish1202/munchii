@@ -13,8 +13,8 @@ import {
 import { useAdminPayouts, useAdminRestaurantPayoutSummary } from '@/hooks/useAdminData';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
-import { Wallet, Store, TrendingUp, AlertCircle, ChevronLeft, CalendarDays, IndianRupee, CreditCard, Banknote } from 'lucide-react';
-import { format, startOfWeek, endOfWeek, parseISO, isWithinInterval } from 'date-fns';
+import { Wallet, Store, TrendingUp, AlertCircle, ChevronLeft, CalendarDays, IndianRupee, CreditCard, Banknote, ArrowDownRight, ArrowUpRight } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
 import { toast } from 'sonner';
 
 const PAYOUT_STATUS_CONFIG: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
@@ -29,14 +29,15 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
   const [editingPayout, setEditingPayout] = useState<any>(null);
   const [newPayoutStatus, setNewPayoutStatus] = useState('');
   const [payoutNotes, setPayoutNotes] = useState('');
+  const platformFee = 4;
 
-  // Fetch completed orders for this restaurant with date + payment method
+  // Fetch completed orders with order_items for detailed breakdown
   const { data: orders, isLoading: loadingOrders } = useQuery({
     queryKey: ['admin', 'restaurant-orders-detail', restaurantId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('orders')
-        .select('id, total_amount, status, payment_method, created_at')
+        .select('id, total_amount, status, payment_method, created_at, order_items(quantity, price_at_time, menu_item:menu_items(name))')
         .eq('restaurant_id', restaurantId)
         .eq('status', 'completed')
         .order('created_at', { ascending: false });
@@ -45,7 +46,7 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
     },
   });
 
-  // Fetch payouts for this restaurant's orders
+  // Fetch payouts
   const { data: payouts, isLoading: loadingPayouts } = useQuery({
     queryKey: ['admin', 'restaurant-payouts-detail', restaurantId],
     queryFn: async () => {
@@ -67,53 +68,44 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
     },
   });
 
-  const platformFee = 4;
   const paidOrderIds = new Set(payouts?.map(p => p.order_id) || []);
 
-  // Group orders by date
-  const dailyBreakdown = useMemo(() => {
+  // Detailed per-order breakdown
+  const orderBreakdown = useMemo(() => {
     if (!orders) return [];
-    const byDate: Record<string, { date: string; orders: typeof orders; onlineTotal: number; codTotal: number; netEarnings: number; commission: number }> = {};
-    
-    orders.forEach(order => {
-      const dateKey = format(parseISO(order.created_at), 'yyyy-MM-dd');
-      if (!byDate[dateKey]) {
-        byDate[dateKey] = { date: dateKey, orders: [], onlineTotal: 0, codTotal: 0, netEarnings: 0, commission: 0 };
-      }
-      const day = byDate[dateKey];
-      day.orders.push(order);
+    return orders.map(order => {
+      const isCod = order.payment_method === 'cod';
       const itemTotal = Math.max(Number(order.total_amount) - platformFee, 0);
-      const comm = Math.round(itemTotal * 0.10 * 100) / 100;
-      const net = itemTotal - comm;
-      day.netEarnings += net;
-      day.commission += comm;
-      if (order.payment_method === 'cod') {
-        day.codTotal += Number(order.total_amount);
-      } else {
-        day.onlineTotal += Number(order.total_amount);
-      }
+      const commission = Math.round(itemTotal * 0.10 * 100) / 100;
+      const netEarning = itemTotal - commission;
+      const deduction = isCod ? platformFee + commission : 0;
+      const isPaid = paidOrderIds.has(order.id);
+      const items = (order as any).order_items || [];
+      return { ...order, isCod, itemTotal, commission, netEarning, deduction, isPaid, items };
     });
-
-    return Object.values(byDate).sort((a, b) => b.date.localeCompare(a.date));
-  }, [orders]);
-
-  // Weekly summary
-  const weeklySummary = useMemo(() => {
-    if (!orders) return { totalNet: 0, totalCommission: 0, totalOnline: 0, totalCod: 0, pending: 0, paid: 0 };
-    let totalNet = 0, totalCommission = 0, totalOnline = 0, totalCod = 0, pending = 0, paid = 0;
-    orders.forEach(order => {
-      const itemTotal = Math.max(Number(order.total_amount) - platformFee, 0);
-      const comm = Math.round(itemTotal * 0.10 * 100) / 100;
-      const net = itemTotal - comm;
-      totalNet += net;
-      totalCommission += comm;
-      if (order.payment_method === 'cod') totalCod += Number(order.total_amount);
-      else totalOnline += Number(order.total_amount);
-      if (paidOrderIds.has(order.id)) paid += net;
-      else pending += net;
-    });
-    return { totalNet, totalCommission, totalOnline, totalCod, pending, paid };
   }, [orders, paidOrderIds]);
+
+  // Summary
+  const summary = useMemo(() => {
+    let totalNet = 0, totalCommission = 0, totalOnline = 0, totalCod = 0, pending = 0, paid = 0, codDeductions = 0;
+    orderBreakdown.forEach(order => {
+      totalNet += order.netEarning;
+      totalCommission += order.commission;
+      if (order.isCod) {
+        totalCod += Number(order.total_amount);
+        codDeductions += order.deduction;
+      } else {
+        totalOnline += Number(order.total_amount);
+      }
+      if (order.isPaid) {
+        const payout = payouts?.find(p => p.order_id === order.id);
+        paid += Number(payout?.restaurant_amount || 0);
+      } else {
+        pending += order.isCod ? -order.deduction : order.netEarning;
+      }
+    });
+    return { totalNet, totalCommission, totalOnline, totalCod, pending, paid, codDeductions };
+  }, [orderBreakdown, payouts]);
 
   const handleUpdatePayoutStatus = async () => {
     if (!editingPayout || !newPayoutStatus) return;
@@ -133,7 +125,6 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
     }
   };
 
-  // Create payouts for all unpaid completed orders
   const handleCreatePayoutsForUnpaid = async () => {
     if (!orders) return;
     const unpaidOrders = orders.filter(o => !paidOrderIds.has(o.id));
@@ -143,14 +134,26 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
     }
     try {
       const payoutRows = unpaidOrders.map(order => {
+        const isCod = order.payment_method === 'cod';
         const itemTotal = Math.max(Number(order.total_amount) - platformFee, 0);
         const comm = Math.round(itemTotal * 0.10 * 100) / 100;
         const net = itemTotal - comm;
+        if (isCod) {
+          const deduction = platformFee + comm;
+          return {
+            order_id: order.id,
+            restaurant_amount: -deduction,
+            platform_fee: deduction,
+            payout_status: 'pending',
+            payout_notes: `COD — Collected ₹${Number(order.total_amount).toFixed(0)}. Deduct ₹${platformFee} fee + ₹${comm.toFixed(0)} commission = ₹${deduction.toFixed(0)}.`,
+          };
+        }
         return {
           order_id: order.id,
           restaurant_amount: net,
-          platform_fee: comm,
+          platform_fee: comm + platformFee,
           payout_status: 'pending',
+          payout_notes: `Online — Credit ₹${net.toFixed(0)} (₹${platformFee} fee + ₹${comm.toFixed(0)} comm deducted).`,
         };
       });
       const { error } = await supabase.from('payouts').insert(payoutRows);
@@ -171,12 +174,12 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
           </button>
           <div>
             <h2 className="text-xl font-bold">{restaurantName}</h2>
-            <p className="text-sm text-muted-foreground">Detailed earnings & payout management</p>
+            <p className="text-sm text-muted-foreground">Per-order breakdown with fees & commissions</p>
           </div>
         </div>
-        {weeklySummary.pending > 0 && (
+        {summary.pending !== 0 && (
           <Button onClick={handleCreatePayoutsForUnpaid} size="sm" className="rounded-xl">
-            Create Payouts for Unpaid (₹{weeklySummary.pending.toFixed(0)})
+            Create Payouts for Unpaid
           </Button>
         )}
       </div>
@@ -189,49 +192,50 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
               <IndianRupee className="w-4 h-4 text-primary" />
               <span className="text-xs text-muted-foreground">Net Earnings</span>
             </div>
-            <p className="text-lg font-bold">₹{weeklySummary.totalNet.toFixed(0)}</p>
+            <p className="text-lg font-bold">₹{summary.totalNet.toFixed(0)}</p>
           </CardContent>
         </Card>
         <Card className="rounded-2xl">
           <CardContent className="p-3">
             <div className="flex items-center gap-2 mb-1">
               <CreditCard className="w-4 h-4 text-primary" />
-              <span className="text-xs text-muted-foreground">Online</span>
+              <span className="text-xs text-muted-foreground">Online Rev.</span>
             </div>
-            <p className="text-lg font-bold">₹{weeklySummary.totalOnline.toFixed(0)}</p>
+            <p className="text-lg font-bold">₹{summary.totalOnline.toFixed(0)}</p>
           </CardContent>
         </Card>
         <Card className="rounded-2xl">
           <CardContent className="p-3">
             <div className="flex items-center gap-2 mb-1">
-              <Banknote className="w-4 h-4 text-primary" />
-              <span className="text-xs text-muted-foreground">COD</span>
+              <Banknote className="w-4 h-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">COD Rev.</span>
             </div>
-            <p className="text-lg font-bold">₹{weeklySummary.totalCod.toFixed(0)}</p>
+            <p className="text-lg font-bold">₹{summary.totalCod.toFixed(0)}</p>
           </CardContent>
         </Card>
         <Card className="rounded-2xl">
           <CardContent className="p-3">
             <div className="flex items-center gap-2 mb-1">
               <AlertCircle className="w-4 h-4 text-destructive" />
-              <span className="text-xs text-muted-foreground">Pending</span>
+              <span className="text-xs text-muted-foreground">COD Deductions</span>
             </div>
-            <p className="text-lg font-bold text-destructive">₹{weeklySummary.pending.toFixed(0)}</p>
+            <p className="text-lg font-bold text-destructive">-₹{summary.codDeductions.toFixed(0)}</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Daily Breakdown */}
+      {/* Per-Order Breakdown */}
       <Card className="rounded-2xl">
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
-            <CalendarDays className="w-4 h-4" /> Daily Earnings Breakdown
+            <CalendarDays className="w-4 h-4" /> Per-Order Breakdown
           </CardTitle>
+          <p className="text-xs text-muted-foreground">Item price, ₹4 platform fee, 10% commission for each order</p>
         </CardHeader>
         <CardContent className="p-0">
           {loadingOrders ? (
             <div className="text-center py-8 text-muted-foreground">Loading...</div>
-          ) : dailyBreakdown.length === 0 ? (
+          ) : orderBreakdown.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">No completed orders</div>
           ) : (
             <div className="overflow-x-auto">
@@ -239,22 +243,56 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
                 <TableHeader>
                   <TableRow>
                     <TableHead>Date</TableHead>
-                    <TableHead className="text-center">Orders</TableHead>
-                    <TableHead className="text-right">Online</TableHead>
-                    <TableHead className="text-right">COD</TableHead>
-                    <TableHead className="text-right">Commission</TableHead>
-                    <TableHead className="text-right">Net Earning</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Items</TableHead>
+                    <TableHead className="text-right">Order ₹</TableHead>
+                    <TableHead className="text-right">Item Total</TableHead>
+                    <TableHead className="text-right">₹4 Fee</TableHead>
+                    <TableHead className="text-right">10% Comm.</TableHead>
+                    <TableHead className="text-right">Net</TableHead>
+                    <TableHead>Paid?</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {dailyBreakdown.map(day => (
-                    <TableRow key={day.date}>
-                      <TableCell className="font-medium whitespace-nowrap">{format(parseISO(day.date), 'MMM d, EEE')}</TableCell>
-                      <TableCell className="text-center">{day.orders.length}</TableCell>
-                      <TableCell className="text-right text-primary">₹{day.onlineTotal.toFixed(0)}</TableCell>
-                      <TableCell className="text-right">₹{day.codTotal.toFixed(0)}</TableCell>
-                      <TableCell className="text-right text-destructive">-₹{day.commission.toFixed(0)}</TableCell>
-                      <TableCell className="text-right font-semibold">₹{day.netEarnings.toFixed(0)}</TableCell>
+                  {orderBreakdown.map(order => (
+                    <TableRow key={order.id}>
+                      <TableCell className="whitespace-nowrap text-xs">{format(parseISO(order.created_at), 'MMM d')}</TableCell>
+                      <TableCell>
+                        {order.isCod ? (
+                          <Badge variant="outline" className="text-[10px] gap-1"><Banknote className="w-3 h-3" />COD</Badge>
+                        ) : (
+                          <Badge variant="secondary" className="text-[10px] gap-1"><CreditCard className="w-3 h-3" />Online</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-xs max-w-[120px]">
+                        {order.items.length > 0 ? order.items.map((item: any, i: number) => (
+                          <span key={i} className="block truncate text-muted-foreground">
+                            {item.quantity}x {item.menu_item?.name || 'Item'}
+                          </span>
+                        )) : <span className="text-muted-foreground">—</span>}
+                      </TableCell>
+                      <TableCell className="text-right text-xs font-medium">₹{Number(order.total_amount).toFixed(0)}</TableCell>
+                      <TableCell className="text-right text-xs">₹{order.itemTotal.toFixed(0)}</TableCell>
+                      <TableCell className="text-right text-xs text-destructive">-₹{platformFee}</TableCell>
+                      <TableCell className="text-right text-xs text-destructive">-₹{order.commission.toFixed(0)}</TableCell>
+                      <TableCell className="text-right text-xs font-semibold">
+                        {order.isCod ? (
+                          <span className="text-destructive flex items-center justify-end gap-0.5">
+                            <ArrowDownRight className="w-3 h-3" />-₹{order.deduction.toFixed(0)}
+                          </span>
+                        ) : (
+                          <span className="text-primary flex items-center justify-end gap-0.5">
+                            <ArrowUpRight className="w-3 h-3" />+₹{order.netEarning.toFixed(0)}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {order.isPaid ? (
+                          <Badge variant="default" className="text-[10px]">Yes</Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[10px]">No</Badge>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -282,21 +320,26 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
                 <TableHeader>
                   <TableRow>
                     <TableHead>Date</TableHead>
-                    <TableHead className="text-right">Restaurant</TableHead>
-                    <TableHead className="text-right">Platform Fee</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead className="text-right">Platform</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Notes</TableHead>
                     <TableHead className="text-right">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {payouts.map(p => {
                     const sc = PAYOUT_STATUS_CONFIG[p.payout_status] || PAYOUT_STATUS_CONFIG.pending;
+                    const isDeduction = Number(p.restaurant_amount) < 0;
                     return (
                       <TableRow key={p.id}>
-                        <TableCell className="whitespace-nowrap">{format(parseISO(p.created_at), 'MMM d')}</TableCell>
-                        <TableCell className="text-right font-medium">₹{Number(p.restaurant_amount).toFixed(0)}</TableCell>
-                        <TableCell className="text-right text-muted-foreground">₹{Number(p.platform_fee).toFixed(0)}</TableCell>
+                        <TableCell className="whitespace-nowrap text-xs">{format(parseISO(p.created_at), 'MMM d')}</TableCell>
+                        <TableCell className={`text-right font-medium ${isDeduction ? 'text-destructive' : 'text-primary'}`}>
+                          {isDeduction ? '-' : '+'}₹{Math.abs(Number(p.restaurant_amount)).toFixed(0)}
+                        </TableCell>
+                        <TableCell className="text-right text-xs text-muted-foreground">₹{Number(p.platform_fee).toFixed(0)}</TableCell>
                         <TableCell><Badge variant={sc.variant}>{sc.label}</Badge></TableCell>
+                        <TableCell className="text-xs text-muted-foreground max-w-[150px] truncate">{p.payout_notes || '—'}</TableCell>
                         <TableCell className="text-right">
                           <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => {
                             setEditingPayout(p);
@@ -322,7 +365,9 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
           <DialogHeader>
             <DialogTitle>Manage Payout</DialogTitle>
             <DialogDescription>
-              ₹{Number(editingPayout?.restaurant_amount || 0).toFixed(0)} to restaurant
+              {Number(editingPayout?.restaurant_amount || 0) < 0
+                ? `COD Deduction: -₹${Math.abs(Number(editingPayout?.restaurant_amount || 0)).toFixed(0)}`
+                : `Credit: ₹${Number(editingPayout?.restaurant_amount || 0).toFixed(0)} to restaurant`}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -358,10 +403,20 @@ export default function AdminPayouts() {
   const { data: restaurantSummary, isLoading: summaryLoading } = useAdminRestaurantPayoutSummary();
   const [selectedRestaurant, setSelectedRestaurant] = useState<{ id: string; name: string } | null>(null);
 
-  const totals = payouts?.reduce((acc, p) => ({
-    restaurant: acc.restaurant + Number(p.restaurant_amount),
-    platform: acc.platform + Number(p.platform_fee),
-  }), { restaurant: 0, platform: 0 }) || { restaurant: 0, platform: 0 };
+  const totals = useMemo(() => {
+    if (!payouts) return { restaurant: 0, platform: 0, codDeductions: 0 };
+    let restaurant = 0, platform = 0, codDeductions = 0;
+    payouts.forEach((p: any) => {
+      const amt = Number(p.restaurant_amount);
+      if (amt < 0) {
+        codDeductions += Math.abs(amt);
+      } else {
+        restaurant += amt;
+      }
+      platform += Number(p.platform_fee);
+    });
+    return { restaurant, platform, codDeductions };
+  }, [payouts]);
 
   const totalPending = restaurantSummary?.reduce((s, r) => s + r.pendingAmount, 0) || 0;
 
@@ -382,7 +437,7 @@ export default function AdminPayouts() {
       <div className="space-y-4">
         <div>
           <h1 className="text-xl font-bold">Payouts Overview</h1>
-          <p className="text-sm text-muted-foreground">Track platform earnings and partner payouts</p>
+          <p className="text-sm text-muted-foreground">Track platform earnings, COD deductions & partner payouts</p>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -390,16 +445,16 @@ export default function AdminPayouts() {
             <CardContent className="p-3">
               <div className="flex items-center gap-2 mb-1">
                 <TrendingUp className="w-4 h-4 text-primary" />
-                <span className="text-xs text-muted-foreground">Volume</span>
+                <span className="text-xs text-muted-foreground">Platform Revenue</span>
               </div>
-              <p className="text-lg font-bold">₹{(totals.restaurant + totals.platform).toFixed(0)}</p>
+              <p className="text-lg font-bold">₹{totals.platform.toFixed(0)}</p>
             </CardContent>
           </Card>
           <Card className="rounded-2xl">
             <CardContent className="p-3">
               <div className="flex items-center gap-2 mb-1">
                 <Store className="w-4 h-4 text-primary" />
-                <span className="text-xs text-muted-foreground">Paid Out</span>
+                <span className="text-xs text-muted-foreground">Paid to Restros</span>
               </div>
               <p className="text-lg font-bold">₹{totals.restaurant.toFixed(0)}</p>
             </CardContent>
@@ -407,10 +462,10 @@ export default function AdminPayouts() {
           <Card className="rounded-2xl">
             <CardContent className="p-3">
               <div className="flex items-center gap-2 mb-1">
-                <Wallet className="w-4 h-4 text-primary" />
-                <span className="text-xs text-muted-foreground">Platform</span>
+                <Banknote className="w-4 h-4 text-destructive" />
+                <span className="text-xs text-muted-foreground">COD Deductions</span>
               </div>
-              <p className="text-lg font-bold">₹{totals.platform.toFixed(0)}</p>
+              <p className="text-lg font-bold text-destructive">₹{totals.codDeductions.toFixed(0)}</p>
             </CardContent>
           </Card>
           <Card className="rounded-2xl">
@@ -427,7 +482,7 @@ export default function AdminPayouts() {
         <Card className="rounded-2xl">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2"><Store className="w-4 h-4" /> Restaurants</CardTitle>
-            <p className="text-xs text-muted-foreground">Tap a restaurant to see daily earnings & manage payouts</p>
+            <p className="text-xs text-muted-foreground">Tap a restaurant to see per-order breakdown with item price, ₹4 fee, 10% commission</p>
           </CardHeader>
           <CardContent className="p-0">
             {summaryLoading ? (
@@ -465,6 +520,8 @@ export default function AdminPayouts() {
                         <TableCell className="text-right">
                           {r.pendingAmount > 0 ? (
                             <Badge variant="destructive">₹{r.pendingAmount.toFixed(0)}</Badge>
+                          ) : r.pendingAmount < 0 ? (
+                            <Badge variant="outline" className="text-destructive">-₹{Math.abs(r.pendingAmount).toFixed(0)}</Badge>
                           ) : (
                             <Badge variant="secondary">Settled</Badge>
                           )}

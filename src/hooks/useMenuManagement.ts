@@ -54,7 +54,7 @@ export function useMyMenuItems() {
         .from('menu_items')
         .select('*')
         .eq('restaurant_id', restaurant!.id)
-        .order('name', { ascending: true });
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       return data as MenuItem[];
@@ -63,128 +63,55 @@ export function useMyMenuItems() {
   });
 }
 
-export function useMyMenuCategories() {
-  const { data: restaurant } = useMyRestaurant();
+export function useMenuCategories(restaurantId?: string) {
+  const { data: myRestaurant } = useMyRestaurant();
+  const rId = restaurantId || myRestaurant?.id;
 
   return useQuery({
-    queryKey: ['my-menu-categories', restaurant?.id],
+    queryKey: ['menu-categories', rId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('menu_categories')
         .select('*')
-        .eq('restaurant_id', restaurant!.id)
+        .eq('restaurant_id', rId!)
         .order('sort_order', { ascending: true });
 
       if (error) throw error;
       return data as MenuCategory[];
     },
-    enabled: !!restaurant?.id,
+    enabled: !!rId,
   });
 }
 
-export function useCreateMenuCategory() {
-  const queryClient = useQueryClient();
+export function useAddMenuItem() {
   const { data: restaurant } = useMyRestaurant();
-
-  return useMutation({
-    mutationFn: async (name: string) => {
-      const { data: existing } = await supabase
-        .from('menu_categories')
-        .select('sort_order')
-        .eq('restaurant_id', restaurant!.id)
-        .order('sort_order', { ascending: false })
-        .limit(1);
-
-      const nextOrder = (existing?.[0]?.sort_order ?? -1) + 1;
-
-      const { data, error } = await supabase
-        .from('menu_categories')
-        .insert({ restaurant_id: restaurant!.id, name, sort_order: nextOrder } as any)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-menu-categories'] });
-      toast.success('Category added');
-    },
-    onError: () => toast.error('Failed to add category'),
-  });
-}
-
-export function useUpdateMenuCategory() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, name }: { id: string; name: string }) => {
-      const { error } = await supabase
-        .from('menu_categories')
-        .update({ name } as any)
-        .eq('id', id);
+    mutationFn: async (item: {
+      name: string;
+      price: number;
+      description?: string;
+      image_url?: string;
+      category_id?: string;
+      discount_percent?: number;
+    }) => {
+      const { error } = await supabase.from('menu_items').insert({
+        restaurant_id: restaurant!.id,
+        name: item.name,
+        price: item.price,
+        description: item.description || null,
+        image_url: item.image_url || null,
+        category_id: item.category_id || null,
+        discount_percent: item.discount_percent || 0,
+      });
       if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-menu-categories'] });
-      toast.success('Category updated');
-    },
-    onError: () => toast.error('Failed to update category'),
-  });
-}
-
-export function useDeleteMenuCategory() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('menu_categories')
-        .delete()
-        .eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-menu-categories'] });
-      queryClient.invalidateQueries({ queryKey: ['my-menu-items'] });
-      toast.success('Category deleted');
-    },
-    onError: () => toast.error('Failed to delete category'),
-  });
-}
-
-export function useCreateMenuItem() {
-  const queryClient = useQueryClient();
-  const { data: restaurant } = useMyRestaurant();
-
-  return useMutation({
-    mutationFn: async (item: { name: string; price: number; image_url?: string; description?: string; discount_percent?: number; category_id?: string }) => {
-      const { data, error } = await supabase
-        .from('menu_items')
-        .insert({
-          restaurant_id: restaurant!.id,
-          name: item.name,
-          price: item.price,
-          available: true,
-          image_url: item.image_url || null,
-          description: item.description || null,
-          discount_percent: item.discount_percent || 0,
-          category_id: item.category_id || null,
-        } as any)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-menu-items'] });
-      toast.success('Menu item added');
+      toast.success('Item added');
     },
-    onError: (error) => {
-      console.error('Failed to add menu item:', error);
-      toast.error('Failed to add menu item');
-    },
+    onError: () => toast.error('Failed to add item'),
   });
 }
 
@@ -192,25 +119,18 @@ export function useUpdateMenuItem() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, ...updates }: { id: string; name?: string; price?: number; available?: boolean; image_url?: string; description?: string; discount_percent?: number; category_id?: string | null }) => {
-      const { data, error } = await supabase
+    mutationFn: async ({ id, ...updates }: Partial<MenuItem> & { id: string }) => {
+      const { error } = await supabase
         .from('menu_items')
-        .update(updates as any)
-        .eq('id', id)
-        .select()
-        .single();
-
+        .update(updates)
+        .eq('id', id);
       if (error) throw error;
-      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-menu-items'] });
-      toast.success('Menu item updated');
+      toast.success('Item updated');
     },
-    onError: (error) => {
-      console.error('Failed to update menu item:', error);
-      toast.error('Failed to update menu item');
-    },
+    onError: () => toast.error('Failed to update item'),
   });
 }
 
@@ -219,51 +139,86 @@ export function useDeleteMenuItem() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('menu_items')
-        .delete()
-        .eq('id', id);
-
+      const { error } = await supabase.from('menu_items').delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-menu-items'] });
-      toast.success('Menu item deleted');
+      toast.success('Item deleted');
     },
-    onError: (error) => {
-      console.error('Failed to delete menu item:', error);
-      toast.error('Failed to delete menu item');
-    },
+    onError: () => toast.error('Failed to delete item'),
   });
 }
 
-export function useCreateRestaurant() {
-  const { user } = useAuth();
+export function useAddCategory() {
+  const { data: restaurant } = useMyRestaurant();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (restaurant: { name: string; address: string }) => {
-      const { data, error } = await supabase
-        .from('restaurants')
-        .insert({
-          owner_id: user!.id,
-          name: restaurant.name,
-          address: restaurant.address,
-          is_active: true,
-        })
-        .select()
-        .single();
-
+    mutationFn: async (name: string) => {
+      const { error } = await supabase.from('menu_categories').insert({
+        restaurant_id: restaurant!.id,
+        name,
+      });
       if (error) throw error;
-      return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-restaurant'] });
-      toast.success('Restaurant created!');
+      queryClient.invalidateQueries({ queryKey: ['menu-categories'] });
+      toast.success('Category added');
     },
-    onError: (error) => {
-      console.error('Failed to create restaurant:', error);
-      toast.error('Failed to create restaurant');
+    onError: () => toast.error('Failed to add category'),
+  });
+}
+
+export function useUpdateCategory() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      const { error } = await supabase
+        .from('menu_categories')
+        .update({ name })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['menu-categories'] });
+      toast.success('Category updated');
+    },
+    onError: () => toast.error('Failed to update category'),
+  });
+}
+
+export function useDeleteCategory() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      // Unlink items first
+      await supabase.from('menu_items').update({ category_id: null }).eq('category_id', id);
+      const { error } = await supabase.from('menu_categories').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['menu-categories'] });
+      queryClient.invalidateQueries({ queryKey: ['my-menu-items'] });
+      toast.success('Category deleted');
+    },
+    onError: () => toast.error('Failed to delete category'),
+  });
+}
+
+export function useReorderCategories() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (categories: { id: string; sort_order: number }[]) => {
+      for (const cat of categories) {
+        await supabase.from('menu_categories').update({ sort_order: cat.sort_order }).eq('id', cat.id);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['menu-categories'] });
     },
   });
 }
@@ -275,21 +230,22 @@ export function useMyPayouts() {
   return useQuery({
     queryKey: ['my-payouts', restaurant?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('payouts')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      
-      // Filter to only this restaurant's payouts by matching order_ids
       const { data: orders } = await supabase
         .from('orders')
         .select('id')
         .eq('restaurant_id', restaurant!.id);
-      
-      const orderIds = new Set(orders?.map(o => o.id) || []);
-      return (data || []).filter((p: any) => orderIds.has(p.order_id));
+
+      const orderIds = orders?.map(o => o.id) || [];
+      if (orderIds.length === 0) return [];
+
+      const { data, error } = await supabase
+        .from('payouts')
+        .select('*')
+        .in('order_id', orderIds)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
     },
     enabled: !!restaurant?.id,
   });
@@ -302,39 +258,86 @@ export function useMyPayoutSummary() {
     queryKey: ['my-payout-summary', restaurant?.id],
     queryFn: async () => {
       const platformFee = 4;
-      
-      // Get completed orders
+
+      // Get completed orders with payment method
       const { data: completedOrders } = await supabase
         .from('orders')
-        .select('id, total_amount')
+        .select('id, total_amount, payment_method, created_at')
         .eq('restaurant_id', restaurant!.id)
-        .eq('status', 'completed');
+        .eq('status', 'completed')
+        .order('created_at', { ascending: false });
 
       // Get payouts
-      const { data: allPayouts } = await supabase
-        .from('payouts')
-        .select('order_id, restaurant_amount');
+      const { data: orders } = await supabase
+        .from('orders')
+        .select('id')
+        .eq('restaurant_id', restaurant!.id);
+      const orderIds = orders?.map(o => o.id) || [];
+
+      const { data: allPayouts } = orderIds.length > 0
+        ? await supabase.from('payouts').select('*').in('order_id', orderIds)
+        : { data: [] };
 
       const paidOrderIds = new Set(allPayouts?.map(p => p.order_id) || []);
 
       let totalEarned = 0;
       let totalPaid = 0;
       let pendingAmount = 0;
+      let onlineOrders = 0;
+      let codOrders = 0;
+      let codDeductions = 0;
+      let onlineCredits = 0;
 
       (completedOrders || []).forEach(order => {
+        const isCod = order.payment_method === 'cod';
         const itemTotal = Math.max(Number(order.total_amount) - platformFee, 0);
-        const netEarning = itemTotal * 0.9;
+        const commission = Math.round(itemTotal * 0.10 * 100) / 100;
+        const netEarning = itemTotal - commission;
         totalEarned += netEarning;
+
+        if (isCod) {
+          codOrders++;
+          codDeductions += platformFee + commission;
+        } else {
+          onlineOrders++;
+          onlineCredits += netEarning;
+        }
 
         if (paidOrderIds.has(order.id)) {
           const payout = allPayouts?.find(p => p.order_id === order.id);
           totalPaid += Number(payout?.restaurant_amount || 0);
         } else {
-          pendingAmount += netEarning;
+          pendingAmount += isCod ? -(platformFee + commission) : netEarning;
         }
       });
 
-      return { totalEarned, totalPaid, pendingAmount };
+      // Weekly growth data
+      const weeklyData: Record<string, { week: string; earned: number; orders: number }> = {};
+      (completedOrders || []).forEach(order => {
+        const weekStart = new Date(order.created_at);
+        weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+        const weekKey = weekStart.toISOString().split('T')[0];
+        if (!weeklyData[weekKey]) {
+          weeklyData[weekKey] = { week: weekKey, earned: 0, orders: 0 };
+        }
+        const itemTotal = Math.max(Number(order.total_amount) - platformFee, 0);
+        weeklyData[weekKey].earned += itemTotal * 0.9;
+        weeklyData[weekKey].orders++;
+      });
+
+      const weeklyGrowth = Object.values(weeklyData).sort((a, b) => a.week.localeCompare(b.week)).slice(-8);
+
+      return {
+        totalEarned,
+        totalPaid,
+        pendingAmount,
+        onlineOrders,
+        codOrders,
+        codDeductions,
+        onlineCredits,
+        weeklyGrowth,
+        completedOrders: completedOrders || [],
+      };
     },
     enabled: !!restaurant?.id,
   });
