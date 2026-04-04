@@ -8,7 +8,7 @@ import { useStartConversation } from '@/hooks/useChat';
 import { useIsBlocked, useToggleBlock } from '@/hooks/useBlockedUsers';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { CoinTransfer } from '@/components/customer/CoinTransfer';
 import { useWallet } from '@/hooks/useWallet';
