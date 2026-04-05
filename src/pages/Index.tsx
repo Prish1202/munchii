@@ -659,9 +659,7 @@ export default function Index() {
             {/* Brand */}
             <div className="col-span-2 md:col-span-1 space-y-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center">
-                  <UtensilsCrossed className="w-4.5 h-4.5 text-primary-foreground" />
-                </div>
+                <img src={logoImg} alt="Munchii logo" className="h-9 w-9 object-contain" />
                 <span className="font-display font-bold text-lg">Munchii</span>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">
