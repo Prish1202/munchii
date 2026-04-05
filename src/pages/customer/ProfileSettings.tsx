@@ -106,14 +106,23 @@ export default function ProfileSettings() {
 
   const { upload: b2Upload } = useB2Upload();
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+
+  const handleAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user?.id) return;
-    if (file.size > 2 * 1024 * 1024) { toast.error('Image must be under 2MB'); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error('Image must be under 5MB'); return; }
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    setPendingFile(file);
+  };
 
+  const confirmAvatar = async () => {
+    if (!pendingFile || !user?.id) return;
     setUploading(true);
     try {
-      const result = await b2Upload(file, `avatars/${user.id}`);
+      const result = await b2Upload(pendingFile, `avatars/${user.id}`);
       if (!result) throw new Error('Upload failed');
       await updateProfile.mutateAsync({ avatar_url: result.publicUrl });
       toast.success('Profile picture updated!');
@@ -121,7 +130,15 @@ export default function ProfileSettings() {
       toast.error(err.message || 'Upload failed');
     } finally {
       setUploading(false);
+      setPreviewUrl(null);
+      setPendingFile(null);
     }
+  };
+
+  const cancelAvatar = () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(null);
+    setPendingFile(null);
   };
 
   const handleSave = () => {
