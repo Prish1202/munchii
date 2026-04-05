@@ -4,6 +4,7 @@ import { ROLE_ROUTES } from '@/types/auth';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Star, Coins, MessageCircle, Users, Shield, MapPin, Zap, Heart, Sparkles, Trophy, Gift, ChevronDown, IndianRupee, Store, Utensils, CreditCard, UtensilsCrossed } from 'lucide-react';
 import logoImg from '@/assets/logo.png';
+import logoWordmark from '@/assets/logo-wordmark.jpg';
 import { useEffect, useRef } from 'react';
 import { motion, useScroll, useTransform, useInView, useSpring, useMotionValue } from 'framer-motion';
 
