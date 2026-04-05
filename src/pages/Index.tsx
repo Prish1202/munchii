@@ -2,7 +2,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { ROLE_ROUTES } from '@/types/auth';
 import { Button } from '@/components/ui/button';
-import { UtensilsCrossed, ArrowRight, Star, Coins, MessageCircle, Users, Shield, MapPin, Zap, Heart, Sparkles, Trophy, Gift, ChevronDown, IndianRupee, Store, Utensils, CreditCard } from 'lucide-react';
+import { ArrowRight, Star, Coins, MessageCircle, Users, Shield, MapPin, Zap, Heart, Sparkles, Trophy, Gift, ChevronDown, IndianRupee, Store, Utensils, CreditCard, UtensilsCrossed } from 'lucide-react';
+import logoImg from '@/assets/logo.png';
 import { useEffect, useRef } from 'react';
 import { motion, useScroll, useTransform, useInView, useSpring, useMotionValue } from 'framer-motion';
 
@@ -222,13 +223,13 @@ export default function Index() {
       >
         <div className="container flex h-16 items-center justify-between backdrop-blur-xl">
           <Link to="/" className="flex items-center gap-2.5">
-            <motion.div
-              className="w-10 h-10 rounded-2xl gradient-brand flex items-center justify-center shadow-lg"
+            <motion.img
+              src={logoImg}
+              alt="Munchii logo"
+              className="h-10 w-10 object-contain"
               whileHover={{ scale: 1.1, rotate: 5 }}
               whileTap={{ scale: 0.95 }}
-            >
-              <UtensilsCrossed className="w-5 h-5 text-primary-foreground" />
-            </motion.div>
+            />
             <span className="font-display font-bold text-xl text-secondary">Munchii</span>
           </Link>
           <div className="flex items-center gap-2">
@@ -658,9 +659,7 @@ export default function Index() {
             {/* Brand */}
             <div className="col-span-2 md:col-span-1 space-y-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center">
-                  <UtensilsCrossed className="w-4.5 h-4.5 text-primary-foreground" />
-                </div>
+                <img src={logoImg} alt="Munchii logo" className="h-9 w-9 object-contain" />
                 <span className="font-display font-bold text-lg">Munchii</span>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">
