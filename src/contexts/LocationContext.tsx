@@ -69,7 +69,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
   }, [setCity]);
 
   useEffect(() => {
-    const saved = sessionStorage.getItem(CITY_STORAGE_KEY);
+    const saved = sessionStorage.getItem(CITY_STORAGE_KEY) || localStorage.getItem(CITY_STORAGE_KEY);
     if (saved) {
       setState({ city: saved, isDetecting: false, error: null });
     } else {
