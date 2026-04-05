@@ -39,6 +39,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
 
   const setCity = useCallback((city: string) => {
     const normalized = city.trim();
+    localStorage.setItem(CITY_STORAGE_KEY, normalized);
     sessionStorage.setItem(CITY_STORAGE_KEY, normalized);
     setState({ city: normalized, isDetecting: false, error: null });
   }, []);
@@ -68,7 +69,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
   }, [setCity]);
 
   useEffect(() => {
-    const saved = sessionStorage.getItem(CITY_STORAGE_KEY);
+    const saved = sessionStorage.getItem(CITY_STORAGE_KEY) || localStorage.getItem(CITY_STORAGE_KEY);
     if (saved) {
       setState({ city: saved, isDetecting: false, error: null });
     } else {

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SearchBar } from '@/components/customer/SearchBar';
@@ -11,9 +11,26 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRestaurants } from '@/hooks/useRestaurants';
 import { useRegisteredCities } from '@/hooks/useRegisteredCities';
 import { useWallet } from '@/hooks/useWallet';
-import { MapPin, ChevronRight, Store, Loader2, Sparkles, Rocket, Search, X } from 'lucide-react';
+import { MapPin, ChevronRight, Store, Loader2, Sparkles, Rocket, Search, X, SlidersHorizontal } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from '@/components/ui/dropdown-menu';
+
+const CITY_PERSIST_KEY = 'foodyzone_dashboard_city';
+
+const SORT_OPTIONS = [
+  { id: 'relevance', label: 'Relevance' },
+  { id: 'name_asc', label: 'Name A-Z' },
+  { id: 'name_desc', label: 'Name Z-A' },
+  { id: 'newest', label: 'Newest' },
+] as const;
 
 export default function CustomerDashboard() {
   const { user } = useAuth();
@@ -22,10 +39,21 @@ export default function CustomerDashboard() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
+  const [sortBy, setSortBy] = useState<string>('relevance');
+  const [showPickupOnly, setShowPickupOnly] = useState(false);
 
   const { data: registeredCities, isLoading: loadingCities } = useRegisteredCities();
   const { data: restaurants, isLoading } = useRestaurants(selectedCity);
   const { data: wallet } = useWallet();
+
+  // Restore persisted city on mount
+  useEffect(() => {
+    const saved = localStorage.getItem(CITY_PERSIST_KEY);
+    if (saved) {
+      setSelectedCity(saved);
+      setCityInput(saved);
+    }
+  }, []);
 
   const filteredCities = useMemo(() => {
     if (!registeredCities || !cityInput.trim()) return [];
@@ -34,15 +62,25 @@ export default function CustomerDashboard() {
     );
   }, [registeredCities, cityInput]);
 
-  const filteredRestaurants = restaurants?.filter(r =>
-    r.name.toLowerCase().includes(search.toLowerCase()) ||
-    r.address.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredRestaurants = useMemo(() => {
+    let list = restaurants?.filter(r =>
+      r.name.toLowerCase().includes(search.toLowerCase()) ||
+      r.address.toLowerCase().includes(search.toLowerCase())
+    ) || [];
+
+    // Sort
+    if (sortBy === 'name_asc') list = [...list].sort((a, b) => a.name.localeCompare(b.name));
+    else if (sortBy === 'name_desc') list = [...list].sort((a, b) => b.name.localeCompare(a.name));
+    else if (sortBy === 'newest') list = [...list].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    return list;
+  }, [restaurants, search, sortBy]);
 
   const handleCitySelect = (city: string) => {
     setSelectedCity(city);
     setCityInput(city);
     setShowSuggestions(false);
+    localStorage.setItem(CITY_PERSIST_KEY, city);
   };
 
   const handleCityInputChange = (value: string) => {
@@ -50,6 +88,7 @@ export default function CustomerDashboard() {
     setShowSuggestions(true);
     if (!value.trim()) {
       setSelectedCity(null);
+      localStorage.removeItem(CITY_PERSIST_KEY);
     }
   };
 
@@ -57,9 +96,9 @@ export default function CustomerDashboard() {
     setCityInput('');
     setSelectedCity(null);
     setShowSuggestions(false);
+    localStorage.removeItem(CITY_PERSIST_KEY);
   };
 
-  // Check if user typed a city that has no match in registered cities
   const isUnregisteredCity = cityInput.trim().length >= 2 && filteredCities.length === 0 && !selectedCity;
 
   return (
@@ -133,7 +172,7 @@ export default function CustomerDashboard() {
             </div>
             <h2 className="font-display font-bold text-2xl text-foreground">Coming Soon!</h2>
             <p className="text-muted-foreground mt-3 text-sm leading-relaxed">
-              We’re lining up the best pickup spots for your city right now.
+              We're lining up the best pickup spots for your city right now.
             </p>
           </motion.div>
         )}
@@ -142,10 +181,33 @@ export default function CustomerDashboard() {
           <>
             <SearchBar value={search} onChange={setSearch} />
 
-            <section className="space-y-3">
-              <h2 className="font-display font-bold text-sm text-muted-foreground uppercase tracking-[0.2em]">What’s on your mind?</h2>
-              <CategoryFilter selected={category} onSelect={setCategory} />
-            </section>
+            <div className="flex items-center gap-2">
+              <section className="flex-1 space-y-3">
+                <h2 className="font-display font-bold text-sm text-muted-foreground uppercase tracking-[0.2em]">What's on your mind?</h2>
+                <CategoryFilter selected={category} onSelect={setCategory} />
+              </section>
+
+              {/* Filter dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" className="rounded-full shrink-0 h-10 w-10 border-border">
+                    <SlidersHorizontal className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+                  {SORT_OPTIONS.map(opt => (
+                    <DropdownMenuCheckboxItem
+                      key={opt.id}
+                      checked={sortBy === opt.id}
+                      onCheckedChange={() => setSortBy(opt.id)}
+                    >
+                      {opt.label}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
 
             <PromoBanner />
 

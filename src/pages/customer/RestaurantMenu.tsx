@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -6,13 +6,21 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { useRestaurant, useMenuItems, useMenuCategories } from '@/hooks/useRestaurants';
 import { useCart } from '@/contexts/CartContext';
-import { ArrowLeft, MapPin, Plus, Minus, ShoppingCart, Star, Clock, Percent } from 'lucide-react';
+import { ArrowLeft, MapPin, Plus, Minus, ShoppingCart, Star, Clock, Percent, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
-import { resolveStorageUrl } from '@/lib/utils';
+import { cn, resolveStorageUrl } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
+  DropdownMenuLabel,
+} from '@/components/ui/dropdown-menu';
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&fit=crop';
 const HERO_IMAGE = 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&h=400&fit=crop';
+
+type SortOption = 'default' | 'price_low' | 'price_high' | 'name_asc' | 'discount';
 
 export default function RestaurantMenu() {
   const { id } = useParams<{ id: string }>();
@@ -21,6 +29,8 @@ export default function RestaurantMenu() {
   const { data: categories } = useMenuCategories(id!);
   const { items: cartItems, addItem, updateQuantity, totalItems, totalAmount, restaurantId } = useCart();
   const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<SortOption>('default');
 
   const getCartQuantity = (menuItemId: string) => {
     const item = cartItems.find(i => i.menuItemId === menuItemId);
@@ -30,7 +40,7 @@ export default function RestaurantMenu() {
   const handleAddItem = (item: any) => {
     const discount = (item as any).discount_percent || 0;
     const effectivePrice = discount > 0 ? item.price * (1 - discount / 100) : item.price;
-    
+
     if (restaurantId && restaurantId !== id) {
       toast.warning('Cart cleared — items were from another restaurant.');
     }
@@ -43,6 +53,36 @@ export default function RestaurantMenu() {
     });
     toast.success(`Added ${item.name}`);
   };
+
+  const heroImage = useMemo(() => {
+    if ((restaurant as any)?.photo_url) {
+      return resolveStorageUrl((restaurant as any).photo_url) || HERO_IMAGE;
+    }
+    return HERO_IMAGE;
+  }, [restaurant]);
+
+  const filteredAndSortedItems = useMemo(() => {
+    let items = menuItems?.filter(item =>
+      (activeCategory === 'all' || (item as any).category_id === activeCategory) &&
+      (!search.trim() || item.name.toLowerCase().includes(search.toLowerCase()))
+    ) || [];
+
+    switch (sortBy) {
+      case 'price_low':
+        items = [...items].sort((a, b) => a.price - b.price);
+        break;
+      case 'price_high':
+        items = [...items].sort((a, b) => b.price - a.price);
+        break;
+      case 'name_asc':
+        items = [...items].sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case 'discount':
+        items = [...items].sort((a, b) => ((b as any).discount_percent || 0) - ((a as any).discount_percent || 0));
+        break;
+    }
+    return items;
+  }, [menuItems, activeCategory, search, sortBy]);
 
   if (loadingRestaurant) {
     return (
@@ -83,7 +123,7 @@ export default function RestaurantMenu() {
 
         {/* Hero */}
         <div className="relative rounded-2xl overflow-hidden mb-5">
-          <img src={HERO_IMAGE} alt={restaurant.name} className="w-full h-44 sm:h-56 object-cover" />
+          <img src={heroImage} alt={restaurant.name} className="w-full h-44 sm:h-56 object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
           <div className="absolute bottom-4 left-4 right-4 text-white">
             <h1 className="font-display font-bold text-2xl">{restaurant.name}</h1>
@@ -102,7 +142,40 @@ export default function RestaurantMenu() {
           </div>
         </div>
 
-        <h2 className="font-display font-semibold text-lg mb-4">Menu</h2>
+        {/* Menu header with search + filter */}
+        <div className="flex items-center gap-2 mb-4">
+          <h2 className="font-display font-semibold text-lg flex-1">Menu</h2>
+          <div className="relative flex-1 max-w-[200px]">
+            <input
+              type="text"
+              placeholder="Search items..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-3 pr-3 py-1.5 rounded-xl border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" className="rounded-xl h-8 w-8">
+                <ArrowUpDown className="w-3.5 h-3.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuLabel>Sort items</DropdownMenuLabel>
+              {([
+                ['default', 'Default'],
+                ['price_low', 'Price: Low → High'],
+                ['price_high', 'Price: High → Low'],
+                ['name_asc', 'Name A-Z'],
+                ['discount', 'Best Discount'],
+              ] as [SortOption, string][]).map(([val, label]) => (
+                <DropdownMenuCheckboxItem key={val} checked={sortBy === val} onCheckedChange={() => setSortBy(val)}>
+                  {label}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
         {/* Category filter */}
         {categories && categories.length > 0 && (
@@ -131,20 +204,19 @@ export default function RestaurantMenu() {
               <Skeleton key={i} className="h-28 w-full rounded-xl" />
             ))}
           </div>
-        ) : menuItems?.filter(item => activeCategory === 'all' || (item as any).category_id === activeCategory).length === 0 ? (
+        ) : filteredAndSortedItems.length === 0 ? (
           <div className="text-center py-12 bg-card rounded-2xl border border-border">
-            <p className="text-muted-foreground">No menu items available right now.</p>
+            <p className="text-muted-foreground">{search ? 'No items match your search.' : 'No menu items available right now.'}</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {menuItems?.filter(item => activeCategory === 'all' || (item as any).category_id === activeCategory).map((item: any) => {
+            {filteredAndSortedItems.map((item: any) => {
               const quantity = getCartQuantity(item.id);
               const image = resolveStorageUrl(item.image_url) || FALLBACK_IMAGE;
               const discount = item.discount_percent || 0;
               const discountedPrice = discount > 0 ? item.price * (1 - discount / 100) : item.price;
               return (
                 <div key={item.id} className="flex gap-3 bg-card rounded-xl border border-border p-3 hover:shadow-sm transition-shadow">
-                  {/* Image */}
                   <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden shrink-0">
                     <img src={image} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
                     {discount > 0 && (
@@ -153,8 +225,6 @@ export default function RestaurantMenu() {
                       </div>
                     )}
                   </div>
-
-                  {/* Info */}
                   <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
                     <div>
                       <h3 className="font-display font-semibold text-sm sm:text-base truncate">{item.name}</h3>

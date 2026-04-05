@@ -9,6 +9,7 @@ export interface Restaurant {
   is_active: boolean;
   created_at: string;
   owner_id: string;
+  photo_url?: string | null;
 }
 
 export interface MenuItem {

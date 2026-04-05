@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { MapPin, Star, Clock, Coins } from 'lucide-react';
 import type { Restaurant } from '@/hooks/useRestaurants';
+import { resolveStorageUrl } from '@/lib/utils';
 
 const FOOD_IMAGES = [
   'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&h=300&fit=crop',
@@ -11,8 +12,11 @@ const FOOD_IMAGES = [
   'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&h=300&fit=crop',
 ];
 
-function getImageForRestaurant(id: string) {
-  const hash = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+function getImageForRestaurant(restaurant: Restaurant & { photo_url?: string | null }) {
+  if (restaurant.photo_url) {
+    return resolveStorageUrl(restaurant.photo_url) || restaurant.photo_url;
+  }
+  const hash = restaurant.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   return FOOD_IMAGES[hash % FOOD_IMAGES.length];
 }
 
@@ -26,11 +30,11 @@ function getPickupTime() {
 }
 
 interface RestaurantCardProps {
-  restaurant: Restaurant;
+  restaurant: Restaurant & { photo_url?: string | null };
 }
 
 export function RestaurantCard({ restaurant }: RestaurantCardProps) {
-  const image = getImageForRestaurant(restaurant.id);
+  const image = getImageForRestaurant(restaurant);
 
   return (
     <Link to={`/customer/restaurant/${restaurant.id}`} className="block group">
