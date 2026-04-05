@@ -658,9 +658,8 @@ export default function Index() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
             {/* Brand */}
             <div className="col-span-2 md:col-span-1 space-y-3">
-              <div className="flex items-center gap-2.5">
-                <img src={logoImg} alt="Munchii logo" className="h-9 w-9 object-contain" />
-                <span className="font-display font-bold text-lg">Munchii</span>
+              <div className="flex items-center">
+                <img src={logoWordmark} alt="Munchii" className="h-9 object-contain" />
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Your campus food network — order, earn, share, and socialize.
