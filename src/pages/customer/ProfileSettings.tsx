@@ -165,25 +165,46 @@ export default function ProfileSettings() {
         {/* Avatar + Name */}
         <motion.div className="flex flex-col items-center gap-3" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           <div className="relative group">
-            <Avatar className="w-24 h-24 border-4 border-card shadow-lg">
-              {profile?.avatar_url ? <AvatarImage src={resolveStorageUrl(profile.avatar_url) || undefined} alt={profile.name} /> : null}
-              <AvatarFallback className="gradient-primary text-primary-foreground text-3xl font-display font-bold">
-                {profile?.name?.charAt(0)?.toUpperCase() || '?'}
-              </AvatarFallback>
-            </Avatar>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-              className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:bg-primary/90 transition-colors"
-            >
-              {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
-            </button>
-            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+            {previewUrl ? (
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-primary shadow-lg">
+                  <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" className="rounded-xl gap-1" onClick={cancelAvatar} disabled={uploading}>
+                    <X className="w-3.5 h-3.5" /> Cancel
+                  </Button>
+                  <Button size="sm" className="rounded-xl gradient-primary border-0 gap-1" onClick={confirmAvatar} disabled={uploading}>
+                    {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                    Set Photo
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <Avatar className="w-24 h-24 border-4 border-card shadow-lg">
+                  {profile?.avatar_url ? <AvatarImage src={resolveStorageUrl(profile.avatar_url) || undefined} alt={profile.name} /> : null}
+                  <AvatarFallback className="gradient-primary text-primary-foreground text-3xl font-display font-bold">
+                    {profile?.name?.charAt(0)?.toUpperCase() || '?'}
+                  </AvatarFallback>
+                </Avatar>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:bg-primary/90 transition-colors"
+                >
+                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
+                </button>
+              </>
+            )}
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarSelect} />
           </div>
-          <div className="text-center">
-            <p className="font-display font-bold">{profile?.name}</p>
-            {profile?.username && <p className="text-sm text-muted-foreground">@{profile.username}</p>}
-          </div>
+          {!previewUrl && (
+            <div className="text-center">
+              <p className="font-display font-bold">{profile?.name}</p>
+              {profile?.username && <p className="text-sm text-muted-foreground">@{profile.username}</p>}
+            </div>
+          )}
         </motion.div>
 
         {/* Edit Profile */}
