@@ -223,13 +223,13 @@ export default function Index() {
       >
         <div className="container flex h-16 items-center justify-between backdrop-blur-xl">
           <Link to="/" className="flex items-center gap-2.5">
-            <motion.div
-              className="w-10 h-10 rounded-2xl gradient-brand flex items-center justify-center shadow-lg"
+            <motion.img
+              src={logoImg}
+              alt="Munchii logo"
+              className="h-10 w-10 object-contain"
               whileHover={{ scale: 1.1, rotate: 5 }}
               whileTap={{ scale: 0.95 }}
-            >
-              <UtensilsCrossed className="w-5 h-5 text-primary-foreground" />
-            </motion.div>
+            />
             <span className="font-display font-bold text-xl text-secondary">Munchii</span>
           </Link>
           <div className="flex items-center gap-2">
