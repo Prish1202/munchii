@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { useRestaurant, useMenuItems, useMenuCategories } from '@/hooks/useRestaurants';
 import { useCart } from '@/contexts/CartContext';
+import { useRestaurantRating } from '@/hooks/useReviews';
 import { ArrowLeft, MapPin, Plus, Minus, ShoppingCart, Star, Clock, Percent, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn, resolveStorageUrl } from '@/lib/utils';
