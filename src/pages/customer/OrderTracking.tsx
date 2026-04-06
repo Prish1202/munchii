@@ -122,7 +122,7 @@ export default function OrderTracking() {
     }
   }, [order?.status, reviewFetched, existingReview]);
 
-
+  if (isLoading) {
     return (
       <DashboardLayout>
         <div className="max-w-xl mx-auto space-y-4">
