@@ -21,7 +21,6 @@ import {
   Settings,
   RotateCcw,
   Wallet,
-  UtensilsCrossed,
   MessageSquare,
   Coins,
   Search,
