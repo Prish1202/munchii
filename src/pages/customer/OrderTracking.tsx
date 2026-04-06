@@ -74,7 +74,8 @@ export default function OrderTracking() {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
   const cancelOrder = useCancelOrder();
-
+  const [showReviewDialog, setShowReviewDialog] = useState(false);
+  const { data: existingReview, isFetched: reviewFetched } = useOrderReview(id);
   const { data: order, isLoading } = useQuery({
     queryKey: ['order', id],
     queryFn: async () => {
