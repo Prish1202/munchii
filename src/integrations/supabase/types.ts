@@ -467,6 +467,51 @@ export type Database = {
           },
         ]
       }
+      order_reviews: {
+        Row: {
+          created_at: string
+          customer_id: string
+          id: string
+          order_id: string
+          rating: number
+          restaurant_id: string
+          review_text: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          id?: string
+          order_id: string
+          rating: number
+          restaurant_id: string
+          review_text?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          id?: string
+          order_id?: string
+          rating?: number
+          restaurant_id?: string
+          review_text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_reviews_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           created_at: string
@@ -956,6 +1001,13 @@ export type Database = {
           total_coins: number
           user_id: string
           username: string
+        }[]
+      }
+      get_restaurant_avg_rating: {
+        Args: { _restaurant_id: string }
+        Returns: {
+          avg_rating: number
+          review_count: number
         }[]
       }
       get_user_role: {
