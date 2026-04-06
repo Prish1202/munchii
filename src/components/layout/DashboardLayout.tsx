@@ -108,13 +108,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <header className="sticky top-0 z-50 border-b border-border/80 glass-strong">
         <div className="container flex h-16 items-center justify-between gap-3">
           <Link to="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl gradient-brand flex items-center justify-center shadow-soft">
-              <UtensilsCrossed className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <div>
-              <span className="font-display font-bold text-lg leading-none text-secondary">Munchii</span>
-              <p className="text-[11px] text-muted-foreground leading-none mt-1 hidden sm:block">Order. Earn. Share.</p>
-            </div>
+            <img src={logoWordmark} alt="Munchii" className="h-10 object-contain" />
           </Link>
 
           <div className="flex items-center gap-1.5">
