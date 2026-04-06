@@ -394,6 +394,17 @@ export default function OrderTracking() {
             <span>Pickup</span>
           </div>
         </div>
+
+        {/* Review Dialog */}
+        {order.restaurant_id && (
+          <ReviewDialog
+            open={showReviewDialog}
+            onOpenChange={setShowReviewDialog}
+            orderId={order.id}
+            restaurantId={order.restaurant_id}
+            restaurantName={order.restaurant?.name || 'Restaurant'}
+          />
+        )}
       </div>
     </DashboardLayout>
   );
