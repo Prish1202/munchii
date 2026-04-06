@@ -115,7 +115,14 @@ export default function OrderTracking() {
     enabled: !!id,
   });
 
-  if (isLoading) {
+  // Auto-show review dialog for completed orders without a review
+  useEffect(() => {
+    if (order?.status === 'completed' && reviewFetched && !existingReview) {
+      setShowReviewDialog(true);
+    }
+  }, [order?.status, reviewFetched, existingReview]);
+
+
     return (
       <DashboardLayout>
         <div className="max-w-xl mx-auto space-y-4">
