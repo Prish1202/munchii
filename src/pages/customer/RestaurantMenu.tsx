@@ -26,6 +26,7 @@ type SortOption = 'default' | 'price_low' | 'price_high' | 'name_asc' | 'discoun
 export default function RestaurantMenu() {
   const { id } = useParams<{ id: string }>();
   const { data: restaurant, isLoading: loadingRestaurant } = useRestaurant(id!);
+  const { data: ratingData } = useRestaurantRating(id);
   const { data: menuItems, isLoading: loadingMenu } = useMenuItems(id!);
   const { data: categories } = useMenuCategories(id!);
   const { items: cartItems, addItem, updateQuantity, totalItems, totalAmount, restaurantId } = useCart();
