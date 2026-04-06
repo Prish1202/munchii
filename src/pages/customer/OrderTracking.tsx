@@ -40,7 +40,8 @@ import {
 import { formatDistanceToNow, format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { OrderProgressBar } from '@/components/customer/OrderProgressBar';
-
+import { ReviewDialog } from '@/components/customer/ReviewDialog';
+import { useOrderReview } from '@/hooks/useReviews';
 const ORDER_STEPS: { status: OrderStatus; label: string; icon: React.ReactNode }[] = [
   { status: 'placed', label: 'Order Placed', icon: <Package className="w-4 h-4" /> },
   { status: 'accepted', label: 'Accepted', icon: <Store className="w-4 h-4" /> },
