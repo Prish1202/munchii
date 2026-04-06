@@ -18,9 +18,9 @@ const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 async function compressVideo(file: File): Promise<File> {
   return new Promise((resolve, reject) => {
     const video = document.createElement('video');
-    video.preload = 'metadata';
-    video.muted = true;
+    video.preload = 'auto';
     video.playsInline = true;
+    // Do NOT mute — we need audio for capture
     const url = URL.createObjectURL(file);
     video.src = url;
 
@@ -30,23 +30,31 @@ async function compressVideo(file: File): Promise<File> {
 
     video.onseeked = () => {
       const canvas = document.createElement('canvas');
-      // Scale down to max 720p
       const scale = Math.min(1, 720 / Math.max(video.videoWidth, video.videoHeight));
       canvas.width = Math.round(video.videoWidth * scale);
       canvas.height = Math.round(video.videoHeight * scale);
 
-      const stream = canvas.captureStream(24);
-      // Try to capture audio too
+      const canvasStream = canvas.captureStream(24);
+
+      // Capture audio from the video element
       try {
         const audioCtx = new AudioContext();
         const source = audioCtx.createMediaElementSource(video);
         const dest = audioCtx.createMediaStreamDestination();
         source.connect(dest);
-        dest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
-      } catch {}
+        // Also connect to speakers so the element plays (muted visually but captured)
+        source.connect(audioCtx.destination);
+        dest.stream.getAudioTracks().forEach(t => canvasStream.addTrack(t));
+      } catch {
+        // No audio track or unsupported — continue without audio
+      }
 
-      const recorder = new MediaRecorder(stream, {
-        mimeType: MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm',
+      const recorder = new MediaRecorder(canvasStream, {
+        mimeType: MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
+          ? 'video/webm;codecs=vp9,opus'
+          : MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')
+            ? 'video/webm;codecs=vp8,opus'
+            : 'video/webm',
         videoBitsPerSecond: 1_500_000,
       });
 
@@ -62,6 +70,8 @@ async function compressVideo(file: File): Promise<File> {
 
       recorder.start();
       const ctx = canvas.getContext('2d')!;
+      // Mute the video element's audio output to prevent hearing it
+      video.volume = 0;
       video.play();
 
       const draw = () => {

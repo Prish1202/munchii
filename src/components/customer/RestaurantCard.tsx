@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { MapPin, Star, Clock, Coins } from 'lucide-react';
 import type { Restaurant } from '@/hooks/useRestaurants';
 import { resolveStorageUrl } from '@/lib/utils';
+import { useRestaurantRating } from '@/hooks/useReviews';
 
 const FOOD_IMAGES = [
   'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&h=300&fit=crop',
@@ -20,10 +21,6 @@ function getImageForRestaurant(restaurant: Restaurant & { photo_url?: string | n
   return FOOD_IMAGES[hash % FOOD_IMAGES.length];
 }
 
-function getRating() {
-  return (3.8 + Math.random() * 1.1).toFixed(1);
-}
-
 function getPickupTime() {
   const min = 10 + Math.floor(Math.random() * 10);
   return `${min}-${min + 5} min`;
@@ -35,6 +32,9 @@ interface RestaurantCardProps {
 
 export function RestaurantCard({ restaurant }: RestaurantCardProps) {
   const image = getImageForRestaurant(restaurant);
+  const { data: ratingData } = useRestaurantRating(restaurant.id);
+  const avgRating = ratingData?.avgRating || 0;
+  const reviewCount = ratingData?.reviewCount || 0;
 
   return (
     <Link to={`/customer/restaurant/${restaurant.id}`} className="block group">
@@ -57,7 +57,9 @@ export function RestaurantCard({ restaurant }: RestaurantCardProps) {
 
           <div className="absolute top-3 right-3 flex items-center gap-1.5 glass px-2.5 py-1.5 rounded-full shadow-soft">
             <Star className="w-3 h-3 fill-coin text-coin" />
-            <span className="text-xs font-bold text-foreground">{getRating()}</span>
+            <span className="text-xs font-bold text-foreground">
+              {reviewCount > 0 ? avgRating : 'New'}
+            </span>
           </div>
 
           <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-2">

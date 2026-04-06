@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { useRestaurant, useMenuItems, useMenuCategories } from '@/hooks/useRestaurants';
 import { useCart } from '@/contexts/CartContext';
+import { useRestaurantRating } from '@/hooks/useReviews';
 import { ArrowLeft, MapPin, Plus, Minus, ShoppingCart, Star, Clock, Percent, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn, resolveStorageUrl } from '@/lib/utils';
@@ -25,6 +26,7 @@ type SortOption = 'default' | 'price_low' | 'price_high' | 'name_asc' | 'discoun
 export default function RestaurantMenu() {
   const { id } = useParams<{ id: string }>();
   const { data: restaurant, isLoading: loadingRestaurant } = useRestaurant(id!);
+  const { data: ratingData } = useRestaurantRating(id);
   const { data: menuItems, isLoading: loadingMenu } = useMenuItems(id!);
   const { data: categories } = useMenuCategories(id!);
   const { items: cartItems, addItem, updateQuantity, totalItems, totalAmount, restaurantId } = useCart();
@@ -133,7 +135,10 @@ export default function RestaurantMenu() {
             </p>
             <div className="flex items-center gap-3 mt-2">
               <Badge className="bg-secondary text-secondary-foreground gap-1">
-                <Star className="w-3 h-3 fill-current" /> 4.2
+                <Star className="w-3 h-3 fill-current" />
+                {ratingData && ratingData.reviewCount > 0
+                  ? `${ratingData.avgRating} (${ratingData.reviewCount})`
+                  : 'New'}
               </Badge>
               <span className="text-xs opacity-80 flex items-center gap-1">
                 <Clock className="w-3 h-3" /> Pickup

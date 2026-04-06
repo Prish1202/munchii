@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -40,7 +40,8 @@ import {
 import { formatDistanceToNow, format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { OrderProgressBar } from '@/components/customer/OrderProgressBar';
-
+import { ReviewDialog } from '@/components/customer/ReviewDialog';
+import { useOrderReview } from '@/hooks/useReviews';
 const ORDER_STEPS: { status: OrderStatus; label: string; icon: React.ReactNode }[] = [
   { status: 'placed', label: 'Order Placed', icon: <Package className="w-4 h-4" /> },
   { status: 'accepted', label: 'Accepted', icon: <Store className="w-4 h-4" /> },
@@ -73,7 +74,8 @@ export default function OrderTracking() {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
   const cancelOrder = useCancelOrder();
-
+  const [showReviewDialog, setShowReviewDialog] = useState(false);
+  const { data: existingReview, isFetched: reviewFetched } = useOrderReview(id);
   const { data: order, isLoading } = useQuery({
     queryKey: ['order', id],
     queryFn: async () => {
@@ -112,6 +114,13 @@ export default function OrderTracking() {
     onUpdate: handleOrderUpdate,
     enabled: !!id,
   });
+
+  // Auto-show review dialog for completed orders without a review
+  useEffect(() => {
+    if (order?.status === 'completed' && reviewFetched && !existingReview) {
+      setShowReviewDialog(true);
+    }
+  }, [order?.status, reviewFetched, existingReview]);
 
   if (isLoading) {
     return (
@@ -385,6 +394,17 @@ export default function OrderTracking() {
             <span>Pickup</span>
           </div>
         </div>
+
+        {/* Review Dialog */}
+        {order.restaurant_id && (
+          <ReviewDialog
+            open={showReviewDialog}
+            onOpenChange={setShowReviewDialog}
+            orderId={order.id}
+            restaurantId={order.restaurant_id}
+            restaurantName={order.restaurant?.name || 'Restaurant'}
+          />
+        )}
       </div>
     </DashboardLayout>
   );
