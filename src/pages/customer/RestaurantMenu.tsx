@@ -135,7 +135,10 @@ export default function RestaurantMenu() {
             </p>
             <div className="flex items-center gap-3 mt-2">
               <Badge className="bg-secondary text-secondary-foreground gap-1">
-                <Star className="w-3 h-3 fill-current" /> 4.2
+                <Star className="w-3 h-3 fill-current" />
+                {ratingData && ratingData.reviewCount > 0
+                  ? `${ratingData.avgRating} (${ratingData.reviewCount})`
+                  : 'New'}
               </Badge>
               <span className="text-xs opacity-80 flex items-center gap-1">
                 <Clock className="w-3 h-3" /> Pickup
