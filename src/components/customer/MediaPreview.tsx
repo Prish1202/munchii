@@ -58,8 +58,9 @@ export function MediaPreview({ mediaUrl, mediaType, fileName, isOwn }: MediaPrev
       <video
         src={mediaUrl}
         controls
+        playsInline
         className="rounded-lg max-w-full max-h-[240px]"
-        preload="metadata"
+        preload="auto"
       />
     );
   }
