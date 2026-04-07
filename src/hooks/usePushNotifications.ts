@@ -102,7 +102,7 @@ export function usePushNotifications() {
     }
   }, [isSupported, permission]);
 
-  // Subscribe to the notifications table for real-time browser push
+  // Subscribe to the notifications table for real-time browser push + OneSignal
   useEffect(() => {
     if (!user?.id) return;
 
@@ -121,7 +121,18 @@ export function usePushNotifications() {
           if (!n) return;
           if (!shouldNotifyForType(n.type)) return;
 
+          // Browser notification (tab not focused)
           showNotification(n.title || 'Munchii', n.message || '', n.link || undefined);
+
+          // Also trigger OneSignal push via edge function
+          supabase.functions.invoke('send-onesignal-push', {
+            body: {
+              user_id: user.id,
+              title: n.title || 'Munchii',
+              message: n.message || '',
+              url: n.link ? `${window.location.origin}${n.link}` : undefined,
+            },
+          }).catch((err: any) => console.error('OneSignal push invoke error:', err));
         }
       )
       .subscribe();
