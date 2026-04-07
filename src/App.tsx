@@ -78,6 +78,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
+        <OneSignalInit />
         <CartProvider>
           <LocationProvider>
           <Toaster />
