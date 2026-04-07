@@ -8,6 +8,7 @@ import { CartProvider } from "@/contexts/CartContext";
 import { LocationProvider } from "@/contexts/LocationContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { OneSignalInit } from "@/components/OneSignalInit";
 
 // Pages
 import Index from "./pages/Index";
