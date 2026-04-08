@@ -25,22 +25,24 @@ async function sendOneSignalPush(payload: PushPayload) {
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
   // Get player IDs for the user
+  console.log("[Push] Fetching subscriptions for user:", payload.user_id);
   const { data: subscriptions, error } = await supabase
     .from("push_subscriptions")
     .select("player_id")
     .eq("user_id", payload.user_id);
 
   if (error) {
-    console.error("Failed to fetch subscriptions:", error);
+    console.error("[Push] Failed to fetch subscriptions:", error);
     return { success: false, error: "Failed to fetch subscriptions" };
   }
 
   if (!subscriptions || subscriptions.length === 0) {
-    console.log("No push subscriptions found for user:", payload.user_id);
+    console.log("[Push] No push subscriptions found for user:", payload.user_id);
     return { success: true, sent: 0 };
   }
 
   const playerIds = subscriptions.map((s: any) => s.player_id);
+  console.log("[Push] Sending to player_ids:", playerIds);
 
   const body: Record<string, any> = {
     app_id: ONESIGNAL_APP_ID,
@@ -68,11 +70,11 @@ async function sendOneSignalPush(payload: PushPayload) {
   const result = await response.json();
 
   if (!response.ok) {
-    console.error("OneSignal API error:", result);
+    console.error("[Push] OneSignal API error:", JSON.stringify(result));
     return { success: false, error: result };
   }
 
-  console.log("OneSignal push sent:", result);
+  console.log("[Push] OneSignal push sent successfully:", JSON.stringify(result));
   return { success: true, sent: playerIds.length, result };
 }
 
@@ -82,7 +84,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Verify caller is authenticated or service role
+    // Accept any valid Bearer token (anon key from DB trigger or user JWT)
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(
@@ -91,18 +93,23 @@ Deno.serve(async (req) => {
       );
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-
-    const { data: claimsData, error: claimsError } = await supabase.auth.getUser();
-    if (claimsError || !claimsData?.user) {
-      // Allow service role calls (from triggers/webhooks)
-      const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-      const token = authHeader.replace("Bearer ", "");
-      if (token !== serviceRoleKey) {
+    // Verify the token is either a valid user JWT, anon key, or service role key
+    const token = authHeader.replace("Bearer ", "");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    
+    const isServiceRole = token === serviceRoleKey;
+    const isAnonKey = token === anonKey;
+    
+    if (!isServiceRole && !isAnonKey) {
+      // Try to validate as user JWT
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const supabase = createClient(supabaseUrl, anonKey!, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { error: authError } = await supabase.auth.getUser();
+      if (authError) {
+        console.error("[Push] Auth failed:", authError.message);
         return new Response(
           JSON.stringify({ error: "Unauthorized" }),
           { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -111,6 +118,7 @@ Deno.serve(async (req) => {
     }
 
     const payload: PushPayload = await req.json();
+    console.log("[Push] Received payload:", JSON.stringify(payload));
 
     if (!payload.user_id || !payload.title || !payload.message) {
       return new Response(
@@ -126,7 +134,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
-    console.error("Push notification error:", err);
+    console.error("[Push] Error:", err.message);
     return new Response(
       JSON.stringify({ error: err.message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
