@@ -122,17 +122,8 @@ export function usePushNotifications() {
           if (!shouldNotifyForType(n.type)) return;
 
           // Browser notification (tab not focused)
+          // OneSignal push is handled server-side via DB trigger on notifications table
           showNotification(n.title || 'Munchii', n.message || '', n.link || undefined);
-
-          // Also trigger OneSignal push via edge function
-          supabase.functions.invoke('send-onesignal-push', {
-            body: {
-              user_id: user.id,
-              title: n.title || 'Munchii',
-              message: n.message || '',
-              url: n.link ? `${window.location.origin}${n.link}` : undefined,
-            },
-          }).catch((err: any) => console.error('OneSignal push invoke error:', err));
         }
       )
       .subscribe();
