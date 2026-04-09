@@ -117,7 +117,7 @@ Deno.serve(async (req) => {
       }
       console.log("[Push] Authenticated as user:", userData.user.id);
     } else {
-      console.log("[Push] Authenticated via", isServiceRole ? "service_role" : isAnonKey ? "anon_key" : "publishable_key");
+      console.log("[Push] Authenticated via known key");
     }
 
     const payload: PushPayload = await req.json();
