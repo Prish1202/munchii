@@ -94,15 +94,14 @@ Deno.serve(async (req) => {
     const token = authHeader.replace("Bearer ", "");
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
-
-    const isServiceRole = token === serviceRoleKey;
-    const isAnonKey = token === anonKey;
-
-    // Also accept the publishable key (used by pg_net trigger)
     const publishableKey = Deno.env.get("SUPABASE_PUBLISHABLE_KEY") || "";
-    const isPublishableKey = publishableKey.length > 0 && token === publishableKey;
 
-    if (!isServiceRole && !isAnonKey && !isPublishableKey) {
+    // Known anon key used by the DB trigger
+    const KNOWN_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2YXJpdW1wZGpxZmFqbHRxcXJ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2ODAzODYsImV4cCI6MjA4MjI1NjM4Nn0.XjmUdcLVwToapulAmREZZKzWDyCJQhbQIlVe6nZnbEM";
+
+    const isKnownKey = token === serviceRoleKey || token === anonKey || token === publishableKey || token === KNOWN_ANON_KEY;
+
+    if (!isKnownKey) {
       // Try to validate as user JWT
       const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
       const supabase = createClient(supabaseUrl, anonKey, {
