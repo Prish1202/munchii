@@ -24,7 +24,6 @@ async function sendOneSignalPush(payload: PushPayload) {
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-  // Get player IDs for the user
   console.log("[Push] Fetching subscriptions for user:", payload.user_id);
   const { data: subscriptions, error } = await supabase
     .from("push_subscriptions")
@@ -84,7 +83,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Accept any valid Bearer token (anon key from DB trigger or user JWT)
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(
@@ -93,28 +91,34 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verify the token is either a valid user JWT, anon key, or service role key
     const token = authHeader.replace("Bearer ", "");
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
-    
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
+
     const isServiceRole = token === serviceRoleKey;
     const isAnonKey = token === anonKey;
-    
-    if (!isServiceRole && !isAnonKey) {
+
+    // Also accept the publishable key (used by pg_net trigger)
+    const publishableKey = Deno.env.get("SUPABASE_PUBLISHABLE_KEY") || "";
+    const isPublishableKey = publishableKey.length > 0 && token === publishableKey;
+
+    if (!isServiceRole && !isAnonKey && !isPublishableKey) {
       // Try to validate as user JWT
       const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-      const supabase = createClient(supabaseUrl, anonKey!, {
+      const supabase = createClient(supabaseUrl, anonKey, {
         global: { headers: { Authorization: authHeader } },
       });
-      const { error: authError } = await supabase.auth.getUser();
-      if (authError) {
-        console.error("[Push] Auth failed:", authError.message);
+      const { data: userData, error: authError } = await supabase.auth.getUser();
+      if (authError || !userData?.user) {
+        console.error("[Push] Auth failed:", authError?.message || "no user");
         return new Response(
           JSON.stringify({ error: "Unauthorized" }),
           { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+      console.log("[Push] Authenticated as user:", userData.user.id);
+    } else {
+      console.log("[Push] Authenticated via", isServiceRole ? "service_role" : isAnonKey ? "anon_key" : "publishable_key");
     }
 
     const payload: PushPayload = await req.json();
