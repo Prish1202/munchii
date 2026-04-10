@@ -9,6 +9,8 @@ import { LocationProvider } from "@/contexts/LocationContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { OneSignalInit } from "@/components/OneSignalInit";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { OfflineScreen } from "@/components/OfflineScreen";
 
 // Pages
 import Index from "./pages/Index";
@@ -74,7 +76,18 @@ import AdminRefunds from "./pages/admin/Refunds";
 
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
+  const { isOnline, retry } = useOnlineStatus();
+
+  if (!isOnline) {
+    return (
+      <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+        <OfflineScreen onRetry={retry} />
+      </ThemeProvider>
+    );
+  }
+
+  return (
   <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -160,6 +173,7 @@ const App = () => (
     </TooltipProvider>
   </QueryClientProvider>
   </ThemeProvider>
-);
+  );
+};
 
 export default App;
