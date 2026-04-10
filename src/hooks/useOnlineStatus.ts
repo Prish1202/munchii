@@ -1,11 +1,22 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { toast } from "sonner";
 
 export function useOnlineStatus() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const wasOffline = useRef(false);
 
   useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+    const handleOnline = () => {
+      setIsOnline(true);
+      if (wasOffline.current) {
+        toast.success("You're back online!", { duration: 3000 });
+      }
+      wasOffline.current = false;
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      wasOffline.current = true;
+    };
 
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
