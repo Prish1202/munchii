@@ -54,9 +54,26 @@
     --sidebar-ring: 224 63% 33%;
 
     --customer: 22 95% 55%;
-    --restaurant: 224 63% 33%;
+    --restaurant: 348 42% 17%;
     --delivery: 30 82% 56%;
     --admin: 224 56% 38%;
+
+    /* Restaurant partner theme overrides */
+    --restro-primary: 348 42% 17%;
+    --restro-primary-glow: 348 38% 24%;
+    --restro-secondary: 348 30% 24%;
+    --restro-accent: 348 28% 32%;
+  }
+
+  .restaurant-theme {
+    --primary: var(--restro-primary);
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: var(--restro-primary-glow);
+    --secondary: var(--restro-secondary);
+    --secondary-foreground: 0 0% 100%;
+    --accent: var(--restro-accent);
+    --accent-foreground: 0 0% 100%;
+    --ring: var(--restro-primary);
   }
 
   .dark {
@@ -105,9 +122,25 @@
     --sidebar-ring: 224 58% 40%;
 
     --customer: 22 95% 57%;
-    --restaurant: 224 58% 40%;
+    --restaurant: 348 42% 20%;
     --delivery: 30 82% 58%;
     --admin: 224 50% 44%;
+
+    --restro-primary: 348 42% 22%;
+    --restro-primary-glow: 348 38% 30%;
+    --restro-secondary: 348 30% 28%;
+    --restro-accent: 348 28% 36%;
+  }
+
+  .dark .restaurant-theme {
+    --primary: var(--restro-primary);
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: var(--restro-primary-glow);
+    --secondary: var(--restro-secondary);
+    --secondary-foreground: 0 0% 100%;
+    --accent: var(--restro-accent);
+    --accent-foreground: 0 0% 100%;
+    --ring: var(--restro-primary);
   }
 }
 
