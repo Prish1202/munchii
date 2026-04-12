@@ -314,6 +314,8 @@ export function useOneSignal() {
             appId: ONESIGNAL_APP_ID,
             allowLocalhostAsSecureOrigin: true,
             notifyButton: { enable: true },
+            serviceWorkerParam: { scope: '/' },
+            serviceWorkerPath: '/OneSignalSDKWorker.js',
           });
           console.log('[OneSignal] SDK initialized');
 
