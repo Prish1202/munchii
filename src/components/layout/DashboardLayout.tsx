@@ -1,6 +1,7 @@
 import { ReactNode, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import logoWordmark from '@/assets/logo-wordmark.jpg';
+import restaurantLogo from '@/assets/munchii-restaurant-logo.png';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import { useWallet } from '@/hooks/useWallet';
@@ -84,6 +85,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const navItems = NAV_ITEMS[user.role];
   const isCustomer = user.role === 'customer';
+  const isRestaurant = user.role === 'restaurant';
   const totalUnread = conversations?.reduce((sum, c) => sum + (c.unread_count || 0), 0) || 0;
   const notificationSettingsHref =
     user.role === 'customer'
@@ -102,13 +104,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-background relative">
+    <div className={cn('min-h-screen bg-background relative', isRestaurant && 'restaurant-theme')}>
       <div className="fixed inset-0 bg-dot-pattern opacity-[0.12] pointer-events-none z-0" />
 
       <header className="sticky top-0 z-50 border-b border-border/80 glass-strong">
         <div className="container flex h-16 items-center justify-between gap-3">
           <Link to="/" className="flex items-center gap-3">
-            <img src={logoWordmark} alt="Munchii" className="h-10 object-contain" />
+            <img src={isRestaurant ? restaurantLogo : logoWordmark} alt="Munchii" className={cn("object-contain", isRestaurant ? "h-12" : "h-10")} />
           </Link>
 
           <div className="flex items-center gap-1.5">
