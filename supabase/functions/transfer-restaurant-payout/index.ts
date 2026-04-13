@@ -72,43 +72,8 @@ Deno.serve(async (req) => {
     const itemTotal = Math.max(order.total_amount - platformFee, 0);
     const commission = Math.round(itemTotal * 0.10 * 100) / 100;
     const restaurantAmount = itemTotal - commission;
-    const isCod = order.payment_method === "cod";
 
     let razorpayTransferId: string | null = null;
-    let payoutNotes = "";
-
-    if (isCod) {
-      // COD: Restaurant already collected full amount from customer.
-      // We record a NEGATIVE payout (deduction) — ₹4 platform fee + 10% commission
-      // will be deducted from their next online payout settlement.
-      const deductionAmount = platformFee + commission;
-      payoutNotes = `COD order — Restaurant collected ₹${order.total_amount}. Deduction of ₹${platformFee} (platform fee) + ₹${commission.toFixed(0)} (10% commission) = ₹${deductionAmount.toFixed(0)} from next payout.`;
-
-      const { error: payoutErr } = await supabaseAdmin.from("payouts").insert({
-        order_id: orderId,
-        restaurant_amount: -deductionAmount, // Negative: deduction from next payout
-        platform_fee: deductionAmount,
-        payout_notes: payoutNotes,
-        payout_status: "pending",
-      });
-
-      if (payoutErr) {
-        console.error("Payout insert error:", payoutErr);
-        throw new Error("Failed to record COD deduction");
-      }
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          type: "cod_deduction",
-          deductionAmount,
-          platformFee,
-          commission,
-          payoutNotes,
-        }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
 
     // Online payment: credit restaurant amount
     const { data: payment } = await supabaseAdmin
@@ -140,7 +105,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    payoutNotes = `Online order — ₹${restaurantAmount.toFixed(0)} credited (₹${platformFee} platform fee + ₹${commission.toFixed(0)} commission deducted from ₹${order.total_amount}).`;
+    const payoutNotes = `Online order — ₹${restaurantAmount.toFixed(0)} credited (₹${platformFee} platform fee + ₹${commission.toFixed(0)} commission deducted from ₹${order.total_amount}).`;
 
     // Record payout
     const { error: payoutErr } = await supabaseAdmin.from("payouts").insert({
@@ -160,7 +125,6 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        type: "online_credit",
         restaurantAmount,
         commission,
         platformFee,
