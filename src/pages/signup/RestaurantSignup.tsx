@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { UtensilsCrossed, Eye, EyeOff, Store } from 'lucide-react';
+import { Eye, EyeOff, Store } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import restroLogo from '@/assets/munchii-restaurant-logo.png';
 
 export default function RestaurantSignup() {
   const [email, setEmail] = useState('');
@@ -46,7 +47,7 @@ export default function RestaurantSignup() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden restaurant-theme">
       <div className="fixed inset-0 bg-dot-pattern opacity-[0.03] pointer-events-none" />
       <div className="fixed top-[-15%] left-[-10%] w-[450px] h-[450px] rounded-full bg-hero-orb-1 blur-3xl pointer-events-none" />
       <div className="fixed bottom-[-15%] right-[-10%] w-[400px] h-[400px] rounded-full bg-hero-orb-2 blur-3xl pointer-events-none" />
@@ -69,8 +70,8 @@ export default function RestaurantSignup() {
         transition={{ duration: 0.6, ease: 'easeOut' }}
       >
         <div className="text-center space-y-3">
-          <Link to="/" className="inline-flex items-center justify-center w-16 h-16 rounded-2xl gradient-primary text-primary-foreground shadow-lg glow-primary">
-            <UtensilsCrossed className="w-8 h-8" />
+          <Link to="/">
+            <img src={restroLogo} alt="Munchii Restaurant" className="h-14 object-contain rounded-xl" />
           </Link>
           <div>
             <h1 className="text-3xl font-display font-bold tracking-tight">Partner with Munchii</h1>

@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { UtensilsCrossed, Eye, EyeOff, ShoppingBag } from 'lucide-react';
+import { Eye, EyeOff, ShoppingBag } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import logoWordmark from '@/assets/logo-wordmark.jpg';
 
 export default function CustomerSignup() {
   const [email, setEmail] = useState('');
@@ -69,8 +70,8 @@ export default function CustomerSignup() {
         transition={{ duration: 0.6, ease: 'easeOut' }}
       >
         <div className="text-center space-y-3">
-          <Link to="/" className="inline-flex items-center justify-center w-16 h-16 rounded-2xl gradient-primary text-primary-foreground shadow-lg glow-primary">
-            <UtensilsCrossed className="w-8 h-8" />
+          <Link to="/">
+            <img src={logoWordmark} alt="Munchii" className="h-14 object-contain rounded-xl" />
           </Link>
           <div>
             <h1 className="text-3xl font-display font-bold tracking-tight">Join Munchii</h1>
