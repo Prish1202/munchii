@@ -133,11 +133,7 @@ export default function CustomerSignup() {
 
             <div className="text-center text-sm text-muted-foreground pt-4">
               Already have an account?{' '}
-              <Link to="/login" className="text-primary hover:underline font-medium">Login</Link>
-            </div>
-            <div className="text-center text-sm text-muted-foreground pt-2">
-              Want to register as a restaurant?{' '}
-              <Link to="/signup/restaurant" className="text-primary hover:underline font-medium">Register here</Link>
+              <Link to="/login?from=customer" className="text-primary hover:underline font-medium">Login</Link>
             </div>
           </CardContent>
         </Card>
