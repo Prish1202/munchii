@@ -16,7 +16,6 @@ import { toast } from 'sonner';
 import { parseDateTimeLocalValue, toDateTimeLocalValue } from '@/lib/datetimeLocal';
 
 const PAYMENT_METHODS = [
-  { id: 'cod', label: 'Pay at Pickup', icon: Banknote },
   { id: 'razorpay', label: 'Pay Online (UPI / Card)', icon: CreditCard },
 ];
 
@@ -43,7 +42,7 @@ export default function Checkout() {
   const redeemCoins = useRedeemCoins();
 
   const [phone, setPhone] = useState(user?.phone || '');
-  const [payment, setPayment] = useState('cod');
+  const [payment, setPayment] = useState('razorpay');
   const [pickupTime, setPickupTime] = useState('');
   const [isPlacing, setIsPlacing] = useState(false);
   const [useCoins, setUseCoins] = useState(false);
@@ -123,32 +122,25 @@ export default function Checkout() {
         await redeemCoins.mutateAsync({ coins: coinDiscount, orderId: order.id });
       }
 
-      if (payment === 'razorpay') {
-        // Initiate Razorpay payment
-        initiatePayment({
-          orderId: order.id,
-          userName: user?.name,
-          userEmail: user?.email,
-          userPhone: phone,
-          onSuccess: (orderId) => {
-            clearCart();
-            navigate(`/customer/order-success/${orderId}`);
-          },
-          onFailure: () => {
-            setIsPlacing(false);
-            // Order stays in 'placed' status - user can retry
-            toast.error('Payment failed. You can retry from your orders page.');
-          },
-        });
-      } else {
-        // COD flow - go directly to success
-        clearCart();
-        navigate(`/customer/order-success/${order.id}`);
-      }
+      // Initiate Razorpay payment
+      initiatePayment({
+        orderId: order.id,
+        userName: user?.name,
+        userEmail: user?.email,
+        userPhone: phone,
+        onSuccess: (orderId) => {
+          clearCart();
+          navigate(`/customer/order-success/${orderId}`);
+        },
+        onFailure: () => {
+          setIsPlacing(false);
+          toast.error('Payment failed. You can retry from your orders page.');
+        },
+      });
     } catch {
       // error handled by hook
     } finally {
-      if (payment !== 'razorpay') setIsPlacing(false);
+      // Payment processing handled by Razorpay callback
     }
   };
 
@@ -367,12 +359,10 @@ export default function Checkout() {
             {busy ? (
               <>
                 <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                {payment === 'razorpay' ? 'Processing Payment...' : 'Placing Order...'}
+                Processing Payment...
               </>
-            ) : payment === 'razorpay' ? (
-              `Pay ₹${grandTotal.toFixed(0)} Online`
             ) : (
-              `Place Pickup Order • ₹${grandTotal.toFixed(0)}`
+              `Pay ₹${grandTotal.toFixed(0)} Online`
             )}
           </Button>
         </div>

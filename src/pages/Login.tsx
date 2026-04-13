@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { UtensilsCrossed, Eye, EyeOff } from 'lucide-react';
+import { UtensilsCrossed, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 
@@ -66,6 +66,16 @@ export default function LoginPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: 'easeOut' }}
       >
+        {from && (
+          <Link
+            to={from === 'restaurant' ? '/signup/restaurant' : '/signup/customer'}
+            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4 mr-1.5" />
+            Back to {from === 'restaurant' ? 'Restaurant Registration' : 'Customer Signup'}
+          </Link>
+        )}
+
         <div className="text-center space-y-3">
           <Link to="/" className="inline-flex items-center justify-center w-16 h-16 rounded-2xl gradient-primary text-primary-foreground shadow-lg glow-primary">
             <UtensilsCrossed className="w-8 h-8" />
