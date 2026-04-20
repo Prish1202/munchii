@@ -27,6 +27,11 @@ const ROLE_PERMISSION_COPY = {
 /**
  * Requests browser notification permission and shows native push notifications
  * for important events (orders, messages, follows) even when the tab is not focused.
+ *
+ * IMPORTANT: We only listen to the `notifications` table here. The DB trigger
+ * `notify_new_message` already inserts a row when a message arrives, and
+ * `trigger_push_notification` fires the OneSignal push from that same row.
+ * Listening to the `messages` table separately would cause duplicate alerts.
  */
 export function usePushNotifications() {
   const { user } = useAuth();
@@ -78,18 +83,21 @@ export function usePushNotifications() {
     return Boolean(preferences[prefKey]);
   }, [preferences]);
 
-  const showNotification = useCallback((title: string, body: string, link?: string) => {
+  const showNotification = useCallback((title: string, body: string, link?: string, dedupeKey?: string) => {
     if (!isSupported) return;
     if (permission !== 'granted') return;
-    // Only show if tab is not focused
+    // Only show if tab is not focused (OneSignal handles background pushes)
     if (document.hasFocus()) return;
 
     try {
       const notif = new Notification(title, {
         body,
         icon: '/favicon.ico',
-        tag: `munchii-${Date.now()}`,
-      });
+        // A stable tag means a second notification with the same tag REPLACES the
+        // previous one rather than stacking — protects against any duplicate fires.
+        tag: dedupeKey || `munchii-${title}-${body}`,
+        renotify: false,
+      } as NotificationOptions);
       if (link) {
         notif.onclick = () => {
           notif.close();
@@ -102,7 +110,9 @@ export function usePushNotifications() {
     }
   }, [isSupported, permission]);
 
-  // Subscribe to the notifications table for real-time browser push + OneSignal
+  // Subscribe to the notifications table for real-time browser notifications.
+  // Push delivery to the device (when the app is closed) is handled server-side
+  // by the trigger_push_notification → send-onesignal-push edge function chain.
   useEffect(() => {
     if (!user?.id) return;
 
@@ -121,56 +131,11 @@ export function usePushNotifications() {
           if (!n) return;
           if (!shouldNotifyForType(n.type)) return;
 
-          // Browser notification (tab not focused)
-          // OneSignal push is handled server-side via DB trigger on notifications table
-          showNotification(n.title || 'Munchii', n.message || '', n.link || undefined);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id, shouldNotifyForType, showNotification]);
-
-  useEffect(() => {
-    if (!user?.id || user.role !== 'customer') return;
-    if (!preferences.push_notifications || !preferences.message_notifications) return;
-
-    const channel = supabase
-      .channel(`push-chat-messages-${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-        },
-        async (payload: any) => {
-          const message = payload.new;
-          if (!message || message.sender_id === user.id) return;
-
-          const { data: conversation } = await supabase
-            .from('conversations')
-            .select('user1_id, user2_id')
-            .eq('id', message.conversation_id)
-            .maybeSingle();
-
-          const isParticipant =
-            conversation?.user1_id === user.id || conversation?.user2_id === user.id;
-
-          if (!isParticipant) return;
-
-          const { data: senderProfile } = await supabase
-            .from('profiles')
-            .select('name')
-            .eq('id', message.sender_id)
-            .maybeSingle();
-
           showNotification(
-            senderProfile?.name || 'New message',
-            'You received a new message.',
-            `/customer/chat/${message.conversation_id}`
+            n.title || 'Munchii',
+            n.message || '',
+            n.link || undefined,
+            `munchii-notif-${n.id}`,
           );
         }
       )
@@ -179,13 +144,7 @@ export function usePushNotifications() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [
-    preferences.message_notifications,
-    preferences.push_notifications,
-    showNotification,
-    user?.id,
-    user?.role,
-  ]);
+  }, [user?.id, shouldNotifyForType, showNotification]);
 
   return {
     showNotification,

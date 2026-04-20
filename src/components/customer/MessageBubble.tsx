@@ -257,7 +257,13 @@ export function MessageBubble({
           {replyToText && <ReplyQuote text={replyToText} isOwn={isOwn} />}
           {mediaUrl && mediaType ? (
             <div className="mb-1">
-              <MediaPreview mediaUrl={mediaUrl} mediaType={mediaType} fileName={mediaFilename || undefined} isOwn={isOwn} />
+              <MediaPreview
+                mediaUrl={mediaUrl}
+                mediaType={mediaType}
+                fileName={mediaFilename || undefined}
+                isOwn={isOwn}
+                onForward={onForward ? () => onForward(messageId, text) : undefined}
+              />
               {text && text !== '📎 Media' && text !== '🎙️ Voice message' && (
                 <p className="whitespace-pre-wrap break-words mt-1.5">{text}</p>
               )}
