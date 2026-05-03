@@ -47,7 +47,7 @@ export default function ChatView() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { data: wallet } = useWallet();
   const { isOtherTyping, sendTyping } = useTypingIndicator(conversationId || '');
-  const { upload: b2Upload, isUploading: isMediaUploading } = useB2Upload();
+  const { upload: b2Upload, isUploading: isMediaUploading, progress: mediaProgress } = useB2Upload();
 
   const { data: conversation } = useQuery({
     queryKey: ['conversation-detail', conversationId],
