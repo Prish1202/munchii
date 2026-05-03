@@ -11,35 +11,54 @@ import { toast } from 'sonner';
 
 interface MediaAttachmentProps {
   onFileSelect: (file: File) => void;
+  onFilesSelect?: (files: File[]) => void;
   disabled?: boolean;
 }
 
 const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
+const MAX_FILES_PER_MESSAGE = 10;
 
-export function MediaAttachment({ onFileSelect, disabled }: MediaAttachmentProps) {
+export function MediaAttachment({ onFileSelect, onFilesSelect, disabled }: MediaAttachmentProps) {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > MAX_FILE_SIZE) {
-      toast.error('File size must be under 200MB');
+  const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const list = e.target.files;
+    if (!list || list.length === 0) return;
+    const all = Array.from(list);
+    const valid = all.filter((f) => {
+      if (f.size > MAX_FILE_SIZE) {
+        toast.error(`${f.name} is over 200MB and was skipped`);
+        return false;
+      }
+      return true;
+    });
+
+    let toSend = valid;
+    if (toSend.length > MAX_FILES_PER_MESSAGE) {
+      toast.error(`Only the first ${MAX_FILES_PER_MESSAGE} files will be sent`);
+      toSend = toSend.slice(0, MAX_FILES_PER_MESSAGE);
+    }
+
+    if (toSend.length === 0) {
       e.target.value = '';
       return;
     }
-    // Send original file as-is to preserve audio, quality, and avoid UI lag
-    // from client-side re-encoding.
-    onFileSelect(file);
+
+    if (onFilesSelect) {
+      onFilesSelect(toSend);
+    } else {
+      toSend.forEach(onFileSelect);
+    }
     e.target.value = '';
   };
 
   return (
     <>
-      <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
-      <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={handleFile} />
-      <input ref={fileInputRef} type="file" className="hidden" onChange={handleFile} />
+      <input ref={imageInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFiles} />
+      <input ref={videoInputRef} type="file" accept="video/*" multiple className="hidden" onChange={handleFiles} />
+      <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFiles} />
       
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
