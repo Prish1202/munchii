@@ -560,8 +560,17 @@ export default function ChatView() {
               <VoiceRecorder onRecordingComplete={handleVoiceRecording} disabled={isMediaUploading || sendMessage.isPending || !recipientPublicKey} />
             )}
             {isMediaUploading && (
-              <div className="flex items-center gap-1">
-                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+              <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-primary/10 min-w-[140px]">
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-primary shrink-0" />
+                <div className="flex-1 h-1.5 rounded-full bg-primary/20 overflow-hidden">
+                  <div
+                    className="h-full bg-primary transition-all duration-200"
+                    style={{ width: `${mediaProgress}%` }}
+                  />
+                </div>
+                <span className="text-[10px] font-medium text-primary tabular-nums w-8 text-right">
+                  {mediaProgress}%
+                </span>
               </div>
             )}
           </div>
