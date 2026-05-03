@@ -318,6 +318,11 @@ export function MediaPreview({ mediaUrl, mediaType, fileName, isOwn, onForward }
             controls
             playsInline
             preload="metadata"
+            onLoadedMetadata={(e) => {
+              const v = e.currentTarget;
+              v.muted = false;
+              v.volume = 1;
+            }}
             className="rounded-lg max-w-full max-h-[280px] bg-black"
           >
             Your browser does not support the video tag.
