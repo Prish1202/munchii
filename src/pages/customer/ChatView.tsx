@@ -195,24 +195,38 @@ export default function ChatView() {
     });
   }, [recipientPublicKey, senderPublicKey, conversationId, b2Upload, sendMessage]);
 
-  const handleMediaFile = useCallback(async (file: File) => {
+  const handleMediaFile = useCallback((file: File) => {
     if (!recipientPublicKey || !senderPublicKey || !conversationId) return;
-    let mediaType = 'file';
+    let mediaType: 'image' | 'video' | 'file' = 'file';
     if (file.type.startsWith('image/')) mediaType = 'image';
     else if (file.type.startsWith('video/')) mediaType = 'video';
-    const result = await b2Upload(file, `chat/${conversationId}/${mediaType}`);
-    if (!result) return;
-    await sendMessage.mutateAsync({
-      conversationId,
-      recipientPublicKey,
-      senderPublicKey,
-      plaintext: '📎 Media',
-      replyToId: null,
-      mediaUrl: result.publicUrl,
+
+    chatUploads.enqueue({
+      file,
+      folder: `chat/${conversationId}/${mediaType}`,
       mediaType,
-      mediaFilename: file.name,
+      onSuccess: async (_item, result) => {
+        try {
+          await sendMessage.mutateAsync({
+            conversationId,
+            recipientPublicKey,
+            senderPublicKey,
+            plaintext: '📎 Media',
+            replyToId: null,
+            mediaUrl: result.publicUrl,
+            mediaType,
+            mediaFilename: file.name,
+          });
+        } catch (err) {
+          toast.error(`Failed to send ${file.name}`);
+        }
+      },
     });
-  }, [recipientPublicKey, senderPublicKey, conversationId, b2Upload, sendMessage]);
+  }, [recipientPublicKey, senderPublicKey, conversationId, chatUploads, sendMessage]);
+
+  const handleMediaFiles = useCallback((files: File[]) => {
+    files.forEach((f) => handleMediaFile(f));
+  }, [handleMediaFile]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
