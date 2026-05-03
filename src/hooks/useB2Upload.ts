@@ -27,43 +27,48 @@ export function useB2Upload() {
       const contentType = file.type || 'application/octet-stream';
 
       const { data: { session } } = await supabase.auth.getSession();
-
       if (!session?.access_token) {
         throw new Error('Please sign in again and try uploading.');
       }
 
-      setProgress(20);
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/b2-signed-url`;
 
-      const uploadResp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/b2-signed-url`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          'Content-Type': contentType,
-          'x-b2-file-path': filePath,
-          'x-b2-content-type': contentType,
-        },
-        body: file,
+      const responseData = await new Promise<Partial<UploadResult> & { error?: string }>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', url, true);
+        xhr.setRequestHeader('Authorization', `Bearer ${session.access_token}`);
+        xhr.setRequestHeader('apikey', import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
+        xhr.setRequestHeader('Content-Type', contentType);
+        xhr.setRequestHeader('x-b2-file-path', filePath);
+        xhr.setRequestHeader('x-b2-content-type', contentType);
+
+        xhr.upload.onprogress = (evt) => {
+          if (evt.lengthComputable) {
+            // Cap at 95% until server confirms
+            const pct = Math.min(95, Math.round((evt.loaded / evt.total) * 95));
+            setProgress(pct);
+          }
+        };
+
+        xhr.onload = () => {
+          let parsed: any = null;
+          try { parsed = xhr.responseText ? JSON.parse(xhr.responseText) : null; } catch { /* ignore */ }
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(parsed || {});
+          } else {
+            reject(new Error(parsed?.error || xhr.responseText || 'Upload failed'));
+          }
+        };
+        xhr.onerror = () => reject(new Error('Network error during upload'));
+        xhr.onabort = () => reject(new Error('Upload aborted'));
+
+        xhr.send(file);
       });
-
-      const responseText = await uploadResp.text();
-      let responseData: Partial<UploadResult> & { error?: string } | null = null;
-
-      try {
-        responseData = responseText ? JSON.parse(responseText) : null;
-      } catch {
-        responseData = null;
-      }
-
-      if (!uploadResp.ok) {
-        throw new Error(responseData?.error || responseText || 'Upload failed');
-      }
 
       if (!responseData?.publicUrl) {
         throw new Error('Upload completed but no file URL was returned');
       }
 
-      setProgress(85);
       setProgress(100);
 
       return {
@@ -76,6 +81,7 @@ export function useB2Upload() {
       return null;
     } finally {
       setIsUploading(false);
+      setTimeout(() => setProgress(0), 600);
     }
   }, []);
 
