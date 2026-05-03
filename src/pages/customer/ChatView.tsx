@@ -540,57 +540,55 @@ export default function ChatView() {
             <p className="text-sm text-muted-foreground">This user hasn't set up encryption yet.</p>
           </div>
         ) : (
-          <div className="flex items-center gap-1.5 px-3 py-2.5 border-t border-border bg-card/80 backdrop-blur-lg safe-area-bottom shrink-0">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="flex-shrink-0 h-9 w-9 rounded-xl"
-              onClick={() => setShowCoinTransfer(!showCoinTransfer)}
-              title="Send coins"
-            >
-              <Coins className="w-5 h-5 text-primary" />
-            </Button>
-            <MediaAttachment onFileSelect={handleMediaFile} disabled={isMediaUploading || sendMessage.isPending} />
-            <Textarea
-              ref={textareaRef}
-              placeholder="Type a message..."
-              value={text}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-              onBlur={(e) => {
-                if (sendMessage.isPending) {
-                  e.preventDefault();
-                  e.target.focus();
-                }
-              }}
-              inputMode="text"
-              enterKeyHint="send"
-              className="flex-1 rounded-2xl bg-muted border-0 focus-visible:ring-1 focus-visible:ring-ring resize-none min-h-[38px] max-h-[120px] py-2 px-3.5 text-sm"
-              maxLength={2000}
-              rows={1}
+          <>
+            <ChatUploadsList
+              items={chatUploads.items}
+              onRetry={chatUploads.retry}
+              onCancel={chatUploads.cancel}
+              onDismiss={chatUploads.dismiss}
             />
-            {text.trim() ? (
-              <Button size="icon" onClick={handleSend} disabled={!text.trim() || sendMessage.isPending} className="flex-shrink-0 h-9 w-9 rounded-full">
-                {sendMessage.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+            <div className="flex items-center gap-1.5 px-3 py-2.5 border-t border-border bg-card/80 backdrop-blur-lg safe-area-bottom shrink-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="flex-shrink-0 h-9 w-9 rounded-xl"
+                onClick={() => setShowCoinTransfer(!showCoinTransfer)}
+                title="Send coins"
+              >
+                <Coins className="w-5 h-5 text-primary" />
               </Button>
-            ) : (
-              <VoiceRecorder onRecordingComplete={handleVoiceRecording} disabled={isMediaUploading || sendMessage.isPending || !recipientPublicKey} />
-            )}
-            {isMediaUploading && (
-              <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-primary/10 min-w-[140px]">
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-primary shrink-0" />
-                <div className="flex-1 h-1.5 rounded-full bg-primary/20 overflow-hidden">
-                  <div
-                    className="h-full bg-primary transition-all duration-200"
-                    style={{ width: `${mediaProgress}%` }}
-                  />
-                </div>
-                <span className="text-[10px] font-medium text-primary tabular-nums w-8 text-right">
-                  {mediaProgress}%
-                </span>
-              </div>
-            )}
-          </div>
+              <MediaAttachment
+                onFileSelect={handleMediaFile}
+                onFilesSelect={handleMediaFiles}
+                disabled={sendMessage.isPending}
+              />
+              <Textarea
+                ref={textareaRef}
+                placeholder="Type a message..."
+                value={text}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                onBlur={(e) => {
+                  if (sendMessage.isPending) {
+                    e.preventDefault();
+                    e.target.focus();
+                  }
+                }}
+                inputMode="text"
+                enterKeyHint="send"
+                className="flex-1 rounded-2xl bg-muted border-0 focus-visible:ring-1 focus-visible:ring-ring resize-none min-h-[38px] max-h-[120px] py-2 px-3.5 text-sm"
+                maxLength={2000}
+                rows={1}
+              />
+              {text.trim() ? (
+                <Button size="icon" onClick={handleSend} disabled={!text.trim() || sendMessage.isPending} className="flex-shrink-0 h-9 w-9 rounded-full">
+                  {sendMessage.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                </Button>
+              ) : (
+                <VoiceRecorder onRecordingComplete={handleVoiceRecording} disabled={sendMessage.isPending || !recipientPublicKey} />
+              )}
+            </div>
+          </>
         )}
       </motion.div>
     </E2EEKeySetup>
