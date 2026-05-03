@@ -15,6 +15,8 @@ import { useMessageStatus } from '@/hooks/useMessageStatus';
 import { usePresence } from '@/hooks/usePresence';
 import { useReactions } from '@/hooks/useReactions';
 import { useB2Upload } from '@/hooks/useB2Upload';
+import { useChatUploads } from '@/hooks/useChatUploads';
+import { ChatUploadsList } from '@/components/customer/ChatUploadsList';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
