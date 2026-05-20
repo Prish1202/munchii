@@ -145,13 +145,41 @@ export default function ChatView() {
     return () => { supabase.removeChannel(channel); };
   }, [conversationId, user?.id]);
 
+  const outboxItems = useOutboxItems();
+  const pendingOutbox = outboxItems.filter((o) => o.conversationId === conversationId);
+
   const handleSend = async () => {
-    if (!text.trim() || !recipientPublicKey || !senderPublicKey || !conversationId) return;
+    if (!text.trim() || !conversationId) return;
     const msgText = text.trim();
     const replyToId = replyTo?.id || null;
     setText('');
     setReplyTo(null);
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
+
+    textareaRef.current?.focus();
+    requestAnimationFrame(() => textareaRef.current?.focus());
+    setTimeout(() => textareaRef.current?.focus(), 50);
+
+    // If offline or keys not yet available, queue to outbox
+    const isOffline = !navigator.onLine;
+    if (isOffline || !recipientPublicKey || !senderPublicKey) {
+      if (!otherUserId || !user?.id) {
+        toast.error('Cannot send right now');
+        return;
+      }
+      await enqueueOutbox({
+        id: `outbox-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        conversationId,
+        recipientUserId: otherUserId,
+        senderId: user.id,
+        plaintext: msgText,
+        replyToId,
+        createdAt: new Date().toISOString(),
+        attempts: 0,
+      });
+      notifyOutboxChanged();
+      return;
+    }
 
     setOptimisticMessages(prev => [...prev, {
       id: `optimistic-${Date.now()}`,
@@ -160,10 +188,6 @@ export default function ChatView() {
       sender_id: user!.id,
       reply_to_id: replyToId,
     }]);
-
-    textareaRef.current?.focus();
-    requestAnimationFrame(() => textareaRef.current?.focus());
-    setTimeout(() => textareaRef.current?.focus(), 50);
 
     try {
       await sendMessage.mutateAsync({
@@ -175,6 +199,20 @@ export default function ChatView() {
       });
     } catch {
       setOptimisticMessages(prev => prev.filter(m => m.text !== msgText));
+      // Fall back to outbox so we don't lose the message
+      if (otherUserId && user?.id) {
+        await enqueueOutbox({
+          id: `outbox-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          conversationId,
+          recipientUserId: otherUserId,
+          senderId: user.id,
+          plaintext: msgText,
+          replyToId,
+          createdAt: new Date().toISOString(),
+          attempts: 0,
+        });
+        notifyOutboxChanged();
+      }
     }
   };
 
