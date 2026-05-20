@@ -14,7 +14,6 @@ export function VoiceRecorder({ onRecordingComplete, disabled }: VoiceRecorderPr
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const autoStopTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startTimeRef = useRef(0);
   const discardRecordingRef = useRef(false);
   const mimeTypeRef = useRef('audio/webm');
@@ -23,10 +22,6 @@ export function VoiceRecorder({ onRecordingComplete, disabled }: VoiceRecorderPr
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
-    }
-    if (autoStopTimeoutRef.current) {
-      clearTimeout(autoStopTimeoutRef.current);
-      autoStopTimeoutRef.current = null;
     }
   }, []);
 
