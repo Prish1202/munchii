@@ -76,25 +76,48 @@ import AdminOrders from "./pages/admin/Orders";
 import AdminPayouts from "./pages/admin/Payouts";
 import AdminRefunds from "./pages/admin/Refunds";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      gcTime: 1000 * 60 * 60 * 24 * 7, // keep cached data for 7 days for offline use
+      staleTime: 1000 * 30,
+      networkMode: 'offlineFirst',
+      retry: 1,
+    },
+    mutations: {
+      networkMode: 'offlineFirst',
+    },
+  },
+});
+
+const persister = createSyncStoragePersister({
+  storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+  key: 'munchii-rq-cache',
+  throttleTime: 1500,
+});
 
 const App = () => {
-  const { isOnline, retry } = useOnlineStatus();
-
-  if (!isOnline) {
-    return (
-      <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-        <OfflineScreen onRetry={retry} />
-      </ThemeProvider>
-    );
-  }
-
   return (
   <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-  <QueryClientProvider client={queryClient}>
+  <PersistQueryClientProvider
+    client={queryClient}
+    persistOptions={{
+      persister,
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+      dehydrateOptions: {
+        // Only persist chat-related queries so we don't bloat localStorage
+        shouldDehydrateQuery: (q) => {
+          const key = q.queryKey?.[0];
+          return key === 'messages' || key === 'conversations' || key === 'profile' || key === 'conversation-detail' || key === 'public-key';
+        },
+      },
+    }}
+  >
     <TooltipProvider>
       <AuthProvider>
         <OneSignalInit />
+        <OutboxFlusher />
+        <OfflineBanner />
         <CartProvider>
           <LocationProvider>
           <Toaster />
