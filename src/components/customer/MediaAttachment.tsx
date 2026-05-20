@@ -7,16 +7,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
 
 interface MediaAttachmentProps {
   onFileSelect: (file: File) => void;
   onFilesSelect?: (files: File[]) => void;
   disabled?: boolean;
 }
-
-const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
-const MAX_FILES_PER_MESSAGE = 10;
 
 export function MediaAttachment({ onFileSelect, onFilesSelect, disabled }: MediaAttachmentProps) {
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -26,30 +22,17 @@ export function MediaAttachment({ onFileSelect, onFilesSelect, disabled }: Media
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const list = e.target.files;
     if (!list || list.length === 0) return;
-    const all = Array.from(list);
-    const valid = all.filter((f) => {
-      if (f.size > MAX_FILE_SIZE) {
-        toast.error(`${f.name} is over 200MB and was skipped`);
-        return false;
-      }
-      return true;
-    });
+    const files = Array.from(list);
 
-    let toSend = valid;
-    if (toSend.length > MAX_FILES_PER_MESSAGE) {
-      toast.error(`Only the first ${MAX_FILES_PER_MESSAGE} files will be sent`);
-      toSend = toSend.slice(0, MAX_FILES_PER_MESSAGE);
-    }
-
-    if (toSend.length === 0) {
+    if (files.length === 0) {
       e.target.value = '';
       return;
     }
 
     if (onFilesSelect) {
-      onFilesSelect(toSend);
+      onFilesSelect(files);
     } else {
-      toSend.forEach(onFileSelect);
+      files.forEach(onFileSelect);
     }
     e.target.value = '';
   };
