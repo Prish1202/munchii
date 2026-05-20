@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, memo } from 'react';
 import { cn } from '@/lib/utils';
 import { Check, CheckCheck, SmilePlus, Coins, Reply, Flag, Copy, Forward, Trash2 } from 'lucide-react';
 import { ReactionBadges } from './EmojiReactions';
@@ -109,7 +109,7 @@ function ReplyQuote({ text, isOwn }: { text: string; isOwn: boolean }) {
   );
 }
 
-export function MessageBubble({
+function MessageBubbleImpl({
   isOwn, text, time, messageId, deliveredAt, readAt,
   reactions, currentUserId, onToggleReaction, onBurstReaction, onReply,
   onForward, onUnsend, replyToText, activeMessageId, onActivate,
@@ -384,3 +384,27 @@ export function MessageBubble({
     </div>
   );
 }
+
+export const MessageBubble = memo(MessageBubbleImpl, (prev, next) => {
+  // Reactions identity changes per render in parent; compare by length + ids
+  const sameReactions =
+    prev.reactions.length === next.reactions.length &&
+    prev.reactions.every((r, i) => r.id === next.reactions[i].id && r.emoji === next.reactions[i].emoji);
+  return (
+    prev.messageId === next.messageId &&
+    prev.text === next.text &&
+    prev.time === next.time &&
+    prev.isOwn === next.isOwn &&
+    prev.deliveredAt === next.deliveredAt &&
+    prev.readAt === next.readAt &&
+    prev.currentUserId === next.currentUserId &&
+    prev.replyToText === next.replyToText &&
+    prev.replyToIsOwn === next.replyToIsOwn &&
+    prev.mediaUrl === next.mediaUrl &&
+    prev.mediaType === next.mediaType &&
+    prev.mediaFilename === next.mediaFilename &&
+    (prev.activeMessageId === next.activeMessageId ||
+      (prev.activeMessageId !== prev.messageId && next.activeMessageId !== next.messageId)) &&
+    sameReactions
+  );
+});
