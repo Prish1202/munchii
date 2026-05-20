@@ -85,16 +85,24 @@ export function useRestaurantOrders() {
 
       const customerIds = [...new Set(ordersData.map(o => o.customer_id).filter(Boolean))];
       let customerMap: Record<string, { name: string; phone: string | null }> = {};
-      
+
       if (customerIds.length > 0) {
         const { data: profiles } = await supabase
           .from('profiles')
-          .select('id, name, phone')
+          .select('id, name')
           .in('id', customerIds);
-        
+
         if (profiles) {
+          // Fetch phones via SECURITY DEFINER rpc (only returns phones for this owner's customers)
+          const phoneEntries = await Promise.all(
+            profiles.map(async (p) => {
+              const { data: phone } = await supabase.rpc('get_customer_phone_for_owner', { _customer_id: p.id });
+              return [p.id, phone as string | null] as const;
+            })
+          );
+          const phoneMap = Object.fromEntries(phoneEntries);
           customerMap = profiles.reduce((acc, p) => {
-            acc[p.id] = { name: p.name, phone: p.phone };
+            acc[p.id] = { name: p.name, phone: phoneMap[p.id] ?? null };
             return acc;
           }, {} as Record<string, { name: string; phone: string | null }>);
         }

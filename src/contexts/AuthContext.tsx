@@ -36,12 +36,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!roleData) return null;
 
+      const { data: contact } = await supabase
+        .from('user_contact_info')
+        .select('phone')
+        .eq('user_id', userId)
+        .maybeSingle();
+
       return {
         id: userId,
         email,
         name: profile?.name || email.split('@')[0],
         role: roleData.role as UserRole,
-        phone: profile?.phone || null,
+        phone: contact?.phone || null,
       };
     } catch (error) {
       console.error('Error fetching user data:', error);

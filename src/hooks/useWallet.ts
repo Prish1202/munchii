@@ -62,26 +62,11 @@ export function useRedeemCoins() {
 
   return useMutation({
     mutationFn: async ({ coins, orderId }: { coins: number; orderId?: string }) => {
-      // Deduct from wallet
-      const { data: wallet, error: wErr } = await supabase
-        .from('user_wallet')
-        .select('total_coins')
-        .eq('user_id', user!.id)
-        .single();
-      if (wErr) throw wErr;
-      if (!wallet || wallet.total_coins < coins) throw new Error('Insufficient coins');
-
-      const { error: updateErr } = await supabase
-        .from('user_wallet')
-        .update({ total_coins: wallet.total_coins - coins, updated_at: new Date().toISOString() })
-        .eq('user_id', user!.id);
-      if (updateErr) throw updateErr;
-
-      const { error: txErr } = await supabase
-        .from('coin_transactions')
-        .insert({ user_id: user!.id, order_id: orderId || null, coins, type: 'redeem' as any });
-      if (txErr) throw txErr;
-
+      const { error } = await supabase.rpc('redeem_coins', {
+        _coins: coins,
+        _order_id: orderId || null,
+      });
+      if (error) throw error;
       return { redeemed: coins };
     },
     onSuccess: ({ redeemed }) => {

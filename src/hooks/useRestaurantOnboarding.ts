@@ -103,7 +103,19 @@ export function useMyRestaurantFull() {
         .eq('owner_id', user!.id)
         .maybeSingle();
       if (error) throw error;
-      return data as RestaurantWithStatus | null;
+      if (!data) return null;
+
+      const { data: compliance } = await supabase
+        .from('restaurant_compliance')
+        .select('fssai_license, gst_number')
+        .eq('restaurant_id', data.id)
+        .maybeSingle();
+
+      return {
+        ...(data as any),
+        fssai_license: compliance?.fssai_license ?? null,
+        gst_number: compliance?.gst_number ?? null,
+      } as RestaurantWithStatus;
     },
     enabled: !!user?.id,
   });
@@ -125,36 +137,52 @@ export function useSaveRestaurantDetails() {
       opening_hours: string;
       closing_hours: string;
     }) => {
+      const { fssai_license, gst_number, ...restaurantFields } = details;
+
       const { data: existing } = await supabase
         .from('restaurants')
         .select('id')
         .eq('owner_id', user!.id)
         .maybeSingle();
 
+      let restaurantId: string;
       if (existing) {
         const { error } = await supabase
           .from('restaurants')
           .update({
-            ...details,
+            ...restaurantFields,
             updated_at: new Date().toISOString(),
           } as any)
           .eq('id', existing.id);
         if (error) throw error;
-        return existing.id;
+        restaurantId = existing.id;
       } else {
         const { data, error } = await supabase
           .from('restaurants')
           .insert({
             owner_id: user!.id,
-            ...details,
+            ...restaurantFields,
             is_active: false,
             verification_status: 'draft',
           } as any)
           .select('id')
           .single();
         if (error) throw error;
-        return data.id;
+        restaurantId = data.id;
       }
+
+      // Upsert compliance fields into private table
+      const { error: cErr } = await supabase
+        .from('restaurant_compliance')
+        .upsert({
+          restaurant_id: restaurantId,
+          fssai_license,
+          gst_number: gst_number || null,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'restaurant_id' });
+      if (cErr) throw cErr;
+
+      return restaurantId;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-restaurant-full'] });
