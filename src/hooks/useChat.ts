@@ -229,6 +229,8 @@ export function useMessages(conversationId: string) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [decryptedMessages, setDecryptedMessages] = useState<Message[]>([]);
+  // Cache decrypted text by message id so we don't re-decrypt on every refetch
+  const decryptCacheRef = useRef<Map<string, string>>(new Map());
 
   const query = useQuery({
     queryKey: ['messages', conversationId],
@@ -242,8 +244,7 @@ export function useMessages(conversationId: string) {
       return data as Message[];
     },
     enabled: !!conversationId,
-    refetchInterval: conversationId ? 2000 : false,
-    refetchIntervalInBackground: true,
+    staleTime: 30_000,
   });
 
   useEffect(() => {
@@ -255,20 +256,32 @@ export function useMessages(conversationId: string) {
         return;
       }
 
+      const cache = decryptCacheRef.current;
       const results = await Promise.all(
         query.data.map(async (msg) => {
+          const cached = cache.get(msg.id);
+          if (cached !== undefined) {
+            return { ...msg, decrypted: cached };
+          }
           try {
             const isMine = msg.sender_id === user.id;
             const ciphertext = isMine && msg.encrypted_for_sender
               ? msg.encrypted_for_sender
               : msg.encrypted_message;
             const decrypted = await decryptMessage(ciphertext, user.id);
+            cache.set(msg.id, decrypted);
             return { ...msg, decrypted };
           } catch {
             return { ...msg, decrypted: '🔒 Cannot decrypt' };
           }
         })
       );
+
+      // Prune cache for messages that no longer exist (e.g. unsent)
+      if (cache.size > query.data.length + 50) {
+        const ids = new Set(query.data.map((m) => m.id));
+        for (const k of cache.keys()) if (!ids.has(k)) cache.delete(k);
+      }
 
       if (isActive) {
         setDecryptedMessages(results);
