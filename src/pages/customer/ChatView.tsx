@@ -27,6 +27,8 @@ import { ChatCoinTransfer } from '@/components/customer/ChatCoinTransfer';
 import { EmojiBurst } from '@/components/customer/EmojiBurst';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
+import { enqueueOutbox } from '@/lib/chatOutbox';
+import { useOutboxItems, notifyOutboxChanged } from '@/hooks/useOutboxFlusher';
 
 export default function ChatView() {
   const { conversationId } = useParams<{ conversationId: string }>();
