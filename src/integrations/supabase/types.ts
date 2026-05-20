@@ -1096,6 +1096,10 @@ export type Database = {
         Args: { _target_user_id: string; _viewer_user_id: string }
         Returns: boolean
       }
+      redeem_coins: {
+        Args: { _coins: number; _order_id?: string }
+        Returns: number
+      }
       transfer_coins: {
         Args: { _coins: number; _recipient_id: string; _sender_id: string }
         Returns: undefined
