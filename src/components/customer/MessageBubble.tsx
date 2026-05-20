@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, memo } from 'react';
 import { cn } from '@/lib/utils';
 import { Check, CheckCheck, SmilePlus, Coins, Reply, Flag, Copy, Forward, Trash2 } from 'lucide-react';
 import { ReactionBadges } from './EmojiReactions';
