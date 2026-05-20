@@ -19,8 +19,15 @@ export function useAdminUsers() {
         .select('*');
       if (rolesError) throw rolesError;
 
+      const { data: contacts } = await supabase
+        .from('user_contact_info')
+        .select('user_id, phone');
+      const phoneByUser: Record<string, string | null> = {};
+      (contacts || []).forEach(c => { phoneByUser[c.user_id] = c.phone; });
+
       return profiles.map(profile => ({
         ...profile,
+        phone: phoneByUser[profile.id] ?? null,
         role: roles.find(r => r.user_id === profile.id)?.role || 'customer'
       }));
     }
