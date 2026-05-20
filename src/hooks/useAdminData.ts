@@ -41,7 +41,7 @@ export function useAdminUserDetail(userId: string | null) {
     queryFn: async () => {
       if (!userId) return null;
 
-      const [profileRes, roleRes, walletRes, ordersRes, followersRes, followingRes, transactionsRes] = await Promise.all([
+      const [profileRes, roleRes, walletRes, ordersRes, followersRes, followingRes, transactionsRes, contactRes] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', userId).single(),
         supabase.from('user_roles').select('role').eq('user_id', userId).maybeSingle(),
         supabase.from('user_wallet').select('total_coins').eq('user_id', userId).maybeSingle(),
@@ -49,10 +49,11 @@ export function useAdminUserDetail(userId: string | null) {
         supabase.from('followers').select('id').eq('following_id', userId),
         supabase.from('followers').select('id').eq('follower_id', userId),
         supabase.from('coin_transactions').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(20),
+        supabase.from('user_contact_info').select('phone').eq('user_id', userId).maybeSingle(),
       ]);
 
       return {
-        profile: profileRes.data,
+        profile: profileRes.data ? { ...profileRes.data, phone: contactRes.data?.phone ?? null } : null,
         role: roleRes.data?.role || 'customer',
         wallet: walletRes.data,
         orders: ordersRes.data || [],
