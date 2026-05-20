@@ -141,14 +141,18 @@ export default function ProfileSettings() {
     setPendingFile(null);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     updateProfile.mutate({
       name: form.name || undefined,
       username: form.username || undefined,
       campus: form.campus || null,
-      phone: form.phone || null,
     } as any);
     supabase.from('profiles').update({ bio: form.bio || null }).eq('id', user!.id).then(() => {});
+    if (user?.id) {
+      await supabase
+        .from('user_contact_info')
+        .upsert({ user_id: user.id, phone: form.phone || null, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+    }
   };
 
   return (
