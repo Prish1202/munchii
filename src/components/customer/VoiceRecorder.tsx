@@ -97,9 +97,6 @@ export function VoiceRecorder({ onRecordingComplete, disabled }: VoiceRecorderPr
       timerRef.current = setInterval(() => {
         setDuration(Math.round((Date.now() - startTimeRef.current) / 1000));
       }, 500);
-
-      // Auto-stop after 2 minutes
-      autoStopTimeoutRef.current = setTimeout(() => finishRecording(false), 120000);
     } catch {
       // Permission denied or not supported
     }
