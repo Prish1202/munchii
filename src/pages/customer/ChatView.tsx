@@ -485,6 +485,27 @@ export default function ChatView() {
                   </div>
                 );
               })}
+              {pendingOutbox.map((msg) => (
+                <div key={msg.id} className="opacity-70">
+                  <MessageBubble
+                    messageId={msg.id}
+                    isOwn={true}
+                    text={msg.plaintext}
+                    time={msg.createdAt}
+                    deliveredAt={null}
+                    readAt={null}
+                    reactions={[]}
+                    currentUserId={user?.id || ''}
+                    onToggleReaction={handleToggleReaction}
+                    onBurstReaction={handleBurstReaction}
+                    onReply={handleReply}
+                    onForward={handleForward}
+                    activeMessageId={activeMessageId}
+                    onActivate={handleActivateMessage}
+                  />
+                  <p className="text-[10px] text-muted-foreground text-right pr-2 -mt-1">⏳ Waiting to send…</p>
+                </div>
+              ))}
             </>
           )}
           {isOtherTyping && <TypingIndicator />}
