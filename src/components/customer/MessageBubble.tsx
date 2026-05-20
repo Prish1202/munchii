@@ -109,7 +109,7 @@ function ReplyQuote({ text, isOwn }: { text: string; isOwn: boolean }) {
   );
 }
 
-export function MessageBubble({
+function MessageBubbleImpl({
   isOwn, text, time, messageId, deliveredAt, readAt,
   reactions, currentUserId, onToggleReaction, onBurstReaction, onReply,
   onForward, onUnsend, replyToText, activeMessageId, onActivate,
