@@ -1,7 +1,9 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
@@ -9,8 +11,8 @@ import { LocationProvider } from "@/contexts/LocationContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { OneSignalInit } from "@/components/OneSignalInit";
-import { useOnlineStatus } from "@/hooks/useOnlineStatus";
-import { OfflineScreen } from "@/components/OfflineScreen";
+import { OfflineBanner } from "@/components/OfflineBanner";
+import { OutboxFlusher } from "@/components/OutboxFlusher";
 
 // Pages
 import Index from "./pages/Index";
