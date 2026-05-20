@@ -244,20 +244,22 @@ export function useAdminRestaurants() {
       const ownerIds = restaurants.map(r => r.owner_id);
       const restaurantIds = restaurants.map(r => r.id);
 
-      const [ownerRes, bankRes, ordersRes] = await Promise.all([
+      const [ownerRes, bankRes, ordersRes, complianceRes] = await Promise.all([
         supabase.from('restaurant_owner_details' as any).select('*').in('user_id', ownerIds),
         supabase.from('restaurant_bank_details' as any).select('*').in('restaurant_id', restaurantIds),
         supabase.from('orders').select('restaurant_id, status, total_amount').in('restaurant_id', restaurantIds),
+        supabase.from('restaurant_compliance').select('*').in('restaurant_id', restaurantIds),
       ]);
 
       return restaurants.map(r => {
         const rOrders = ordersRes.data?.filter(o => o.restaurant_id === r.id) || [];
         const completedOrders = rOrders.filter(o => o.status === 'completed');
+        const compliance = (complianceRes.data || []).find((c: any) => c.restaurant_id === r.id);
         return {
           ...r,
           verification_status: (r as any).verification_status || 'verified',
-          fssai_license: (r as any).fssai_license,
-          gst_number: (r as any).gst_number,
+          fssai_license: compliance?.fssai_license ?? null,
+          gst_number: compliance?.gst_number ?? null,
           contact_phone: (r as any).contact_phone,
           area: (r as any).area,
           university_name: (r as any).university_name,
