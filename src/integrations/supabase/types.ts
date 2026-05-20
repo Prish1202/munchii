@@ -659,7 +659,6 @@ export type Database = {
           created_at: string
           id: string
           name: string
-          phone: string | null
           state: string | null
           updated_at: string
           username: string | null
@@ -672,7 +671,6 @@ export type Database = {
           created_at?: string
           id: string
           name: string
-          phone?: string | null
           state?: string | null
           updated_at?: string
           username?: string | null
@@ -685,7 +683,6 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
-          phone?: string | null
           state?: string | null
           updated_at?: string
           username?: string | null
@@ -810,6 +807,30 @@ export type Database = {
           },
         ]
       }
+      restaurant_compliance: {
+        Row: {
+          created_at: string
+          fssai_license: string | null
+          gst_number: string | null
+          restaurant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          fssai_license?: string | null
+          gst_number?: string | null
+          restaurant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          fssai_license?: string | null
+          gst_number?: string | null
+          restaurant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       restaurant_owner_details: {
         Row: {
           aadhaar_number: string | null
@@ -854,8 +875,6 @@ export type Database = {
           closing_hours: string | null
           contact_phone: string | null
           created_at: string
-          fssai_license: string | null
-          gst_number: string | null
           id: string
           is_active: boolean
           name: string
@@ -873,8 +892,6 @@ export type Database = {
           closing_hours?: string | null
           contact_phone?: string | null
           created_at?: string
-          fssai_license?: string | null
-          gst_number?: string | null
           id?: string
           is_active?: boolean
           name: string
@@ -892,8 +909,6 @@ export type Database = {
           closing_hours?: string | null
           contact_phone?: string | null
           created_at?: string
-          fssai_license?: string | null
-          gst_number?: string | null
           id?: string
           is_active?: boolean
           name?: string
@@ -924,6 +939,27 @@ export type Database = {
           transfer_count?: number
           user_id?: string
           window_start?: string
+        }
+        Relationships: []
+      }
+      user_contact_info: {
+        Row: {
+          created_at: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -1019,6 +1055,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_customer_phone_for_owner: {
+        Args: { _customer_id: string }
+        Returns: string
+      }
       get_leaderboard_top10: {
         Args: never
         Returns: {
