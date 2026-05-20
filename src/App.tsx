@@ -196,7 +196,7 @@ const App = () => {
         </CartProvider>
       </AuthProvider>
     </TooltipProvider>
-  </QueryClientProvider>
+  </PersistQueryClientProvider>
   </ThemeProvider>
   );
 };
