@@ -16,6 +16,7 @@ import { OutboxFlusher } from "@/components/OutboxFlusher";
 
 // Pages
 import Index from "./pages/Index";
+import RoleSelect from "./pages/RoleSelect";
 import Login from "./pages/Login";
 import CustomerSignup from "./pages/signup/CustomerSignup";
 import RestaurantSignup from "./pages/signup/RestaurantSignup";
@@ -125,7 +126,8 @@ const App = () => {
           <BrowserRouter>
             <Routes>
               {/* Public Routes */}
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={<RoleSelect />} />
+              <Route path="/home" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<CustomerSignup />} />
               <Route path="/signup/customer" element={<CustomerSignup />} />
