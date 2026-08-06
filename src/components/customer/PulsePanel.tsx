@@ -7,7 +7,7 @@ import { Plus, Camera, Type, Video, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function PulsePanel() {
-  const { profile } = useProfile();
+  const { data: profile } = useProfile();
   const [creating, setCreating] = useState(false);
 
   const notReady = () => {
