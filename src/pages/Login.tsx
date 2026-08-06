@@ -68,15 +68,14 @@ export default function LoginPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: 'easeOut' }}
       >
-        {from && (
-          <Link
-            to={from === 'restaurant' ? '/signup/restaurant' : '/signup/customer'}
-            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4 mr-1.5" />
-            Back to {from === 'restaurant' ? 'Restaurant Registration' : 'Customer Signup'}
-          </Link>
-        )}
+        <Link
+          to="/"
+          className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4 mr-1.5" />
+          Back to role selection
+        </Link>
+
 
         <div className="text-center space-y-3">
           <Link to="/">
