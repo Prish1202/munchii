@@ -11,6 +11,10 @@ import { usePresence } from '@/hooks/usePresence';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { MessageSquare, Loader2, Search, UserPlus } from 'lucide-react';
+import { ChatTabs, type ChatTabKey } from '@/components/customer/ChatTabs';
+import { PulsePanel } from '@/components/customer/PulsePanel';
+import { ClubsPanel } from '@/components/customer/ClubsPanel';
+import { ConnectPanel } from '@/components/customer/ConnectPanel';
 import { formatDistanceToNow } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -25,6 +29,7 @@ export default function Conversations() {
   const [searchResult, setSearchResult] = useState<{ id: string; name: string; username: string } | null>(null);
   const [searching, setSearching] = useState(false);
   const [notFound, setNotFound] = useState(false);
+  const [tab, setTab] = useState<ChatTabKey>('chat');
 
   const handleSearch = async () => {
     const q = search.trim().replace('@', '');
@@ -59,6 +64,11 @@ export default function Conversations() {
       <E2EEKeySetup>
         <div className="max-w-lg mx-auto pb-28 md:pb-6 space-y-4">
           <h1 className="font-display font-bold text-2xl">Messages</h1>
+
+          <ChatTabs value={tab} onChange={setTab} />
+
+          {tab === 'chat' && (
+            <div className="space-y-4 animate-in fade-in duration-200">
           <p className="text-sm text-muted-foreground">
             🔒 End-to-end encrypted. Only you and the recipient can read these messages.
           </p>
@@ -160,6 +170,18 @@ export default function Conversations() {
                 </Link>
               ))}
             </div>
+          )}
+            </div>
+          )}
+
+          {tab === 'pulse' && (
+            <div className="animate-in fade-in duration-200"><PulsePanel /></div>
+          )}
+          {tab === 'clubs' && (
+            <div className="animate-in fade-in duration-200"><ClubsPanel /></div>
+          )}
+          {tab === 'connect' && (
+            <div className="animate-in fade-in duration-200"><ConnectPanel /></div>
           )}
         </div>
       </E2EEKeySetup>
