@@ -35,13 +35,7 @@ export function ClubsPanel() {
 
   const { clubs, myClubs, isLoading, createClub, joinClub, leaveClub, deleteClub } = useClubs();
   const { upload, isUploading, progress } = useB2Upload();
-  const locationCtx = (() => {
-    try {
-      return useLocation();
-    } catch {
-      return null as any;
-    }
-  })();
+  const { city } = useLocation();
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
