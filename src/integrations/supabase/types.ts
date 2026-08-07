@@ -92,6 +92,77 @@ export type Database = {
         }
         Relationships: []
       }
+      club_members: {
+        Row: {
+          club_id: string
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["club_role"]
+          user_id: string
+        }
+        Insert: {
+          club_id: string
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["club_role"]
+          user_id: string
+        }
+        Update: {
+          club_id?: string
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["club_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_members_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clubs: {
+        Row: {
+          category: string | null
+          city: string | null
+          cover_url: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_private: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          city?: string | null
+          cover_url?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_private?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          city?: string | null
+          cover_url?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_private?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       coin_transactions: {
         Row: {
           coins: number
@@ -689,6 +760,68 @@ export type Database = {
         }
         Relationships: []
       }
+      pulse_views: {
+        Row: {
+          created_at: string
+          id: string
+          pulse_id: string
+          viewer_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          pulse_id: string
+          viewer_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          pulse_id?: string
+          viewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pulse_views_pulse_id_fkey"
+            columns: ["pulse_id"]
+            isOneToOne: false
+            referencedRelation: "pulses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pulses: {
+        Row: {
+          background_color: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          media_type: Database["public"]["Enums"]["pulse_media_type"]
+          media_url: string | null
+          text_content: string | null
+          user_id: string
+        }
+        Insert: {
+          background_color?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          media_type: Database["public"]["Enums"]["pulse_media_type"]
+          media_url?: string | null
+          text_content?: string | null
+          user_id: string
+        }
+        Update: {
+          background_color?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          media_type?: Database["public"]["Enums"]["pulse_media_type"]
+          media_url?: string | null
+          text_content?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       push_subscriptions: {
         Row: {
           created_at: string
@@ -1096,6 +1229,10 @@ export type Database = {
         Args: { _target_user_id: string; _viewer_user_id: string }
         Returns: boolean
       }
+      is_club_admin: {
+        Args: { _club_id: string; _user_id: string }
+        Returns: boolean
+      }
       redeem_coins: {
         Args: { _coins: number; _order_id?: string }
         Returns: number
@@ -1107,6 +1244,7 @@ export type Database = {
     }
     Enums: {
       app_role: "customer" | "restaurant" | "admin"
+      club_role: "admin" | "member"
       coin_type: "earn" | "redeem" | "transfer"
       order_status:
         | "pending_payment"
@@ -1117,6 +1255,7 @@ export type Database = {
         | "picked_up"
         | "completed"
         | "cancelled"
+      pulse_media_type: "image" | "video" | "text"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1245,6 +1384,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["customer", "restaurant", "admin"],
+      club_role: ["admin", "member"],
       coin_type: ["earn", "redeem", "transfer"],
       order_status: [
         "pending_payment",
@@ -1256,6 +1396,7 @@ export const Constants = {
         "completed",
         "cancelled",
       ],
+      pulse_media_type: ["image", "video", "text"],
     },
   },
 } as const
