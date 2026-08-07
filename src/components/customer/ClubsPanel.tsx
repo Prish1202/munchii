@@ -65,7 +65,7 @@ export function ClubsPanel() {
       name,
       description,
       category: newCategory,
-      city: locationCtx?.selectedCity || null,
+      city: city || null,
       cover_url: coverUrl,
     });
     setName('');
