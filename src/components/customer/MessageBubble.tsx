@@ -4,6 +4,7 @@ import { Check, CheckCheck, SmilePlus, Coins, Reply, Flag, Copy, Forward, Trash2
 import { ReactionBadges } from './EmojiReactions';
 import { ProfilePreviewCard, parseProfileLink } from './ProfilePreviewCard';
 import { MediaPreview } from './MediaPreview';
+import { ViewOnceMedia } from './ViewOnceMedia';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ReportDialog } from './ReportDialog';
 import { toast } from 'sonner';
@@ -32,6 +33,9 @@ interface MessageBubbleProps {
   mediaUrl?: string | null;
   mediaType?: string | null;
   mediaFilename?: string | null;
+  mediaLifecycle?: string | null;
+  mediaFilePath?: string | null;
+  mediaViewedAt?: string | null;
 }
 
 function useLongPress(callback: () => void, ms = 500) {
@@ -113,7 +117,7 @@ function MessageBubbleImpl({
   isOwn, text, time, messageId, deliveredAt, readAt,
   reactions, currentUserId, onToggleReaction, onBurstReaction, onReply,
   onForward, onUnsend, replyToText, activeMessageId, onActivate,
-  mediaUrl, mediaType, mediaFilename,
+  mediaUrl, mediaType, mediaFilename, mediaLifecycle, mediaFilePath, mediaViewedAt,
 }: MessageBubbleProps) {
   const settings = getChatSettings();
   const effectiveReadAt = settings.hideBlueTick ? null : readAt;
@@ -416,6 +420,9 @@ export const MessageBubble = memo(MessageBubbleImpl, (prev, next) => {
     prev.mediaUrl === next.mediaUrl &&
     prev.mediaType === next.mediaType &&
     prev.mediaFilename === next.mediaFilename &&
+    prev.mediaLifecycle === next.mediaLifecycle &&
+    prev.mediaFilePath === next.mediaFilePath &&
+    prev.mediaViewedAt === next.mediaViewedAt &&
     (prev.activeMessageId === next.activeMessageId ||
       (prev.activeMessageId !== prev.messageId && next.activeMessageId !== next.messageId)) &&
     sameReactions
