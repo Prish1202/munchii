@@ -240,6 +240,36 @@ export type Database = {
         }
         Relationships: []
       }
+      media_cleanup_queue: {
+        Row: {
+          attempts: number
+          created_at: string
+          file_path: string
+          id: string
+          last_error: string | null
+          processed_at: string | null
+          reason: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          file_path: string
+          id?: string
+          last_error?: string | null
+          processed_at?: string | null
+          reason?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          file_path?: string
+          id?: string
+          last_error?: string | null
+          processed_at?: string | null
+          reason?: string
+        }
+        Relationships: []
+      }
       menu_categories: {
         Row: {
           created_at: string
@@ -369,9 +399,14 @@ export type Database = {
           encrypted_for_sender: string | null
           encrypted_message: string
           id: string
+          media_file_path: string | null
           media_filename: string | null
+          media_iv: string | null
+          media_key: string | null
+          media_lifecycle: string
           media_type: string | null
           media_url: string | null
+          media_viewed_at: string | null
           read_at: string | null
           reply_to_id: string | null
           sender_id: string
@@ -383,9 +418,14 @@ export type Database = {
           encrypted_for_sender?: string | null
           encrypted_message: string
           id?: string
+          media_file_path?: string | null
           media_filename?: string | null
+          media_iv?: string | null
+          media_key?: string | null
+          media_lifecycle?: string
           media_type?: string | null
           media_url?: string | null
+          media_viewed_at?: string | null
           read_at?: string | null
           reply_to_id?: string | null
           sender_id: string
@@ -397,9 +437,14 @@ export type Database = {
           encrypted_for_sender?: string | null
           encrypted_message?: string
           id?: string
+          media_file_path?: string | null
           media_filename?: string | null
+          media_iv?: string | null
+          media_key?: string | null
+          media_lifecycle?: string
           media_type?: string | null
           media_url?: string | null
+          media_viewed_at?: string | null
           read_at?: string | null
           reply_to_id?: string | null
           sender_id?: string
@@ -1188,6 +1233,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_view_once_media: {
+        Args: { _message_id: string }
+        Returns: {
+          file_path: string
+          media_filename: string
+          media_iv: string
+          media_key: string
+          media_type: string
+        }[]
+      }
+      finalize_view_once_media: {
+        Args: { _message_id: string }
+        Returns: undefined
+      }
       get_customer_phone_for_owner: {
         Args: { _customer_id: string }
         Returns: string
@@ -1233,10 +1292,12 @@ export type Database = {
         Args: { _club_id: string; _user_id: string }
         Returns: boolean
       }
+      kick_media_cleanup: { Args: never; Returns: undefined }
       redeem_coins: {
         Args: { _coins: number; _order_id?: string }
         Returns: number
       }
+      sweep_stale_view_once_media: { Args: never; Returns: undefined }
       transfer_coins: {
         Args: { _coins: number; _recipient_id: string; _sender_id: string }
         Returns: undefined
