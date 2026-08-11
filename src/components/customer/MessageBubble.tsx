@@ -4,6 +4,7 @@ import { Check, CheckCheck, SmilePlus, Coins, Reply, Flag, Copy, Forward, Trash2
 import { ReactionBadges } from './EmojiReactions';
 import { ProfilePreviewCard, parseProfileLink } from './ProfilePreviewCard';
 import { MediaPreview } from './MediaPreview';
+import { ViewOnceMedia } from './ViewOnceMedia';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ReportDialog } from './ReportDialog';
 import { toast } from 'sonner';
@@ -32,6 +33,9 @@ interface MessageBubbleProps {
   mediaUrl?: string | null;
   mediaType?: string | null;
   mediaFilename?: string | null;
+  mediaLifecycle?: string | null;
+  mediaFilePath?: string | null;
+  mediaViewedAt?: string | null;
 }
 
 function useLongPress(callback: () => void, ms = 500) {
@@ -113,7 +117,7 @@ function MessageBubbleImpl({
   isOwn, text, time, messageId, deliveredAt, readAt,
   reactions, currentUserId, onToggleReaction, onBurstReaction, onReply,
   onForward, onUnsend, replyToText, activeMessageId, onActivate,
-  mediaUrl, mediaType, mediaFilename,
+  mediaUrl, mediaType, mediaFilename, mediaLifecycle, mediaFilePath, mediaViewedAt,
 }: MessageBubbleProps) {
   const settings = getChatSettings();
   const effectiveReadAt = settings.hideBlueTick ? null : readAt;
@@ -255,7 +259,20 @@ function MessageBubbleImpl({
           )}
         >
           {replyToText && <ReplyQuote text={replyToText} isOwn={isOwn} />}
-          {mediaUrl && mediaType ? (
+          {mediaLifecycle === 'VIEW_ONCE_MEDIA' && mediaType ? (
+            <div className="mb-1">
+              <ViewOnceMedia
+                messageId={messageId}
+                isOwn={isOwn}
+                mediaType={mediaType}
+                viewedAt={mediaViewedAt}
+                available={!!mediaFilePath}
+              />
+              {text && text !== '📎 Media' && (
+                <p className="whitespace-pre-wrap break-words mt-1.5">{text}</p>
+              )}
+            </div>
+          ) : mediaUrl && mediaType ? (
             <div className="mb-1">
               <MediaPreview
                 mediaUrl={mediaUrl}
@@ -403,6 +420,9 @@ export const MessageBubble = memo(MessageBubbleImpl, (prev, next) => {
     prev.mediaUrl === next.mediaUrl &&
     prev.mediaType === next.mediaType &&
     prev.mediaFilename === next.mediaFilename &&
+    prev.mediaLifecycle === next.mediaLifecycle &&
+    prev.mediaFilePath === next.mediaFilePath &&
+    prev.mediaViewedAt === next.mediaViewedAt &&
     (prev.activeMessageId === next.activeMessageId ||
       (prev.activeMessageId !== prev.messageId && next.activeMessageId !== next.messageId)) &&
     sameReactions
