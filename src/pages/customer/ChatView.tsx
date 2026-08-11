@@ -28,6 +28,9 @@ import { EmojiBurst } from '@/components/customer/EmojiBurst';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { enqueueOutbox } from '@/lib/chatOutbox';
+import { MEDIA_LIFECYCLE, classifyChatFile, validateChatFile } from '@/lib/mediaLifecycle';
+import { compressImage, validateVideoDuration } from '@/lib/mediaProcessing';
+import { encryptMediaFile } from '@/lib/mediaCrypto';
 import { useOutboxItems, notifyOutboxChanged } from '@/hooks/useOutboxFlusher';
 
 export default function ChatView() {
@@ -235,16 +238,42 @@ export default function ChatView() {
     });
   }, [recipientPublicKey, senderPublicKey, conversationId, b2Upload, sendMessage]);
 
-  const handleMediaFile = useCallback((file: File) => {
+  const handleMediaFile = useCallback(async (rawFile: File) => {
     if (!recipientPublicKey || !senderPublicKey || !conversationId) return;
-    let mediaType: 'image' | 'video' | 'file' = 'file';
-    if (file.type.startsWith('image/')) mediaType = 'image';
-    else if (file.type.startsWith('video/')) mediaType = 'video';
+
+    const invalid = validateChatFile(rawFile);
+    if (invalid) {
+      toast.error(invalid);
+      return;
+    }
+
+    const { kind, lifecycle } = classifyChatFile(rawFile);
+    let file = rawFile;
+    let encrypted: Awaited<ReturnType<typeof encryptMediaFile>> | null = null;
+
+    if (lifecycle === MEDIA_LIFECYCLE.VIEW_ONCE_MEDIA) {
+      if (kind === 'video') {
+        const durationError = await validateVideoDuration(rawFile);
+        if (durationError) {
+          toast.error(durationError);
+          return;
+        }
+      }
+      if (kind === 'image') {
+        file = await compressImage(rawFile);
+      }
+      try {
+        encrypted = await encryptMediaFile(file, recipientPublicKey);
+      } catch {
+        toast.error('Could not secure this media');
+        return;
+      }
+    }
 
     chatUploads.enqueue({
-      file,
-      folder: `chat/${conversationId}/${mediaType}`,
-      mediaType,
+      file: encrypted ? encrypted.file : file,
+      folder: `chat/${conversationId}/${kind}`,
+      mediaType: kind,
       onSuccess: async (_item, result) => {
         try {
           await sendMessage.mutateAsync({
@@ -253,12 +282,16 @@ export default function ChatView() {
             senderPublicKey,
             plaintext: '📎 Media',
             replyToId: null,
-            mediaUrl: result.publicUrl,
-            mediaType,
-            mediaFilename: file.name,
+            mediaUrl: encrypted ? undefined : result.publicUrl,
+            mediaType: kind,
+            mediaFilename: rawFile.name,
+            mediaLifecycle: lifecycle,
+            mediaFilePath: result.filePath,
+            mediaKey: encrypted?.wrappedKey,
+            mediaIv: encrypted?.iv,
           });
         } catch (err) {
-          toast.error(`Failed to send ${file.name}`);
+          toast.error(`Failed to send ${rawFile.name}`);
         }
       },
     });
@@ -456,6 +489,9 @@ export default function ChatView() {
                       mediaUrl={msg.media_url}
                       mediaType={msg.media_type}
                       mediaFilename={msg.media_filename}
+                      mediaLifecycle={msg.media_lifecycle}
+                      mediaFilePath={msg.media_file_path}
+                      mediaViewedAt={msg.media_viewed_at}
                     />
                   </div>
                 );

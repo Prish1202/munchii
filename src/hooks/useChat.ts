@@ -38,6 +38,11 @@ export interface Message {
   media_url?: string | null;
   media_type?: string | null;
   media_filename?: string | null;
+  media_lifecycle?: string | null;
+  media_file_path?: string | null;
+  media_key?: string | null;
+  media_iv?: string | null;
+  media_viewed_at?: string | null;
 }
 
 // Fetch & store public key for the current user
@@ -362,6 +367,10 @@ export function useSendMessage() {
       mediaUrl,
       mediaType,
       mediaFilename,
+      mediaLifecycle,
+      mediaFilePath,
+      mediaKey,
+      mediaIv,
     }: {
       conversationId: string;
       recipientPublicKey: string;
@@ -371,6 +380,10 @@ export function useSendMessage() {
       mediaUrl?: string;
       mediaType?: string;
       mediaFilename?: string;
+      mediaLifecycle?: string;
+      mediaFilePath?: string;
+      mediaKey?: string;
+      mediaIv?: string;
     }) => {
       const [encryptedForRecipient, encryptedForSender] = await Promise.all([
         encryptMessage(plaintext, recipientPublicKey),
@@ -386,6 +399,10 @@ export function useSendMessage() {
       if (mediaUrl) insertPayload.media_url = mediaUrl;
       if (mediaType) insertPayload.media_type = mediaType;
       if (mediaFilename) insertPayload.media_filename = mediaFilename;
+      if (mediaLifecycle) insertPayload.media_lifecycle = mediaLifecycle;
+      if (mediaFilePath) insertPayload.media_file_path = mediaFilePath;
+      if (mediaKey) insertPayload.media_key = mediaKey;
+      if (mediaIv) insertPayload.media_iv = mediaIv;
 
       const { error } = await supabase.from('messages').insert(insertPayload);
       if (error) throw error;
