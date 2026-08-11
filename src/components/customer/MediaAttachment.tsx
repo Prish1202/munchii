@@ -57,10 +57,10 @@ export function MediaAttachment({ onFileSelect, onFilesSelect, disabled }: Media
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="min-w-[160px]">
           <DropdownMenuItem onClick={() => imageInputRef.current?.click()} className="gap-2">
-            <Image className="w-4 h-4" /> Photo
+            <Image className="w-4 h-4" /> Photo (view once)
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => videoInputRef.current?.click()} className="gap-2">
-            <Film className="w-4 h-4" /> Video
+            <Film className="w-4 h-4" /> Video (view once, 60s)
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => fileInputRef.current?.click()} className="gap-2">
             <FileText className="w-4 h-4" /> Document

@@ -235,6 +235,7 @@ export default function ChatView() {
       mediaUrl: result.publicUrl,
       mediaType: 'voice',
       mediaFilename: file.name,
+      mediaFilePath: result.filePath,
     });
   }, [recipientPublicKey, senderPublicKey, conversationId, b2Upload, sendMessage]);
 
