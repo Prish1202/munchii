@@ -255,7 +255,20 @@ function MessageBubbleImpl({
           )}
         >
           {replyToText && <ReplyQuote text={replyToText} isOwn={isOwn} />}
-          {mediaUrl && mediaType ? (
+          {mediaLifecycle === 'VIEW_ONCE_MEDIA' && mediaType ? (
+            <div className="mb-1">
+              <ViewOnceMedia
+                messageId={messageId}
+                isOwn={isOwn}
+                mediaType={mediaType}
+                viewedAt={mediaViewedAt}
+                available={!!mediaFilePath}
+              />
+              {text && text !== '📎 Media' && (
+                <p className="whitespace-pre-wrap break-words mt-1.5">{text}</p>
+              )}
+            </div>
+          ) : mediaUrl && mediaType ? (
             <div className="mb-1">
               <MediaPreview
                 mediaUrl={mediaUrl}
