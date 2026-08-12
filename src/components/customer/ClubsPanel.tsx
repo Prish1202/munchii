@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,7 +11,7 @@ import { useClubs } from '@/hooks/useClubs';
 import { useB2Upload } from '@/hooks/useB2Upload';
 import { useLocation } from '@/contexts/LocationContext';
 import { resolveStorageUrl } from '@/lib/utils';
-import { Users, Plus, Search, ImagePlus, Shield, LogOut, Trash2 } from 'lucide-react';
+import { Users, Plus, Search, ImagePlus, Shield, LogOut, Trash2, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 const SUGGESTED = [
@@ -36,6 +37,7 @@ export function ClubsPanel() {
   const { clubs, myClubs, isLoading, createClub, joinClub, leaveClub, deleteClub } = useClubs();
   const { upload, isUploading, progress } = useB2Upload();
   const { city } = useLocation();
+  const navigate = useNavigate();
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -126,6 +128,7 @@ export function ClubsPanel() {
                 onJoin={() => joinClub.mutate(c.id)}
                 onLeave={() => leaveClub.mutate(c.id)}
                 onDelete={() => deleteClub.mutate(c.id)}
+                onOpen={() => navigate(`/customer/club/${c.id}`)}
               />
             ))}
           </div>
@@ -151,6 +154,7 @@ export function ClubsPanel() {
                 onJoin={() => joinClub.mutate(c.id)}
                 onLeave={() => leaveClub.mutate(c.id)}
                 onDelete={() => deleteClub.mutate(c.id)}
+                onOpen={() => navigate(`/customer/club/${c.id}`)}
               />
             ))}
           </div>
@@ -237,14 +241,20 @@ function ClubRow({
   onJoin,
   onLeave,
   onDelete,
+  onOpen,
 }: {
   club: ReturnType<typeof useClubs>['clubs'][number];
   onJoin: () => void;
   onLeave: () => void;
   onDelete: () => void;
+  onOpen?: () => void;
 }) {
+  const openable = !!onOpen && !!club.myRole;
   return (
-    <div className="flex items-center gap-3 bg-card rounded-2xl border border-border p-3">
+    <div
+      className={`flex items-center gap-3 bg-card rounded-2xl border border-border p-3 ${openable ? 'cursor-pointer hover:border-primary/40 transition-colors' : ''}`}
+      onClick={openable ? onOpen : undefined}
+    >
       <div className="w-12 h-12 rounded-xl overflow-hidden bg-primary/10 flex items-center justify-center shrink-0">
         {club.cover_url ? (
           <img src={resolveStorageUrl(club.cover_url)} alt={club.name} className="w-full h-full object-cover" />
@@ -268,16 +278,23 @@ function ClubRow({
         </p>
       </div>
 
-      {club.myRole === 'admin' ? (
-        <Button size="sm" variant="ghost" className="text-destructive rounded-xl" onClick={onDelete}>
-          <Trash2 className="w-4 h-4" />
-        </Button>
-      ) : club.myRole === 'member' ? (
-        <Button size="sm" variant="outline" className="rounded-xl" onClick={onLeave}>
-          <LogOut className="w-4 h-4 mr-1" /> Leave
-        </Button>
+      {club.myRole ? (
+        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+          <Button size="sm" variant="outline" className="rounded-xl" onClick={onOpen}>
+            <MessageCircle className="w-4 h-4 mr-1" /> Chat
+          </Button>
+          {club.myRole === 'admin' ? (
+            <Button size="sm" variant="ghost" className="text-destructive rounded-xl" onClick={onDelete}>
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          ) : (
+            <Button size="sm" variant="ghost" className="rounded-xl" onClick={onLeave}>
+              <LogOut className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
       ) : (
-        <Button size="sm" className="rounded-xl gradient-primary border-0" onClick={onJoin}>
+        <Button size="sm" className="rounded-xl gradient-primary border-0" onClick={(e) => { e.stopPropagation(); onJoin(); }}>
           Join
         </Button>
       )}
