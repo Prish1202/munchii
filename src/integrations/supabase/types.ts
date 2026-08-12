@@ -124,6 +124,53 @@ export type Database = {
           },
         ]
       }
+      club_messages: {
+        Row: {
+          club_id: string
+          content: string | null
+          created_at: string
+          id: string
+          media_name: string | null
+          media_size: number | null
+          media_type: string | null
+          media_url: string | null
+          sender_id: string
+          updated_at: string
+        }
+        Insert: {
+          club_id: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          media_name?: string | null
+          media_size?: number | null
+          media_type?: string | null
+          media_url?: string | null
+          sender_id: string
+          updated_at?: string
+        }
+        Update: {
+          club_id?: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          media_name?: string | null
+          media_size?: number | null
+          media_type?: string | null
+          media_url?: string | null
+          sender_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_messages_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clubs: {
         Row: {
           category: string | null
@@ -1289,6 +1336,10 @@ export type Database = {
         Returns: boolean
       }
       is_club_admin: {
+        Args: { _club_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_club_member: {
         Args: { _club_id: string; _user_id: string }
         Returns: boolean
       }

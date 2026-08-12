@@ -11,6 +11,7 @@ import { useConversations } from '@/hooks/useChat';
 import { usePublicKey } from '@/hooks/useChat';
 import { useIsBlocked, useToggleBlock } from '@/hooks/useBlockedUsers';
 import { supabase } from '@/integrations/supabase/client';
+import { profileShareUrl } from '@/lib/appLinks';
 
 interface ProfileMoreMenuProps {
   userId: string;
@@ -30,7 +31,7 @@ export function ProfileMoreMenu({ userId, username, name, avatarUrl, createdAt, 
   const { data: isBlocked } = useIsBlocked(userId);
   const toggleBlock = useToggleBlock();
 
-  const profileUrl = `${window.location.origin}/customer/user/${userId}`;
+  const profileUrl = profileShareUrl(userId);
 
   const handleCopyUrl = async () => {
     try {
