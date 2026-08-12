@@ -51,7 +51,7 @@ export function ProfilePreviewCard({ userId }: ProfilePreviewCardProps) {
 export function parseProfileLink(text: string): string | null {
   const trimmed = text.trim();
   const uuidPattern = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
-  const profilePathPattern = '(?:customer/(?:user|profile)|user)';
+  const profilePathPattern = '(?:customer/(?:user|profile)|user|u)';
   const patterns = [
     // Full URLs
     new RegExp(`https?://[^\\s]+/${profilePathPattern}/(${uuidPattern})(?:[/?#][^\\s]*)?`, 'i'),

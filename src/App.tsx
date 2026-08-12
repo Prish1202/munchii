@@ -25,6 +25,7 @@ import EmailVerified from "./pages/EmailVerified";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
+import ProfileLanding from "./pages/ProfileLanding";
 
 // Customer Pages
 import CustomerDashboard from "./pages/customer/Dashboard";
@@ -42,6 +43,7 @@ import PublicProfile from "./pages/customer/PublicProfile";
 import FollowersList from "./pages/customer/FollowersList";
 import Conversations from "./pages/customer/Conversations";
 import ChatView from "./pages/customer/ChatView";
+import ClubChat from "./pages/customer/ClubChat";
 import CustomerNotifications from "./pages/customer/Notifications";
 import NotificationSettings from "./pages/customer/NotificationSettings";
 import ProfileSettings from "./pages/customer/ProfileSettings";
@@ -137,6 +139,7 @@ const App = () => {
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/auth" element={<Navigate to="/login" replace />} />
+              <Route path="/u/:userId" element={<ProfileLanding />} />
 
               {/* Legal Pages */}
               <Route path="/terms" element={<TermsOfService />} />
@@ -163,6 +166,7 @@ const App = () => {
               <Route path="/customer/user/:userId" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><PublicProfile /></UsernameSetup></ProtectedRoute>} />
               <Route path="/customer/messages" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><Conversations /></UsernameSetup></ProtectedRoute>} />
               <Route path="/customer/chat/:conversationId" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><ChatView /></UsernameSetup></ProtectedRoute>} />
+              <Route path="/customer/club/:clubId" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><ClubChat /></UsernameSetup></ProtectedRoute>} />
               <Route path="/customer/notifications" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><CustomerNotifications /></UsernameSetup></ProtectedRoute>} />
               <Route path="/customer/notification-settings" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><NotificationSettings /></UsernameSetup></ProtectedRoute>} />
               <Route path="/customer/chat-settings" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><ChatSettings /></UsernameSetup></ProtectedRoute>} />
