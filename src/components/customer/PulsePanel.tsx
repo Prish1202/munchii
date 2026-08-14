@@ -4,13 +4,16 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { EmptyState } from '@/components/customer/EmptyState';
 import { useProfile } from '@/hooks/useProfile';
 import { useB2Upload } from '@/hooks/useB2Upload';
 import { usePulses, timeLeft, type Pulse } from '@/hooks/usePulses';
+import { usePulseAudience } from '@/hooks/usePulseAudience';
 import { resolveStorageUrl } from '@/lib/utils';
-import { Plus, Camera, Type, Video, Zap, Trash2, X } from 'lucide-react';
+import { Plus, Camera, Type, Video, Zap, Trash2, X, Heart, Eye } from 'lucide-react';
 import { toast } from 'sonner';
+
 
 const BG_COLORS = [
   'linear-gradient(135deg,#FF6A1A,#FF9E4A)',
