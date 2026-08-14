@@ -290,8 +290,33 @@ export function PulsePanel() {
 
               <div className="flex items-center justify-between p-3 bg-card">
                 <span className="text-xs text-muted-foreground">{timeLeft(current.expires_at)}</span>
+              <div className="flex items-center justify-between p-3 bg-card">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">{timeLeft(current.expires_at)}</span>
+                  {isMine && (
+                    <button
+                      type="button"
+                      onClick={() => setShowAudience(true)}
+                      className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
+                    >
+                      <Eye className="w-4 h-4" /> {viewCount}
+                      <Heart className="w-4 h-4 ml-1 text-primary" /> {likeCount}
+                    </button>
+                  )}
+                </div>
                 <div className="flex items-center gap-1">
-                  {myPulses.some((p) => p.id === current.id) && (
+                  {!isMine && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      aria-label={likedByMe ? 'Unlike Pulse' : 'Like Pulse'}
+                      onClick={() => toggleLike.mutate(likedByMe)}
+                      disabled={toggleLike.isPending}
+                    >
+                      <Heart className={`w-5 h-5 ${likedByMe ? 'fill-primary text-primary' : ''}`} />
+                    </Button>
+                  )}
+                  {isMine && (
                     <Button
                       size="sm"
                       variant="ghost"
@@ -311,6 +336,7 @@ export function PulsePanel() {
               </div>
             </div>
           )}
+
         </DialogContent>
       </Dialog>
     </div>
