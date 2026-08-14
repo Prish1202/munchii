@@ -340,6 +340,39 @@ export function PulsePanel() {
 
         </DialogContent>
       </Dialog>
+
+      {/* Viewers + likers */}
+      <Sheet open={showAudience} onOpenChange={setShowAudience}>
+        <SheetContent side="bottom" className="rounded-t-2xl max-h-[70vh] overflow-y-auto">
+          <SheetHeader className="text-left">
+            <SheetTitle className="flex items-center gap-3 text-base">
+              <span className="flex items-center gap-1"><Eye className="w-4 h-4" /> {viewCount} viewed</span>
+              <span className="flex items-center gap-1"><Heart className="w-4 h-4 fill-primary text-primary" /> {likeCount} liked</span>
+            </SheetTitle>
+          </SheetHeader>
+          <div className="mt-3 space-y-2 pb-4">
+            {entries.length === 0 && (
+              <p className="text-sm text-muted-foreground py-6 text-center">No views yet</p>
+            )}
+            {entries.map((e) => (
+              <div key={e.user_id} className="flex items-center gap-3">
+                <Avatar className="w-9 h-9">
+                  {e.avatar_url && <AvatarImage src={resolveStorageUrl(e.avatar_url)} alt={e.name || 'User'} />}
+                  <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                    {e.name?.charAt(0)?.toUpperCase() || '?'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{e.name || 'User'}</p>
+                  {e.username && <p className="text-xs text-muted-foreground truncate">@{e.username}</p>}
+                </div>
+                {e.liked && <Heart className="w-4 h-4 fill-primary text-primary shrink-0" />}
+              </div>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
+
     </div>
   );
 }
