@@ -5,7 +5,7 @@ import { UserRole, UserWithRole, AuthState, ROLE_ROUTES } from '@/types/auth';
 import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => Promise<{ error: string | null }>;
+  login: (identifier: string, password: string) => Promise<{ error: string | null }>;
   signup: (email: string, password: string, name: string, role: UserRole, phone?: string, city?: string, state?: string, area?: string) => Promise<{ error: string | null }>;
   logout: () => Promise<void>;
 }
