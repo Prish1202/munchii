@@ -75,6 +75,9 @@ export function PulsePanel() {
   };
 
   const current = viewing?.[viewIndex];
+  const isMine = !!current && myPulses.some((p) => p.id === current.id);
+  const { entries, likeCount, viewCount, likedByMe, toggleLike } = usePulseAudience(current?.id, !!current);
+
 
   return (
     <div className="space-y-4">
