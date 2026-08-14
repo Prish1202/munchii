@@ -38,3 +38,11 @@ export const ROLE_ROUTES: Record<UserRole, string> = {
   restaurant: '/restaurant',
   admin: '/admin',
 };
+
+// Where a signed-in user lands when they reopen the app / hit a public page
+export const ROLE_LANDING: Record<UserRole, string> = {
+  customer: '/customer/messages',
+  restaurant: '/restaurant',
+  admin: '/admin',
+};
+
