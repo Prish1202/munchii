@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { ROLE_ROUTES } from '@/types/auth';
+import { ROLE_LANDING } from '@/types/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,7 +24,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      navigate(ROLE_ROUTES[user.role], { replace: true });
+      navigate(ROLE_LANDING[user.role], { replace: true });
     }
   }, [isAuthenticated, user, navigate]);
 
@@ -96,17 +96,20 @@ export default function LoginPage() {
           <CardContent className="space-y-4">
             <form onSubmit={handleEmailLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="login-email">Email</Label>
+                <Label htmlFor="login-email">{from === 'restaurant' ? 'Email' : 'Email or username'}</Label>
                 <Input
                   id="login-email"
-                  type="email"
-                  placeholder="you@example.com"
+                  type={from === 'restaurant' ? 'email' : 'text'}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  placeholder={from === 'restaurant' ? 'you@example.com' : 'you@example.com or @username'}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   className="bg-background rounded-xl"
                 />
               </div>
+
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="login-password">Password</Label>

@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { ROLE_ROUTES } from '@/types/auth';
+import { ROLE_LANDING } from '@/types/auth';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Star, Coins, MessageCircle, Users, Shield, MapPin, Zap, Heart, Sparkles, Trophy, Gift, ChevronDown, IndianRupee, Store, Utensils, CreditCard, UtensilsCrossed } from 'lucide-react';
 import logoImg from '@/assets/logo.png';
@@ -212,7 +212,7 @@ export default function Index() {
   const headerBg = useTransform(scrollYProgress, [0, 0.05], [0, 1]);
 
   useEffect(() => {
-    if (isAuthenticated && user) navigate(ROLE_ROUTES[user.role]);
+    if (isAuthenticated && user) navigate(ROLE_LANDING[user.role]);
   }, [isAuthenticated, user, navigate]);
 
   return (

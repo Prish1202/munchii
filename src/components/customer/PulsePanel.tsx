@@ -4,13 +4,16 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { EmptyState } from '@/components/customer/EmptyState';
 import { useProfile } from '@/hooks/useProfile';
 import { useB2Upload } from '@/hooks/useB2Upload';
 import { usePulses, timeLeft, type Pulse } from '@/hooks/usePulses';
+import { usePulseAudience } from '@/hooks/usePulseAudience';
 import { resolveStorageUrl } from '@/lib/utils';
-import { Plus, Camera, Type, Video, Zap, Trash2, X } from 'lucide-react';
+import { Plus, Camera, Type, Video, Zap, Trash2, X, Heart, Eye } from 'lucide-react';
 import { toast } from 'sonner';
+
 
 const BG_COLORS = [
   'linear-gradient(135deg,#FF6A1A,#FF9E4A)',
@@ -30,6 +33,8 @@ export function PulsePanel() {
   const [bg, setBg] = useState(BG_COLORS[0]);
   const [viewing, setViewing] = useState<Pulse[] | null>(null);
   const [viewIndex, setViewIndex] = useState(0);
+  const [showAudience, setShowAudience] = useState(false);
+
 
   const photoRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLInputElement>(null);
@@ -72,6 +77,9 @@ export function PulsePanel() {
   };
 
   const current = viewing?.[viewIndex];
+  const isMine = !!current && myPulses.some((p) => p.id === current.id);
+  const { entries, likeCount, viewCount, likedByMe, toggleLike } = usePulseAudience(current?.id, !!current);
+
 
   return (
     <div className="space-y-4">
@@ -283,9 +291,33 @@ export function PulsePanel() {
               />
 
               <div className="flex items-center justify-between p-3 bg-card">
-                <span className="text-xs text-muted-foreground">{timeLeft(current.expires_at)}</span>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">{timeLeft(current.expires_at)}</span>
+                  {isMine && (
+                    <button
+                      type="button"
+                      onClick={() => setShowAudience(true)}
+                      className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
+                    >
+                      <Eye className="w-4 h-4" /> {viewCount}
+                      <Heart className="w-4 h-4 ml-1 text-primary" /> {likeCount}
+                    </button>
+                  )}
+                </div>
                 <div className="flex items-center gap-1">
-                  {myPulses.some((p) => p.id === current.id) && (
+                  {!isMine && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      aria-label={likedByMe ? 'Unlike Pulse' : 'Like Pulse'}
+                      onClick={() => toggleLike.mutate(likedByMe)}
+                      disabled={toggleLike.isPending}
+                    >
+                      <Heart className={`w-5 h-5 ${likedByMe ? 'fill-primary text-primary' : ''}`} />
+                    </Button>
+                  )}
+                  {isMine && (
                     <Button
                       size="sm"
                       variant="ghost"
@@ -305,8 +337,42 @@ export function PulsePanel() {
               </div>
             </div>
           )}
+
         </DialogContent>
       </Dialog>
+
+      {/* Viewers + likers */}
+      <Sheet open={showAudience} onOpenChange={setShowAudience}>
+        <SheetContent side="bottom" className="rounded-t-2xl max-h-[70vh] overflow-y-auto">
+          <SheetHeader className="text-left">
+            <SheetTitle className="flex items-center gap-3 text-base">
+              <span className="flex items-center gap-1"><Eye className="w-4 h-4" /> {viewCount} viewed</span>
+              <span className="flex items-center gap-1"><Heart className="w-4 h-4 fill-primary text-primary" /> {likeCount} liked</span>
+            </SheetTitle>
+          </SheetHeader>
+          <div className="mt-3 space-y-2 pb-4">
+            {entries.length === 0 && (
+              <p className="text-sm text-muted-foreground py-6 text-center">No views yet</p>
+            )}
+            {entries.map((e) => (
+              <div key={e.user_id} className="flex items-center gap-3">
+                <Avatar className="w-9 h-9">
+                  {e.avatar_url && <AvatarImage src={resolveStorageUrl(e.avatar_url)} alt={e.name || 'User'} />}
+                  <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                    {e.name?.charAt(0)?.toUpperCase() || '?'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{e.name || 'User'}</p>
+                  {e.username && <p className="text-xs text-muted-foreground truncate">@{e.username}</p>}
+                </div>
+                {e.liked && <Heart className="w-4 h-4 fill-primary text-primary shrink-0" />}
+              </div>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
+
     </div>
   );
 }

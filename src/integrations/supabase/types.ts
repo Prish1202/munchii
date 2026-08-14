@@ -852,6 +852,35 @@ export type Database = {
         }
         Relationships: []
       }
+      pulse_likes: {
+        Row: {
+          created_at: string
+          id: string
+          pulse_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          pulse_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          pulse_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pulse_likes_pulse_id_fkey"
+            columns: ["pulse_id"]
+            isOneToOne: false
+            referencedRelation: "pulses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pulse_views: {
         Row: {
           created_at: string

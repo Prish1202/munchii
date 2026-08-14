@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { UtensilsCrossed, Store, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { ROLE_ROUTES } from '@/types/auth';
+import { ROLE_LANDING } from '@/types/auth';
 import { Card } from '@/components/ui/card';
 import logoWordmark from '@/assets/logo-wordmark.jpg';
 
@@ -13,7 +13,7 @@ export default function RoleSelect() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated && user) {
-      navigate(ROLE_ROUTES[user.role], { replace: true });
+      navigate(ROLE_LANDING[user.role], { replace: true });
     }
   }, [isLoading, isAuthenticated, user, navigate]);
 

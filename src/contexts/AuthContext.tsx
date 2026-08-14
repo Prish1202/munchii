@@ -5,7 +5,7 @@ import { UserRole, UserWithRole, AuthState, ROLE_ROUTES } from '@/types/auth';
 import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => Promise<{ error: string | null }>;
+  login: (identifier: string, password: string) => Promise<{ error: string | null }>;
   signup: (email: string, password: string, name: string, role: UserRole, phone?: string, city?: string, state?: string, area?: string) => Promise<{ error: string | null }>;
   logout: () => Promise<void>;
 }
@@ -93,10 +93,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const login = async (email: string, password: string): Promise<{ error: string | null }> => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error?.message || null };
+  const login = async (identifier: string, password: string): Promise<{ error: string | null }> => {
+    const id = identifier.trim();
+
+    // Email login
+    if (id.includes('@') && !id.startsWith('@')) {
+      const { error } = await supabase.auth.signInWithPassword({ email: id, password });
+      return { error: error?.message || null };
+    }
+
+    // Username login (Foodie accounts only) — resolved server-side
+    try {
+      const { data, error } = await supabase.functions.invoke('username-login', {
+        body: { username: id, password },
+      });
+      if (error) {
+        const ctx: any = (error as any).context;
+        let message = 'Invalid username or password';
+        try {
+          const body = await ctx?.json?.();
+          if (body?.error) message = body.error;
+        } catch { /* keep default */ }
+        return { error: message };
+      }
+      if (!data?.access_token || !data?.refresh_token) {
+        return { error: 'Invalid username or password' };
+      }
+      const { error: sessErr } = await supabase.auth.setSession({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+      });
+      return { error: sessErr?.message || null };
+    } catch (e: any) {
+      return { error: e?.message || 'Could not sign in' };
+    }
   };
+
 
   const signup = async (
     email: string,
