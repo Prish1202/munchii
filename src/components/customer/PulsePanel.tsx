@@ -289,8 +289,7 @@ export function PulsePanel() {
               />
 
               <div className="flex items-center justify-between p-3 bg-card">
-                <span className="text-xs text-muted-foreground">{timeLeft(current.expires_at)}</span>
-              <div className="flex items-center justify-between p-3 bg-card">
+
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-muted-foreground">{timeLeft(current.expires_at)}</span>
                   {isMine && (
