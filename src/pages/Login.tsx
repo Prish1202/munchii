@@ -96,17 +96,20 @@ export default function LoginPage() {
           <CardContent className="space-y-4">
             <form onSubmit={handleEmailLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="login-email">Email</Label>
+                <Label htmlFor="login-email">{from === 'restaurant' ? 'Email' : 'Email or username'}</Label>
                 <Input
                   id="login-email"
-                  type="email"
-                  placeholder="you@example.com"
+                  type={from === 'restaurant' ? 'email' : 'text'}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  placeholder={from === 'restaurant' ? 'you@example.com' : 'you@example.com or @username'}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   className="bg-background rounded-xl"
                 />
               </div>
+
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="login-password">Password</Label>
