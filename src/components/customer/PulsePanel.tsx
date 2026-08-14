@@ -33,6 +33,8 @@ export function PulsePanel() {
   const [bg, setBg] = useState(BG_COLORS[0]);
   const [viewing, setViewing] = useState<Pulse[] | null>(null);
   const [viewIndex, setViewIndex] = useState(0);
+  const [showAudience, setShowAudience] = useState(false);
+
 
   const photoRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLInputElement>(null);
