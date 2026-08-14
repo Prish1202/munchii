@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { UserRole, ROLE_LABELS, ROLE_ROUTES, SIGNUP_ROLES } from '@/types/auth';
+import { UserRole, ROLE_LABELS, ROLE_LANDING, SIGNUP_ROLES } from '@/types/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -39,7 +39,7 @@ export default function SignupPage() {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      navigate(ROLE_ROUTES[user.role], { replace: true });
+      navigate(ROLE_LANDING[user.role], { replace: true });
     }
   }, [isAuthenticated, user, navigate]);
 
