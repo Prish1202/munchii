@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { ArrowLeft, Mail } from 'lucide-react';
+import { PUBLIC_BASE_URL } from '@/lib/appLinks';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -25,7 +26,7 @@ export default function ForgotPassword() {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${PUBLIC_BASE_URL}/reset-password`,
       });
 
       if (error) throw error;
