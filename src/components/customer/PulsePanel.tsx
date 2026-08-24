@@ -254,43 +254,50 @@ export function PulsePanel() {
                 ))}
               </div>
 
-              <div
-                className="aspect-[9/16] w-full flex items-center justify-center bg-muted"
-                style={current.media_type === 'text' ? { background: current.background_color || BG_COLORS[0] } : undefined}
-              >
-                {current.media_type === 'image' && (
-                  <img src={resolveStorageUrl(current.media_url)} alt="Pulse" className="w-full h-full object-contain" />
-                )}
-                {current.media_type === 'video' && (
-                  <video
-                    src={resolveStorageUrl(current.media_url)}
-                    className="w-full h-full object-contain"
-                    controls
-                    autoPlay
-                    playsInline
-                  />
-                )}
-                {current.media_type === 'text' && (
-                  <p className="text-primary-foreground text-xl font-display font-semibold text-center px-6">
-                    {current.text_content}
-                  </p>
+              <div className="relative">
+                <div
+                  className="aspect-[9/16] w-full flex items-center justify-center bg-muted"
+                  style={current.media_type === 'text' ? { background: current.background_color || BG_COLORS[0] } : undefined}
+                >
+                  {current.media_type === 'image' && (
+                    <img src={resolveStorageUrl(current.media_url)} alt="Pulse" className="w-full h-full object-contain" />
+                  )}
+                  {current.media_type === 'video' && (
+                    <video
+                      src={resolveStorageUrl(current.media_url)}
+                      className="w-full h-full object-contain"
+                      controls
+                      autoPlay
+                      playsInline
+                    />
+                  )}
+                  {current.media_type === 'text' && (
+                    <p className="text-primary-foreground text-xl font-display font-semibold text-center px-6">
+                      {current.text_content}
+                    </p>
+                  )}
+                </div>
+
+                {current.media_type !== 'video' && (
+                  <>
+                    <button
+                      type="button"
+                      aria-label="Previous"
+                      onClick={() => step(-1)}
+                      className="absolute inset-y-0 left-0 w-1/3"
+                    />
+                    <button
+                      type="button"
+                      aria-label="Next"
+                      onClick={() => step(1)}
+                      className="absolute inset-y-0 right-0 w-1/3"
+                    />
+                  </>
                 )}
               </div>
 
-              <button
-                type="button"
-                aria-label="Previous"
-                onClick={() => step(-1)}
-                className="absolute inset-y-0 left-0 w-1/3"
-              />
-              <button
-                type="button"
-                aria-label="Next"
-                onClick={() => step(1)}
-                className="absolute inset-y-0 right-0 w-1/3"
-              />
+              <div className="relative z-20 flex items-center justify-between p-3 bg-card">
 
-              <div className="flex items-center justify-between p-3 bg-card">
 
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-muted-foreground">{timeLeft(current.expires_at)}</span>
