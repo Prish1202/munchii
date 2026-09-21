@@ -15,6 +15,7 @@ export interface MenuItem {
   category_id: string | null;
   created_at: string;
   updated_at: string;
+  preparation_time_minutes: number;
 }
 
 export interface MenuCategory {
@@ -95,6 +96,7 @@ export function useAddMenuItem() {
       image_url?: string;
       category_id?: string;
       discount_percent?: number;
+      preparation_time_minutes?: number;
     }) => {
       const { error } = await supabase.from('menu_items').insert({
         restaurant_id: restaurant!.id,
@@ -104,6 +106,7 @@ export function useAddMenuItem() {
         image_url: item.image_url || null,
         category_id: item.category_id || null,
         discount_percent: item.discount_percent || 0,
+        preparation_time_minutes: item.preparation_time_minutes || 10,
       });
       if (error) throw error;
     },

@@ -11,8 +11,8 @@ import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   ArrowLeft, Camera, Save, Loader2, Check, X,
-  Shield, FileText, Users, Mail, MessageSquare, ChevronRight,
-  Bell, Moon, Sun, LogOut, HelpCircle, Lock, Globe, Eye
+  Shield, FileText, Users, Mail, ChevronRight,
+  Bell, Moon, Sun, LogOut, HelpCircle, Lock, Globe
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -269,13 +269,11 @@ export default function ProfileSettings() {
             />
           </div>
           <SettingsLink icon={Bell} label="Notifications" href="/customer/notification-settings" />
-          <SettingsLink icon={MessageSquare} label="Chat Settings" href="/customer/chat-settings" />
         </SettingsSection>
 
         {/* Privacy & Security */}
         <SettingsSection title="Privacy & Security" delay={0.15}>
           <SettingsLink icon={Lock} label="Change Password" href="/forgot-password" />
-          <SettingsLink icon={Eye} label="Account Privacy" href="/customer/account-privacy" />
         </SettingsSection>
 
         {/* Legal & Support */}

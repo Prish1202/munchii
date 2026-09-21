@@ -359,6 +359,7 @@ export type Database = {
           id: string
           image_url: string | null
           name: string
+          preparation_time_minutes: number
           price: number
           restaurant_id: string
           updated_at: string
@@ -372,6 +373,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           name: string
+          preparation_time_minutes?: number
           price: number
           restaurant_id: string
           updated_at?: string
@@ -385,6 +387,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           name?: string
+          preparation_time_minutes?: number
           price?: number
           restaurant_id?: string
           updated_at?: string
@@ -1135,6 +1138,7 @@ export type Database = {
           opening_hours: string | null
           owner_id: string
           photo_url: string | null
+          preparation_buffer_minutes: number
           university_name: string | null
           updated_at: string
           verification_status: string
@@ -1152,6 +1156,7 @@ export type Database = {
           opening_hours?: string | null
           owner_id: string
           photo_url?: string | null
+          preparation_buffer_minutes?: number
           university_name?: string | null
           updated_at?: string
           verification_status?: string
@@ -1169,6 +1174,7 @@ export type Database = {
           opening_hours?: string | null
           owner_id?: string
           photo_url?: string | null
+          preparation_buffer_minutes?: number
           university_name?: string | null
           updated_at?: string
           verification_status?: string

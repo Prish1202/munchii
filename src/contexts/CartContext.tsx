@@ -8,6 +8,8 @@ export interface CartItem {
   quantity: number;
   restaurantId: string;
   restaurantName: string;
+  preparationTimeMinutes: number;
+  restaurantBufferMinutes: number;
 }
 
 interface CartContextType {
@@ -20,6 +22,10 @@ interface CartContextType {
   clearCart: () => void;
   totalItems: number;
   totalAmount: number;
+  longestPreparationMinutes: number;
+  restaurantBufferMinutes: number;
+  selectedPickupTime: string | null;
+  setSelectedPickupTime: (value: string | null) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -30,6 +36,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
   const [restaurantName, setRestaurantName] = useState<string | null>(null);
+  const [restaurantBufferMinutes, setRestaurantBufferMinutes] = useState(5);
+  const [selectedPickupTime, setSelectedPickupTime] = useState<string | null>(null);
 
   // Load cart from localStorage on mount
   useEffect(() => {
@@ -37,9 +45,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
-        setItems(parsed.items || []);
+        setItems((parsed.items || []).map((item: CartItem) => ({
+          ...item,
+          preparationTimeMinutes: item.preparationTimeMinutes || 10,
+        })));
         setRestaurantId(parsed.restaurantId || null);
         setRestaurantName(parsed.restaurantName || null);
+        setRestaurantBufferMinutes(parsed.restaurantBufferMinutes ?? 5);
+        setSelectedPickupTime(parsed.selectedPickupTime || null);
       } catch {
         localStorage.removeItem(CART_STORAGE_KEY);
       }
@@ -52,8 +65,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
       items,
       restaurantId,
       restaurantName,
+      restaurantBufferMinutes,
+      selectedPickupTime,
     }));
-  }, [items, restaurantId, restaurantName]);
+  }, [items, restaurantId, restaurantName, restaurantBufferMinutes, selectedPickupTime]);
 
   const addItem = (item: Omit<CartItem, 'id' | 'quantity'>) => {
     // If adding from a different restaurant, clear the cart first
@@ -65,6 +80,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }]);
       setRestaurantId(item.restaurantId);
       setRestaurantName(item.restaurantName);
+      setRestaurantBufferMinutes(item.restaurantBufferMinutes ?? 5);
+      setSelectedPickupTime(null);
       return;
     }
 
@@ -83,7 +100,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (!restaurantId) {
       setRestaurantId(item.restaurantId);
       setRestaurantName(item.restaurantName);
+      setRestaurantBufferMinutes(item.restaurantBufferMinutes ?? 5);
     }
+    setSelectedPickupTime(null);
   };
 
   const removeItem = (menuItemId: string) => {
@@ -92,6 +111,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (updated.length === 0) {
         setRestaurantId(null);
         setRestaurantName(null);
+        setRestaurantBufferMinutes(5);
+        setSelectedPickupTime(null);
       }
       return updated;
     });
@@ -113,10 +134,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems([]);
     setRestaurantId(null);
     setRestaurantName(null);
+    setRestaurantBufferMinutes(5);
+    setSelectedPickupTime(null);
   };
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const totalAmount = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const longestPreparationMinutes = items.reduce(
+    (longest, item) => Math.max(longest, item.preparationTimeMinutes || 10),
+    10,
+  );
 
   return (
     <CartContext.Provider value={{
@@ -129,6 +156,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
       clearCart,
       totalItems,
       totalAmount,
+      longestPreparationMinutes,
+      restaurantBufferMinutes,
+      selectedPickupTime,
+      setSelectedPickupTime,
     }}>
       {children}
     </CartContext.Provider>

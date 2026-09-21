@@ -41,7 +41,7 @@ export const ROLE_ROUTES: Record<UserRole, string> = {
 
 // Where a signed-in user lands when they reopen the app / hit a public page
 export const ROLE_LANDING: Record<UserRole, string> = {
-  customer: '/customer/messages',
+  customer: '/customer',
   restaurant: '/restaurant',
   admin: '/admin',
 };

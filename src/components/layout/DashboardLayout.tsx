@@ -5,7 +5,6 @@ import restaurantLogo from '@/assets/munchii-restaurant-logo.png';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import { useWallet } from '@/hooks/useWallet';
-import { useConversations } from '@/hooks/useChat';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,9 +21,7 @@ import {
   Settings,
   RotateCcw,
   Wallet,
-  MessageSquare,
   Coins,
-  Search,
   Sparkles,
   BellRing
 } from 'lucide-react';
@@ -42,9 +39,8 @@ interface NavItem {
 const NAV_ITEMS: Record<UserRole, NavItem[]> = {
   customer: [
     { label: 'Home', href: '/customer', icon: <Home className="w-5 h-5" /> },
-    { label: 'Explore', href: '/customer/explore', icon: <Search className="w-5 h-5" /> },
+    { label: 'Orders', href: '/customer/orders', icon: <ClipboardList className="w-5 h-5" /> },
     { label: 'Coins', href: '/customer/coins', icon: <Coins className="w-5 h-5" /> },
-    { label: 'Chat', href: '/customer/messages', icon: <MessageSquare className="w-5 h-5" /> },
     { label: 'Profile', href: '/customer/profile', icon: <User className="w-5 h-5" /> },
   ],
   restaurant: [
@@ -71,7 +67,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, logout } = useAuth();
   const { totalItems } = useCart();
   const { data: wallet } = useWallet();
-  const { data: conversations } = useConversations();
   const location = useLocation();
   const [dismissNotificationsPrompt, setDismissNotificationsPrompt] = useState(false);
   const {
@@ -86,7 +81,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const navItems = NAV_ITEMS[user.role];
   const isCustomer = user.role === 'customer';
   const isRestaurant = user.role === 'restaurant';
-  const totalUnread = conversations?.reduce((sum, c) => sum + (c.unread_count || 0), 0) || 0;
   const notificationSettingsHref =
     user.role === 'customer'
       ? '/customer/notification-settings'
@@ -145,7 +139,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <nav className="space-y-1.5">
             {navItems.map((item) => {
               const isActive = location.pathname === item.href;
-              const badge = item.label === 'Chat' && totalUnread > 0 ? totalUnread : 0;
               return (
                 <Link
                   key={item.href + item.label}
@@ -159,11 +152,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 >
                   {item.icon}
                   {item.label}
-                  {badge > 0 && (
-                    <Badge className="ml-auto h-5 min-w-5 px-1.5 flex items-center justify-center text-[10px] bg-primary/20 text-primary-foreground border-0">
-                      {badge > 99 ? '99+' : badge}
-                    </Badge>
-                  )}
                 </Link>
               );
             })}
@@ -236,10 +224,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       </div>
 
       <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t border-border/80 glass-strong z-50 safe-area-bottom">
-        <div className={cn('grid gap-1 px-2 py-2', user.role === 'admin' ? 'grid-cols-7' : 'grid-cols-5')}>
+        <div className={cn('grid gap-1 px-2 py-2', user.role === 'admin' ? 'grid-cols-7' : user.role === 'customer' ? 'grid-cols-4' : 'grid-cols-4')}>
           {navItems.map((item) => {
             const isActive = location.pathname === item.href;
-            const badge = item.label === 'Chat' && totalUnread > 0 ? totalUnread : 0;
             return (
               <Link
                 key={item.href + item.label}
@@ -251,11 +238,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               >
                 <div className={cn('p-2 rounded-2xl transition-all relative', isActive && 'bg-secondary/12 shadow-soft')}>
                   {item.icon}
-                  {badge > 0 && (
-                    <Badge className="absolute -top-1 -right-2 h-4 min-w-4 px-1 flex items-center justify-center text-[9px] gradient-primary border-0">
-                      {badge > 99 ? '99+' : badge}
-                    </Badge>
-                  )}
                 </div>
                 <span className="truncate">{item.label}</span>
               </Link>

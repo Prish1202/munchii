@@ -12,7 +12,6 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { OneSignalInit } from "@/components/OneSignalInit";
 import { OfflineBanner } from "@/components/OfflineBanner";
-import { OutboxFlusher } from "@/components/OutboxFlusher";
 
 // Pages
 import Index from "./pages/Index";
@@ -30,7 +29,6 @@ import ProfileLanding from "./pages/ProfileLanding";
 // Customer Pages
 import CustomerDashboard from "./pages/customer/Dashboard";
 import RestaurantList from "./pages/customer/RestaurantList";
-import Explore from "./pages/customer/Explore";
 import RestaurantMenu from "./pages/customer/RestaurantMenu";
 import Cart from "./pages/customer/Cart";
 import Checkout from "./pages/customer/Checkout";
@@ -39,18 +37,9 @@ import Orders from "./pages/customer/Orders";
 import OrderTracking from "./pages/customer/OrderTracking";
 import CustomerProfile from "./pages/customer/Profile";
 import CustomerCoins from "./pages/customer/Coins";
-import PublicProfile from "./pages/customer/PublicProfile";
-import FollowersList from "./pages/customer/FollowersList";
-import Conversations from "./pages/customer/Conversations";
-import ChatView from "./pages/customer/ChatView";
-import ClubChat from "./pages/customer/ClubChat";
 import CustomerNotifications from "./pages/customer/Notifications";
 import NotificationSettings from "./pages/customer/NotificationSettings";
 import ProfileSettings from "./pages/customer/ProfileSettings";
-import ChatSettings from "./pages/customer/ChatSettings";
-import AccountPrivacy from "./pages/customer/AccountPrivacy";
-import BlockedUsers from "./pages/customer/BlockedUsers";
-import { UsernameSetup } from "./components/customer/UsernameSetup";
 // Restaurant Pages
 import RestaurantDashboard from "./pages/restaurant/Dashboard";
 import RestaurantOrders from "./pages/restaurant/Orders";
@@ -108,10 +97,10 @@ const App = () => {
       persister,
       maxAge: 1000 * 60 * 60 * 24 * 7,
       dehydrateOptions: {
-        // Only persist chat-related queries so we don't bloat localStorage
+        // Persist lightweight customer data for a fast return to the app.
         shouldDehydrateQuery: (q) => {
           const key = q.queryKey?.[0];
-          return key === 'messages' || key === 'conversations' || key === 'profile' || key === 'conversation-detail' || key === 'public-key';
+          return key === 'profile' || key === 'wallet' || key === 'customer-orders' || key === 'restaurants';
         },
       },
     }}
@@ -119,7 +108,6 @@ const App = () => {
     <TooltipProvider>
       <AuthProvider>
         <OneSignalInit />
-        <OutboxFlusher />
         <OfflineBanner />
         <CartProvider>
           <LocationProvider>
@@ -150,29 +138,29 @@ const App = () => {
               <Route path="/contact" element={<ContactUs />} />
 
               {/* Customer Routes */}
-              <Route path="/customer" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><CustomerDashboard /></UsernameSetup></ProtectedRoute>} />
-              <Route path="/customer/explore" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><Explore /></UsernameSetup></ProtectedRoute>} />
-              <Route path="/customer/browse" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><RestaurantList /></UsernameSetup></ProtectedRoute>} />
-              <Route path="/customer/restaurant/:id" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><RestaurantMenu /></UsernameSetup></ProtectedRoute>} />
-              <Route path="/customer/cart" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><Cart /></UsernameSetup></ProtectedRoute>} />
-              <Route path="/customer/checkout" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><Checkout /></UsernameSetup></ProtectedRoute>} />
-              <Route path="/customer/order-success/:id" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><OrderSuccess /></UsernameSetup></ProtectedRoute>} />
-              <Route path="/customer/orders" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><Orders /></UsernameSetup></ProtectedRoute>} />
-              <Route path="/customer/orders/:id" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><OrderTracking /></UsernameSetup></ProtectedRoute>} />
-              <Route path="/customer/profile" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><CustomerProfile /></UsernameSetup></ProtectedRoute>} />
-              <Route path="/customer/profile/settings" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><ProfileSettings /></UsernameSetup></ProtectedRoute>} />
-              <Route path="/customer/coins" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><CustomerCoins /></UsernameSetup></ProtectedRoute>} />
-              <Route path="/customer/profile/:type" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><FollowersList /></UsernameSetup></ProtectedRoute>} />
-              <Route path="/customer/user/:userId" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><PublicProfile /></UsernameSetup></ProtectedRoute>} />
-              <Route path="/customer/messages" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><Conversations /></UsernameSetup></ProtectedRoute>} />
-              <Route path="/customer/chat/:conversationId" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><ChatView /></UsernameSetup></ProtectedRoute>} />
-              <Route path="/customer/club/:clubId" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><ClubChat /></UsernameSetup></ProtectedRoute>} />
-              <Route path="/customer/notifications" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><CustomerNotifications /></UsernameSetup></ProtectedRoute>} />
-              <Route path="/customer/notification-settings" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><NotificationSettings /></UsernameSetup></ProtectedRoute>} />
-              <Route path="/customer/chat-settings" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><ChatSettings /></UsernameSetup></ProtectedRoute>} />
-              <Route path="/customer/account-privacy" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><AccountPrivacy /></UsernameSetup></ProtectedRoute>} />
-              <Route path="/customer/blocked-users" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><BlockedUsers /></UsernameSetup></ProtectedRoute>} />
-              <Route path="/customer/*" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><CustomerDashboard /></UsernameSetup></ProtectedRoute>} />
+              <Route path="/customer" element={<ProtectedRoute allowedRoles={['customer']}><CustomerDashboard /></ProtectedRoute>} />
+              <Route path="/customer/browse" element={<ProtectedRoute allowedRoles={['customer']}><RestaurantList /></ProtectedRoute>} />
+              <Route path="/customer/restaurant/:id" element={<ProtectedRoute allowedRoles={['customer']}><RestaurantMenu /></ProtectedRoute>} />
+              <Route path="/customer/cart" element={<ProtectedRoute allowedRoles={['customer']}><Cart /></ProtectedRoute>} />
+              <Route path="/customer/checkout" element={<ProtectedRoute allowedRoles={['customer']}><Checkout /></ProtectedRoute>} />
+              <Route path="/customer/order-success/:id" element={<ProtectedRoute allowedRoles={['customer']}><OrderSuccess /></ProtectedRoute>} />
+              <Route path="/customer/orders" element={<ProtectedRoute allowedRoles={['customer']}><Orders /></ProtectedRoute>} />
+              <Route path="/customer/orders/:id" element={<ProtectedRoute allowedRoles={['customer']}><OrderTracking /></ProtectedRoute>} />
+              <Route path="/customer/profile" element={<ProtectedRoute allowedRoles={['customer']}><CustomerProfile /></ProtectedRoute>} />
+              <Route path="/customer/profile/settings" element={<ProtectedRoute allowedRoles={['customer']}><ProfileSettings /></ProtectedRoute>} />
+              <Route path="/customer/coins" element={<ProtectedRoute allowedRoles={['customer']}><CustomerCoins /></ProtectedRoute>} />
+              <Route path="/customer/notifications" element={<ProtectedRoute allowedRoles={['customer']}><CustomerNotifications /></ProtectedRoute>} />
+              <Route path="/customer/notification-settings" element={<ProtectedRoute allowedRoles={['customer']}><NotificationSettings /></ProtectedRoute>} />
+              <Route path="/customer/explore" element={<Navigate to="/customer" replace />} />
+              <Route path="/customer/messages" element={<Navigate to="/customer" replace />} />
+              <Route path="/customer/chat/*" element={<Navigate to="/customer" replace />} />
+              <Route path="/customer/club/*" element={<Navigate to="/customer" replace />} />
+              <Route path="/customer/user/*" element={<Navigate to="/customer" replace />} />
+              <Route path="/customer/profile/:type" element={<Navigate to="/customer/profile" replace />} />
+              <Route path="/customer/chat-settings" element={<Navigate to="/customer/profile/settings" replace />} />
+              <Route path="/customer/account-privacy" element={<Navigate to="/customer/profile/settings" replace />} />
+              <Route path="/customer/blocked-users" element={<Navigate to="/customer/profile/settings" replace />} />
+              <Route path="/customer/*" element={<Navigate to="/customer" replace />} />
 
               {/* Restaurant Routes */}
               <Route path="/restaurant/onboarding" element={<ProtectedRoute allowedRoles={['restaurant']}><RestaurantOnboarding /></ProtectedRoute>} />
