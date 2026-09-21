@@ -52,6 +52,8 @@ export default function RestaurantMenu() {
       price: effectivePrice,
       restaurantId: id!,
       restaurantName: restaurant?.name || '',
+      preparationTimeMinutes: item.preparation_time_minutes || 10,
+      restaurantBufferMinutes: restaurant?.preparation_buffer_minutes || 5,
     });
     toast.success(`Added ${item.name}`);
   };
@@ -238,11 +240,14 @@ export default function RestaurantMenu() {
                       </p>
                     </div>
                     <div className="flex items-center justify-between mt-2">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-semibold text-primary">₹{discountedPrice.toFixed(0)}</span>
                         {discount > 0 && (
                           <span className="text-xs text-muted-foreground line-through">₹{item.price}</span>
                         )}
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Clock className="w-3 h-3" /> ~{item.preparation_time_minutes || 10} min
+                        </span>
                       </div>
                       {quantity > 0 ? (
                         <div className="flex items-center gap-1.5 bg-primary/10 rounded-lg px-1">

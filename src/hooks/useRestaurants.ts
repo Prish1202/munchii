@@ -10,6 +10,7 @@ export interface Restaurant {
   created_at: string;
   owner_id: string;
   photo_url?: string | null;
+  preparation_buffer_minutes: number;
 }
 
 export interface MenuItem {
@@ -23,6 +24,7 @@ export interface MenuItem {
   description?: string | null;
   discount_percent?: number | null;
   category_id?: string | null;
+  preparation_time_minutes: number;
 }
 
 export interface MenuCategory {

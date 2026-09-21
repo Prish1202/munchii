@@ -102,7 +102,7 @@ function OrderCard({ order, showReorder }: { order: any; showReorder?: boolean }
     if (order.restaurant_id) {
       const { data: restaurant } = await supabase
         .from('restaurants')
-        .select('is_active, name')
+        .select('is_active, name, preparation_buffer_minutes')
         .eq('id', order.restaurant_id)
         .maybeSingle();
 
@@ -116,7 +116,7 @@ function OrderCard({ order, showReorder }: { order: any; showReorder?: boolean }
     const menuItemIds = orderItems.map(i => i.menu_item_id).filter(Boolean);
     const { data: currentMenuItems } = await supabase
       .from('menu_items')
-      .select('id, name, price, available')
+      .select('id, name, price, available, preparation_time_minutes')
       .in('id', menuItemIds);
 
     const currentPriceMap = new Map(
@@ -139,6 +139,8 @@ function OrderCard({ order, showReorder }: { order: any; showReorder?: boolean }
           price: Number(current.price),
           restaurantId: order.restaurant_id,
           restaurantName: order.restaurant?.name || 'Restaurant',
+          preparationTimeMinutes: current.preparation_time_minutes || 10,
+          restaurantBufferMinutes: restaurant?.preparation_buffer_minutes || 5,
         });
       }
     });
