@@ -3,7 +3,6 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile, useUserStats } from '@/hooks/useProfile';
 import { useWallet } from '@/hooks/useWallet';
-import { useFollowerCounts } from '@/hooks/useFollowers';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -18,7 +17,6 @@ export default function Profile() {
   const { data: profile } = useProfile();
   const { data: wallet } = useWallet();
   const { data: stats } = useUserStats();
-  const { data: counts } = useFollowerCounts(user?.id || '');
   const { data: orders } = useCustomerOrders();
 
   const hasLiveOrder = orders?.some(o => !['completed', 'cancelled'].includes(o.status)) || false;
@@ -63,28 +61,12 @@ export default function Profile() {
                 <h1 className="font-display font-bold text-xl">{profile?.name}</h1>
                 
               </div>
-              {profile?.username && (
-                <p className="text-sm text-muted-foreground">@{profile.username}</p>
-              )}
-              {profile?.bio && (
-                <p className="text-sm text-foreground/80 mt-1">{profile.bio}</p>
-              )}
               {profile?.campus && (
                 <div className="flex items-center gap-2 mt-1.5">
                   <Badge variant="secondary" className="text-xs rounded-lg">🎓 {profile.campus}</Badge>
                 </div>
               )}
 
-              <div className="flex gap-5 mt-3 text-sm">
-                <Link to="/customer/profile/followers" className="hover:text-primary transition-colors">
-                  <span className="font-bold">{counts?.followers || 0}</span>{' '}
-                  <span className="text-muted-foreground">Followers</span>
-                </Link>
-                <Link to="/customer/profile/following" className="hover:text-primary transition-colors">
-                  <span className="font-bold">{counts?.following || 0}</span>{' '}
-                  <span className="text-muted-foreground">Following</span>
-                </Link>
-              </div>
             </div>
           </div>
         </motion.div>
