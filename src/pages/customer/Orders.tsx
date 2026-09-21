@@ -99,6 +99,7 @@ function OrderCard({ order, showReorder }: { order: any; showReorder?: boolean }
     }
 
     // Check if restaurant is still active/open
+    let restaurantBufferMinutes = 5;
     if (order.restaurant_id) {
       const { data: restaurant } = await supabase
         .from('restaurants')
@@ -110,6 +111,7 @@ function OrderCard({ order, showReorder }: { order: any; showReorder?: boolean }
         toast.error(`${restaurant?.name || 'This restaurant'} is currently offline. You can't reorder right now.`);
         return;
       }
+      restaurantBufferMinutes = restaurant.preparation_buffer_minutes || 5;
     }
 
     // Fetch current prices from menu_items
@@ -140,7 +142,7 @@ function OrderCard({ order, showReorder }: { order: any; showReorder?: boolean }
           restaurantId: order.restaurant_id,
           restaurantName: order.restaurant?.name || 'Restaurant',
           preparationTimeMinutes: current.preparation_time_minutes || 10,
-          restaurantBufferMinutes: restaurant?.preparation_buffer_minutes || 5,
+          restaurantBufferMinutes,
         });
       }
     });

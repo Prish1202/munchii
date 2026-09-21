@@ -9,6 +9,7 @@ export interface CartItem {
   restaurantId: string;
   restaurantName: string;
   preparationTimeMinutes: number;
+  restaurantBufferMinutes: number;
 }
 
 interface CartContextType {
