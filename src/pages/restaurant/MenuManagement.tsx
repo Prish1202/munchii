@@ -49,8 +49,8 @@ export default function MenuManagement() {
   const deleteCategory = useDeleteMenuCategory();
   
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<{ id: string; name: string; price: number; description?: string; discount_percent?: number; image_url?: string; category_id?: string | null } | null>(null);
-  const [newItem, setNewItem] = useState({ name: '', price: '', description: '', discount_percent: '', image_url: '', category_id: '' });
+  const [editingItem, setEditingItem] = useState<{ id: string; name: string; price: number; description?: string; discount_percent?: number; image_url?: string; category_id?: string | null; preparation_time_minutes?: number } | null>(null);
+  const [newItem, setNewItem] = useState({ name: '', price: '', description: '', discount_percent: '', image_url: '', category_id: '', preparation_time_minutes: '10' });
   const [uploading, setUploading] = useState(false);
   const [editUploading, setEditUploading] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -101,6 +101,7 @@ export default function MenuManagement() {
       description: newItem.description.trim() || undefined,
       discount_percent: newItem.discount_percent ? parseFloat(newItem.discount_percent) : undefined,
       category_id: newItem.category_id || undefined,
+      preparation_time_minutes: Math.min(180, Math.max(1, parseInt(newItem.preparation_time_minutes) || 10)),
     });
     
     setNewItem({ name: '', price: '', description: '', discount_percent: '', image_url: '', category_id: '' });
@@ -119,6 +120,7 @@ export default function MenuManagement() {
       description: editingItem.description,
       discount_percent: editingItem.discount_percent,
       category_id: editingItem.category_id,
+      preparation_time_minutes: Math.min(180, Math.max(1, editingItem.preparation_time_minutes || 10)),
     });
     
     setEditingItem(null);
@@ -248,6 +250,11 @@ export default function MenuManagement() {
                   <div className="space-y-2">
                     <Label htmlFor="discount">Discount % <span className="text-muted-foreground text-xs">(optional)</span></Label>
                     <Input id="discount" type="number" placeholder="e.g., 10" min="0" max="100" value={newItem.discount_percent} onChange={(e) => setNewItem(prev => ({ ...prev, discount_percent: e.target.value }))} className="rounded-xl" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="prep">Preparation Time (minutes)</Label>
+                    <Input id="prep" type="number" placeholder="e.g., 12" min="1" max="180" value={newItem.preparation_time_minutes} onChange={(e) => setNewItem(prev => ({ ...prev, preparation_time_minutes: e.target.value }))} className="rounded-xl" />
+                    <p className="text-xs text-muted-foreground">Shown to customers as ~N min and used to offer pickup windows.</p>
                   </div>
                   <Button type="submit" className="w-full rounded-xl gradient-primary text-primary-foreground" disabled={createItem.isPending || uploading}>
                     {createItem.isPending ? 'Adding...' : 'Add Item'}
@@ -409,6 +416,10 @@ export default function MenuManagement() {
                                 <div className="space-y-2">
                                   <Label htmlFor="edit-discount">Discount %</Label>
                                   <Input id="edit-discount" type="number" min="0" max="100" value={editingItem?.discount_percent || ''} onChange={(e) => setEditingItem(prev => prev ? { ...prev, discount_percent: parseFloat(e.target.value) || 0 } : null)} className="rounded-xl" />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor="edit-prep">Preparation Time (minutes)</Label>
+                                  <Input id="edit-prep" type="number" min="1" max="180" value={editingItem?.preparation_time_minutes ?? 10} onChange={(e) => setEditingItem(prev => prev ? { ...prev, preparation_time_minutes: parseInt(e.target.value) || 10 } : null)} className="rounded-xl" />
                                 </div>
                                 <Button type="submit" className="w-full rounded-xl gradient-primary text-primary-foreground" disabled={updateItem.isPending || editUploading}>
                                   {updateItem.isPending ? 'Saving...' : 'Save Changes'}
