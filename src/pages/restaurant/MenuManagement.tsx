@@ -104,7 +104,7 @@ export default function MenuManagement() {
       preparation_time_minutes: Math.min(180, Math.max(1, parseInt(newItem.preparation_time_minutes) || 10)),
     });
     
-    setNewItem({ name: '', price: '', description: '', discount_percent: '', image_url: '', category_id: '' });
+    setNewItem({ name: '', price: '', description: '', discount_percent: '', image_url: '', category_id: '', preparation_time_minutes: '10' });
     setIsAddOpen(false);
   };
 
@@ -361,7 +361,7 @@ export default function MenuManagement() {
 
                           <Dialog open={editingItem?.id === item.id} onOpenChange={(open) => !open && setEditingItem(null)}>
                             <DialogTrigger asChild>
-                              <Button variant="ghost" size="icon" className="rounded-xl" onClick={() => setEditingItem({ id: item.id, name: item.name, price: Number(item.price), description: item.description || '', discount_percent: item.discount_percent || 0, image_url: item.image_url || '', category_id: item.category_id })}>
+                              <Button variant="ghost" size="icon" className="rounded-xl" onClick={() => setEditingItem({ id: item.id, name: item.name, price: Number(item.price), description: item.description || '', discount_percent: item.discount_percent || 0, image_url: item.image_url || '', category_id: item.category_id, preparation_time_minutes: item.preparation_time_minutes || 10 })}>
                                 <Pencil className="w-4 h-4" />
                               </Button>
                             </DialogTrigger>
