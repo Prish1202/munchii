@@ -13,28 +13,28 @@ import { cn } from '@/lib/utils';
 import { useWallet, useRedeemCoins } from '@/hooks/useWallet';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { parseDateTimeLocalValue, toDateTimeLocalValue } from '@/lib/datetimeLocal';
+import { getPickupWindows, formatPickupWindow } from '@/lib/pickupWindows';
 
 const PAYMENT_METHODS = [
   { id: 'razorpay', label: 'Pay Online (UPI / Card)', icon: CreditCard },
 ];
 
-const MIN_PICKUP_LEAD_MINUTES = 5;
 const PLATFORM_FEE = 4;
-
-function getMinPickupDate(now = new Date()) {
-  const minMs = now.getTime() + MIN_PICKUP_LEAD_MINUTES * 60_000;
-  const d = new Date(minMs);
-  const needsRoundUp = d.getSeconds() !== 0 || d.getMilliseconds() !== 0;
-  d.setSeconds(0, 0);
-  if (needsRoundUp) d.setMinutes(d.getMinutes() + 1);
-  return d;
-}
 
 export default function Checkout() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { items, restaurantId, restaurantName, totalAmount, clearCart } = useCart();
+  const {
+    items,
+    restaurantId,
+    restaurantName,
+    totalAmount,
+    clearCart,
+    longestPreparationMinutes,
+    restaurantBufferMinutes,
+    selectedPickupTime,
+    setSelectedPickupTime,
+  } = useCart();
   const createOrder = useCreateOrder();
   const { initiatePayment, isProcessing: isRazorpayProcessing } = useRazorpay();
 
@@ -43,26 +43,35 @@ export default function Checkout() {
 
   const [phone, setPhone] = useState(user?.phone || '');
   const [payment, setPayment] = useState('razorpay');
-  const [pickupTime, setPickupTime] = useState('');
   const [isPlacing, setIsPlacing] = useState(false);
   const [useCoins, setUseCoins] = useState(false);
   const [coinInputValue, setCoinInputValue] = useState('');
 
-  const [minPickupValue, setMinPickupValue] = useState(() => toDateTimeLocalValue(getMinPickupDate()));
+  const [now, setNow] = useState(() => new Date());
   useEffect(() => {
-    const tick = () => setMinPickupValue(toDateTimeLocalValue(getMinPickupDate()));
-    tick();
-    const id = window.setInterval(tick, 15_000);
+    const id = window.setInterval(() => setNow(new Date()), 30_000);
     return () => window.clearInterval(id);
   }, []);
 
-  const minPickupDate = useMemo(() => parseDateTimeLocalValue(minPickupValue) ?? getMinPickupDate(), [minPickupValue]);
-  const selectedPickupDate = useMemo(() => (pickupTime ? parseDateTimeLocalValue(pickupTime) : null), [pickupTime]);
-  const isPickupTimeValid = useMemo(() => {
-    if (!pickupTime) return true;
-    if (!selectedPickupDate) return false;
-    return selectedPickupDate.getTime() >= minPickupDate.getTime();
-  }, [minPickupDate, pickupTime, selectedPickupDate]);
+  const windows = useMemo(
+    () =>
+      getPickupWindows({
+        preparationMinutes: longestPreparationMinutes,
+        bufferMinutes: restaurantBufferMinutes,
+        now,
+        count: 6,
+      }),
+    [longestPreparationMinutes, restaurantBufferMinutes, now],
+  );
+
+  const pickupTime = selectedPickupTime && windows.some((w) => w.value === selectedPickupTime)
+    ? selectedPickupTime
+    : windows[0]?.value || '';
+
+  useEffect(() => {
+    if (pickupTime && pickupTime !== selectedPickupTime) setSelectedPickupTime(pickupTime);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pickupTime]);
 
   const subtotalWithFees = totalAmount + PLATFORM_FEE;
   const availableCoins = wallet?.total_coins || 0;
@@ -72,34 +81,12 @@ export default function Checkout() {
   const grandTotal = subtotalWithFees - coinDiscount;
   const estimatedPoints = Math.round(totalAmount * 0.03);
 
-  const canPlace = phone.trim().length >= 10 && items.length > 0 && isPickupTimeValid && !!pickupTime;
-
-  const handlePickupTimeChange = (nextValue: string) => {
-    if (!nextValue) { setPickupTime(''); return; }
-    const nextDate = parseDateTimeLocalValue(nextValue);
-    const freshMin = getMinPickupDate();
-    if (!nextDate || nextDate.getTime() < freshMin.getTime()) {
-      setPickupTime(toDateTimeLocalValue(freshMin));
-      toast.error(`Pickup time must be at least ${MIN_PICKUP_LEAD_MINUTES} minutes from now.`);
-      return;
-    }
-    setPickupTime(nextValue);
-  };
+  const canPlace = phone.trim().length >= 10 && items.length > 0 && !!pickupTime;
 
   const handlePlaceOrder = async () => {
     if (!restaurantId || !canPlace) {
-      if (!isPickupTimeValid) toast.error(`Pickup time must be at least ${MIN_PICKUP_LEAD_MINUTES} minutes from now.`);
+      if (!pickupTime) toast.error('Please select a pickup window.');
       return;
-    }
-
-    if (pickupTime) {
-      const pickup = parseDateTimeLocalValue(pickupTime);
-      const freshMin = getMinPickupDate();
-      if (!pickup || pickup.getTime() < freshMin.getTime()) {
-        setPickupTime(toDateTimeLocalValue(freshMin));
-        toast.error(`Pickup time must be after ${format(freshMin, 'PPp')}.`);
-        return;
-      }
     }
 
     setIsPlacing(true);
@@ -114,7 +101,7 @@ export default function Checkout() {
         })),
         totalAmount: grandTotal,
         paymentMethod: payment === 'razorpay' ? 'razorpay' : 'cod',
-        pickupTime: pickupTime ? new Date(pickupTime).toISOString() : undefined,
+        pickupTime: pickupTime || undefined,
       });
 
       // Redeem coins if applicable
@@ -201,47 +188,31 @@ export default function Checkout() {
           </div>
         </section>
 
-        {/* Pickup time */}
+        {/* Pickup window */}
         <section className="bg-card rounded-2xl border border-border p-4 space-y-3">
           <div className="flex items-center gap-2 text-sm font-semibold">
             <Clock3 className="w-4 h-4 text-primary" />
-            Pickup Time <span className="text-destructive">*</span>
+            Pickup Window <span className="text-destructive">*</span>
           </div>
-          <div className="flex gap-2 flex-wrap">
-            {[15, 30, 45, 60].map((mins) => {
-              const target = new Date(Date.now() + mins * 60_000);
-              const value = toDateTimeLocalValue(target);
-              const isSelected = pickupTime === value;
-              return (
-                <button
-                  key={mins}
-                  onClick={() => handlePickupTimeChange(isSelected ? '' : value)}
-                  className={cn(
-                    'px-3 py-2 rounded-xl border text-sm font-medium transition-colors',
-                    isSelected
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border hover:border-muted-foreground/30 text-muted-foreground'
-                  )}
-                >
-                  +{mins} min
-                </button>
-              );
-            })}
+          <div className="grid grid-cols-2 gap-2">
+            {windows.map((w) => (
+              <button
+                key={w.value}
+                onClick={() => setSelectedPickupTime(w.value)}
+                className={cn(
+                  'px-3 py-2.5 rounded-xl border text-sm font-medium transition-colors text-center',
+                  pickupTime === w.value
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-border hover:border-muted-foreground/30 text-muted-foreground'
+                )}
+              >
+                {w.label}
+              </button>
+            ))}
           </div>
-          <Input
-            type="datetime-local"
-            value={pickupTime}
-            onChange={(e) => handlePickupTimeChange(e.target.value)}
-            min={minPickupValue}
-            className="mt-1"
-          />
-          {!isPickupTimeValid && (
-            <p className="text-xs text-destructive">
-              Pickup time must be at least {MIN_PICKUP_LEAD_MINUTES} minutes from now.
-            </p>
-          )}
           <p className="text-xs text-muted-foreground">
-            Please select a pickup time (minimum {MIN_PICKUP_LEAD_MINUTES} minutes from now).
+            Earliest window uses the longest prep time in your cart ({longestPreparationMinutes} min) plus a{' '}
+            {restaurantBufferMinutes} min kitchen buffer.
           </p>
         </section>
 
@@ -327,8 +298,8 @@ export default function Checkout() {
             </div>
             {pickupTime && (
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Pickup Time</span>
-                <span>{format(new Date(pickupTime), 'PPp')}</span>
+                <span className="text-muted-foreground">Pickup Window</span>
+                <span>{formatPickupWindow(pickupTime)}</span>
               </div>
             )}
           </div>
@@ -347,7 +318,7 @@ export default function Checkout() {
             <div className="flex items-center gap-2 text-xs text-primary bg-primary/5 rounded-lg px-3 py-2 mt-2">
               <Coins className="w-4 h-4" />
               <span>
-                You'll earn <strong>{estimatedPoints} points</strong> (3% of item price) on completion
+                You'll earn <strong>+{estimatedPoints} Coins</strong> (3% of item total) after pickup
               </span>
             </div>
           )}
