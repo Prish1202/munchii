@@ -12,6 +12,7 @@ import {
   ArrowLeft, Check, X, ChefHat, Package, Clock, User, ShoppingBag, Banknote, CreditCard, Wallet
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
+import { formatPickupWindow } from '@/lib/pickupWindows';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; nextStatus?: OrderStatus; nextLabel?: string }> = {
   placed: { label: 'New', color: 'bg-secondary', nextStatus: 'accepted', nextLabel: 'Accept' },
@@ -135,7 +136,7 @@ function OrderCard({ order, onUpdateStatus, isUpdating, compact = false }: { ord
   const orderItems = order.order_items?.map(item => `${item.quantity}x ${item.menu_item?.name || 'Item'}`).join(', ') || 'No items';
 
   const pickupTimeLabel = order.pickup_time
-    ? format(new Date(order.pickup_time), 'PPp')
+    ? `${format(new Date(order.pickup_time), 'd MMM')} · ${formatPickupWindow(order.pickup_time)}`
     : null;
 
   return (
