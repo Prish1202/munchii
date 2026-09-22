@@ -12,6 +12,7 @@ import { ArrowLeft, Clock, User, Phone, Banknote, Wallet, CreditCard, ChefHat, S
 import { format, formatDistanceToNow } from 'date-fns';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { formatPickupWindow } from '@/lib/pickupWindows';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; nextStatus?: OrderStatus; nextLabel?: string }> = {
   placed: { label: 'New', color: 'bg-secondary', nextStatus: 'accepted', nextLabel: 'Accept Order' },
@@ -133,7 +134,7 @@ export default function RestaurantOrderDetail() {
             <CardContent className="p-4 flex items-center gap-2 text-sm">
               <Clock className="w-4 h-4 text-muted-foreground" />
               <span className="font-medium">Pickup Time:</span>
-              <span>{format(new Date(order.pickup_time), 'PPp')}</span>
+              <span>{format(new Date(order.pickup_time), 'd MMM')} · {formatPickupWindow(order.pickup_time)}</span>
             </CardContent>
           </Card>
         )}

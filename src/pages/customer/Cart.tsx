@@ -1,16 +1,56 @@
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useCart } from '@/contexts/CartContext';
-import { ArrowLeft, Minus, Plus, Trash2, ShoppingCart, Store, Coins } from 'lucide-react';
+import { ArrowLeft, Minus, Plus, Trash2, ShoppingCart, Store, Coins, Clock3 } from 'lucide-react';
+import { getPickupWindows } from '@/lib/pickupWindows';
+import { cn } from '@/lib/utils';
 
 export default function Cart() {
-  const { items, restaurantId, restaurantName, updateQuantity, removeItem, clearCart, totalAmount } = useCart();
+  const {
+    items,
+    restaurantId,
+    restaurantName,
+    updateQuantity,
+    removeItem,
+    clearCart,
+    totalAmount,
+    longestPreparationMinutes,
+    restaurantBufferMinutes,
+    selectedPickupTime,
+    setSelectedPickupTime,
+  } = useCart();
 
   const platformFee = 4;
   const grandTotal = totalAmount + platformFee;
   const estimatedPoints = Math.round(totalAmount * 0.03);
+
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(new Date()), 30_000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  const windows = useMemo(
+    () =>
+      getPickupWindows({
+        preparationMinutes: longestPreparationMinutes,
+        bufferMinutes: restaurantBufferMinutes,
+        now,
+        count: 6,
+      }),
+    [longestPreparationMinutes, restaurantBufferMinutes, now],
+  );
+
+  // Keep a valid future window selected at all times
+  useEffect(() => {
+    if (windows.length === 0) return;
+    const isStillAvailable = selectedPickupTime && windows.some((w) => w.value === selectedPickupTime);
+    if (!isStillAvailable) setSelectedPickupTime(windows[0].value);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [windows, selectedPickupTime]);
 
   if (items.length === 0) {
     return (
@@ -28,6 +68,8 @@ export default function Cart() {
       </DashboardLayout>
     );
   }
+
+  const earliest = windows[0];
 
   return (
     <DashboardLayout>
@@ -67,7 +109,9 @@ export default function Cart() {
             <div key={item.id} className="flex items-center justify-between gap-3 p-4">
               <div className="flex-1 min-w-0">
                 <h4 className="font-medium text-sm truncate">{item.name}</h4>
-                <p className="text-xs text-muted-foreground">₹{item.price} each</p>
+                <p className="text-xs text-muted-foreground">
+                  ₹{item.price} each · ~{item.preparationTimeMinutes || 10} min
+                </p>
               </div>
               <div className="flex items-center gap-1.5 bg-primary/10 rounded-lg px-1">
                 <Button
@@ -93,6 +137,39 @@ export default function Cart() {
           ))}
         </div>
 
+        {/* Pickup windows */}
+        <div className="bg-card rounded-2xl border border-border p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <Clock3 className="w-4 h-4 text-primary" />
+            <h3 className="font-display font-semibold text-base">Pickup Window</h3>
+          </div>
+          {earliest && (
+            <div className="rounded-xl bg-primary/5 border border-primary/20 px-3 py-2.5">
+              <p className="text-xs text-muted-foreground">Earliest available</p>
+              <p className="text-sm font-semibold text-primary">{earliest.label}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Based on {longestPreparationMinutes} min prep + {restaurantBufferMinutes} min kitchen buffer
+              </p>
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-2">
+            {windows.map((w) => (
+              <button
+                key={w.value}
+                onClick={() => setSelectedPickupTime(w.value)}
+                className={cn(
+                  'px-3 py-2.5 rounded-xl border text-sm font-medium transition-colors text-center',
+                  selectedPickupTime === w.value
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-border hover:border-muted-foreground/30 text-muted-foreground',
+                )}
+              >
+                {w.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Bill */}
         <div className="bg-card rounded-2xl border border-border p-4 space-y-2.5 text-sm">
           <h3 className="font-display font-semibold text-base">Bill Details</h3>
@@ -112,8 +189,8 @@ export default function Cart() {
               <Coins className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-primary">Earn {estimatedPoints} points on this order!</p>
-              <p className="text-xs text-muted-foreground">3% of item price credited on order completion</p>
+              <p className="text-sm font-semibold text-primary">+{estimatedPoints} Coins on this order</p>
+              <p className="text-xs text-muted-foreground">3% of item total, credited after successful pickup</p>
             </div>
           </div>
         )}
@@ -121,7 +198,7 @@ export default function Cart() {
         {/* Checkout button */}
         <div className="fixed bottom-16 md:bottom-4 left-0 right-0 p-4 md:left-64 z-40 bg-background/80 backdrop-blur-sm">
           <Link to="/customer/checkout">
-            <Button className="w-full h-14 text-base rounded-2xl shadow-xl">
+            <Button className="w-full h-14 text-base rounded-2xl shadow-xl" disabled={!selectedPickupTime}>
               Proceed to Checkout • ₹{grandTotal.toFixed(0)}
             </Button>
           </Link>

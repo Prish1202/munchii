@@ -175,8 +175,29 @@ export default function RestaurantSettings() {
                 if (e.target.value !== restaurant.address) updateRestaurant.mutate({ address: e.target.value });
               }} />
             </div>
+            <div className="space-y-2">
+
+              <Label>Kitchen Buffer (minutes)</Label>
+              <Input
+                type="number"
+                min={0}
+                max={60}
+                defaultValue={(restaurant as any).preparation_buffer_minutes ?? 5}
+                className="rounded-xl"
+                onBlur={(e) => {
+                  const next = Math.min(60, Math.max(0, parseInt(e.target.value) || 0));
+                  if (next !== ((restaurant as any).preparation_buffer_minutes ?? 5)) {
+                    updateRestaurant.mutate({ preparation_buffer_minutes: next } as any);
+                  }
+                }}
+              />
+              <p className="text-xs text-muted-foreground">
+                Added to the longest item preparation time when offering customers pickup windows.
+              </p>
+            </div>
           </CardContent>
         </Card>
+
 
         {/* Payment Preferences */}
         <Card className="rounded-2xl">

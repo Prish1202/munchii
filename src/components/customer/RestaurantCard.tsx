@@ -21,9 +21,10 @@ function getImageForRestaurant(restaurant: Restaurant & { photo_url?: string | n
   return FOOD_IMAGES[hash % FOOD_IMAGES.length];
 }
 
-function getPickupTime() {
-  const min = 10 + Math.floor(Math.random() * 10);
-  return `${min}-${min + 5} min`;
+function getPickupTime(restaurant: Restaurant) {
+  const buffer = restaurant.preparation_buffer_minutes ?? 5;
+  const min = 10 + buffer;
+  return `~${min} min`;
 }
 
 interface RestaurantCardProps {
@@ -87,7 +88,7 @@ export function RestaurantCard({ restaurant }: RestaurantCardProps) {
               <span className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                 <Clock className="w-3 h-3" /> Ready in
               </span>
-              <p className="text-sm font-display font-bold mt-1">{getPickupTime()}</p>
+              <p className="text-sm font-display font-bold mt-1">{getPickupTime(restaurant)}</p>
             </div>
             <div className="rounded-2xl bg-card px-3 py-2.5 border border-border/60 text-right">
               <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Fees</span>

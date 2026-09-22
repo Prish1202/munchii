@@ -42,6 +42,7 @@ import { cn } from '@/lib/utils';
 import { OrderProgressBar } from '@/components/customer/OrderProgressBar';
 import { ReviewDialog } from '@/components/customer/ReviewDialog';
 import { useOrderReview } from '@/hooks/useReviews';
+import { formatPickupWindow } from '@/lib/pickupWindows';
 const ORDER_STEPS: { status: OrderStatus; label: string; icon: React.ReactNode }[] = [
   { status: 'placed', label: 'Order Placed', icon: <Package className="w-4 h-4" /> },
   { status: 'accepted', label: 'Accepted', icon: <Store className="w-4 h-4" /> },
@@ -381,8 +382,8 @@ export default function OrderTracking() {
           </div>
           {order.pickup_time && (
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Pickup Time</span>
-              <span className="font-medium text-primary">{format(new Date(order.pickup_time), 'PPp')}</span>
+              <span className="text-muted-foreground">Pickup Window</span>
+              <span className="font-medium text-primary">{format(new Date(order.pickup_time), 'd MMM')} · {formatPickupWindow(order.pickup_time)}</span>
             </div>
           )}
           <div className="flex justify-between">
