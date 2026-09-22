@@ -11,7 +11,6 @@ import { useRazorpay } from '@/hooks/useRazorpay';
 import { ArrowLeft, Phone, CreditCard, Banknote, Loader2, Coins, Clock3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useWallet, useRedeemCoins } from '@/hooks/useWallet';
-import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { getPickupWindows, formatPickupWindow } from '@/lib/pickupWindows';
 
