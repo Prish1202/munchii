@@ -174,7 +174,9 @@ export default function RestaurantSettings() {
               <Input defaultValue={restaurant.address} className="rounded-xl" onBlur={(e) => {
                 if (e.target.value !== restaurant.address) updateRestaurant.mutate({ address: e.target.value });
               }} />
+            </div>
             <div className="space-y-2">
+
               <Label>Kitchen Buffer (minutes)</Label>
               <Input
                 type="number"
