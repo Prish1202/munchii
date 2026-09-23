@@ -5,7 +5,7 @@ import { UtensilsCrossed, Store, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { ROLE_LANDING } from '@/types/auth';
 import { Card } from '@/components/ui/card';
-import logoWordmark from '@/assets/logo-wordmark.jpg';
+import logoAsset from '@/assets/munchii-blue-logo.png.asset.json';
 
 export default function RoleSelect() {
   const { isAuthenticated, user, isLoading } = useAuth();
@@ -30,7 +30,7 @@ export default function RoleSelect() {
         transition={{ duration: 0.5, ease: 'easeOut' }}
       >
         <div className="text-center space-y-3 flex flex-col items-center">
-          <img src={logoWordmark} alt="Munchii" className="h-14 object-contain rounded-xl" />
+          <img src={logoAsset.url} alt="Munchii" className="h-24 w-24 object-cover rounded-2xl shadow-soft" />
           <div>
             <h1 className="text-3xl font-display font-bold tracking-tight">Welcome to Munchii</h1>
             <p className="text-muted-foreground text-sm mt-1">Choose how you want to continue</p>

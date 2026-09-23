@@ -9,8 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import logoWordmark from '@/assets/logo-wordmark.jpg';
-import restroLogo from '@/assets/munchii-restaurant-logo.png';
+import logoAsset from '@/assets/munchii-blue-logo.png.asset.json';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -79,7 +78,7 @@ export default function LoginPage() {
 
         <div className="text-center space-y-3">
           <Link to="/">
-            <img src={from === 'restaurant' ? restroLogo : logoWordmark} alt="Munchii" className="h-14 object-contain rounded-xl" />
+            <img src={logoAsset.url} alt="Munchii" className="h-24 w-24 mx-auto object-cover rounded-2xl shadow-soft" />
           </Link>
           <div>
             <h1 className="text-3xl font-display font-bold tracking-tight">Welcome back</h1>

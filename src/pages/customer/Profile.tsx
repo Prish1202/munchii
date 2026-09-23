@@ -3,10 +3,8 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile, useUserStats } from '@/hooks/useProfile';
 import { useWallet } from '@/hooks/useWallet';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ShoppingBag, Sparkles, Settings, ClipboardList } from 'lucide-react';
+import { ShoppingBag, Coins, Settings, HelpCircle, ChevronRight, ArrowLeft, UserRound } from 'lucide-react';
 import { useCustomerOrders } from '@/hooks/useOrders';
 import { motion } from 'framer-motion';
 import { resolveStorageUrl } from '@/lib/utils';
@@ -19,111 +17,61 @@ export default function Profile() {
   const { data: stats } = useUserStats();
   const { data: orders } = useCustomerOrders();
 
-  const hasLiveOrder = orders?.some(o => !['completed', 'cancelled'].includes(o.status)) || false;
-  const completedOrders = orders?.filter(o => o.status === 'completed').slice(0, 10) || [];
+  const completedOrders = orders?.filter(o => o.status === 'completed') || [];
 
+  const profileLinks = [
+    { label: 'My Orders', href: '/customer/orders', icon: ShoppingBag },
+    { label: 'My Coins', href: '/customer/coins', icon: Coins },
+    { label: 'Help & Support', href: '/contact', icon: HelpCircle },
+    { label: 'Settings', href: '/customer/profile/settings', icon: Settings },
+  ];
 
   return (
     <DashboardLayout>
-      <div className="max-w-lg mx-auto pb-28 md:pb-6 space-y-4">
-        {/* Profile Header */}
-        <motion.div
-          className="relative overflow-hidden rounded-3xl border border-border"
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <div className="h-24 gradient-social" />
-          <div className="bg-card px-5 pb-5">
-            <div className="-mt-10 flex items-end justify-between">
-              <Avatar className="w-20 h-20 border-4 border-card shadow-lg">
-                {profile?.avatar_url ? (
-                  <AvatarImage src={resolveStorageUrl(profile.avatar_url) || undefined} alt={profile.name} />
-                ) : null}
-                <AvatarFallback className="gradient-primary text-primary-foreground text-2xl font-display font-bold">
-                  {profile?.name?.charAt(0)?.toUpperCase() || '?'}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex items-center gap-2 mb-1">
-                <Button variant="outline" size="sm" onClick={() => navigate('/customer/orders')} className="rounded-xl relative">
-                  <ClipboardList className="w-4 h-4 mr-1" /> Orders
-                  {hasLiveOrder && (
-                    <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-primary animate-pulse border-2 border-card" />
-                  )}
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => navigate('/customer/profile/settings')} className="rounded-xl">
-                  <Settings className="w-4 h-4 mr-1" /> Settings
-                </Button>
-              </div>
-            </div>
-
-            <div className="mt-3">
-              <div className="flex items-center gap-2">
-                <h1 className="font-display font-bold text-xl">{profile?.name}</h1>
-                
-              </div>
-              {profile?.campus && (
-                <div className="flex items-center gap-2 mt-1.5">
-                  <Badge variant="secondary" className="text-xs rounded-lg">🎓 {profile.campus}</Badge>
-                </div>
-              )}
-
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-3">
-          <Link to="/customer/coins">
-            <motion.div className="bg-card rounded-2xl border border-border p-3.5 text-center hover:border-coin/40 transition-colors" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>
-              <div className="w-10 h-10 rounded-xl gradient-coin flex items-center justify-center mx-auto mb-2 shadow-md">
-                <Sparkles className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <p className="font-display font-bold text-lg">{wallet?.total_coins || 0}</p>
-              <p className="text-[11px] text-muted-foreground font-medium">Points</p>
-            </motion.div>
-          </Link>
-          <motion.div className="bg-card rounded-2xl border border-border p-3.5 text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}>
-            <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center mx-auto mb-2 shadow-md">
-              <ShoppingBag className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <p className="font-display font-bold text-lg">{stats?.totalOrders || 0}</p>
-            <p className="text-[11px] text-muted-foreground font-medium">Orders</p>
-          </motion.div>
-          <motion.div className="bg-card rounded-2xl border border-border p-3.5 text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
-            <div className="w-10 h-10 rounded-xl gradient-mint flex items-center justify-center mx-auto mb-2 shadow-md">
-              <span className="text-lg">🎓</span>
-            </div>
-            <p className="font-display font-bold text-sm truncate">{profile?.campus || '—'}</p>
-            <p className="text-[11px] text-muted-foreground font-medium">Campus</p>
-          </motion.div>
+      <div className="max-w-lg mx-auto pb-28 md:pb-6">
+        <div className="flex items-center justify-between h-12">
+          <button onClick={() => navigate('/customer')} aria-label="Back to home" className="p-2 rounded-xl hover:bg-muted transition-colors">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h1 className="font-display font-bold text-lg">Profile</h1>
+          <button onClick={() => navigate('/customer/profile/settings')} aria-label="Open settings" className="p-2 rounded-xl hover:bg-muted transition-colors">
+            <Settings className="w-5 h-5" />
+          </button>
         </div>
 
-        {/* Recent Activity */}
-        <section className="bg-card rounded-2xl border border-border p-4 space-y-3">
-          <h3 className="font-display font-bold text-sm">Recent Orders</h3>
-          {completedOrders.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-6 text-center">No completed orders yet.</p>
-          ) : (
-            <div className="space-y-1.5">
-              {completedOrders.map(order => (
-                <div key={order.id} className="flex items-center justify-between py-2.5 px-2 rounded-xl hover:bg-secondary/50 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <ShoppingBag className="w-4 h-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold">{order.restaurant?.name || 'Restaurant'}</p>
-                      <p className="text-[11px] text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                  <Badge variant="secondary" className="text-[10px] rounded-lg bg-accent/10 text-accent border-0 font-semibold">
-                    Completed ✓
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
+        <motion.section className="flex flex-col items-center pt-5 pb-6" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+          <Avatar className="w-24 h-24 border-4 border-card shadow-soft">
+            {profile?.avatar_url ? <AvatarImage src={resolveStorageUrl(profile.avatar_url) || undefined} alt={profile.name} /> : null}
+            <AvatarFallback className="gradient-primary text-primary-foreground text-3xl font-display font-bold">
+              {profile?.name?.charAt(0)?.toUpperCase() || <UserRound className="w-8 h-8" />}
+            </AvatarFallback>
+          </Avatar>
+          <h2 className="font-display font-bold text-xl mt-3">{profile?.name || 'Munchii Foodie'}</h2>
+          <p className="text-sm text-muted-foreground">{profile?.username ? `@${profile.username}` : profile?.campus || user?.email}</p>
+        </motion.section>
+
+        <motion.div className="grid grid-cols-2 rounded-xl border border-border bg-card mb-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <Link to="/customer/orders" className="py-4 text-center border-r border-border">
+            <p className="font-display font-bold text-xl">{stats?.totalOrders || completedOrders.length}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Orders</p>
+          </Link>
+          <Link to="/customer/coins" className="py-4 text-center">
+            <p className="font-display font-bold text-xl text-primary">{wallet?.total_coins || 0}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Coins</p>
+          </Link>
+        </motion.div>
+
+        <motion.nav className="border-y border-border bg-card" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+          {profileLinks.map(({ label, href, icon: Icon }, index) => (
+            <Link key={label} to={href} className={`flex items-center gap-4 px-3 py-4 hover:bg-muted/60 transition-colors ${index < profileLinks.length - 1 ? 'border-b border-border' : ''}`}>
+              <span className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                <Icon className="w-4.5 h-4.5" />
+              </span>
+              <span className="flex-1 text-sm font-semibold">{label}</span>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </Link>
+          ))}
+        </motion.nav>
       </div>
     </DashboardLayout>
   );
