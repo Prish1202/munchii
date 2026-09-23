@@ -1,9 +1,8 @@
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 import { Switch } from '@/components/ui/switch';
-import { Bell, ShoppingBag, UserPlus, TrendingUp, MessageSquare, Volume2, Vibrate, Smartphone, ArrowLeft, Loader2 } from 'lucide-react';
+import { ShoppingBag, TrendingUp, Volume2, Vibrate, Smartphone, ArrowLeft, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { cn } from '@/lib/utils';
 
 interface SettingRowProps {
   icon: React.ReactNode;
@@ -64,20 +63,6 @@ export default function NotificationSettings() {
             description="Get notified about order status changes"
             checked={preferences.order_notifications}
             onToggle={toggle('order_notifications')}
-          />
-          <SettingRow
-            icon={<UserPlus className="w-4 h-4 text-secondary" />}
-            title="Social Activity"
-            description="New followers and social interactions"
-            checked={preferences.social_notifications}
-            onToggle={toggle('social_notifications')}
-          />
-          <SettingRow
-            icon={<MessageSquare className="w-4 h-4 text-blue-500" />}
-            title="Messages"
-            description="New chat messages from friends"
-            checked={preferences.message_notifications}
-            onToggle={toggle('message_notifications')}
           />
           <SettingRow
             icon={<TrendingUp className="w-4 h-4 text-primary" />}

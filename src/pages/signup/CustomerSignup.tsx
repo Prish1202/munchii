@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Eye, EyeOff, ShoppingBag } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import logoWordmark from '@/assets/logo-wordmark.jpg';
+import logoAsset from '@/assets/munchii-blue-logo.png.asset.json';
 
 export default function CustomerSignup() {
   const [email, setEmail] = useState('');
@@ -71,7 +71,7 @@ export default function CustomerSignup() {
       >
         <div className="text-center space-y-3">
           <Link to="/">
-            <img src={logoWordmark} alt="Munchii" className="h-14 object-contain rounded-xl" />
+            <img src={logoAsset.url} alt="Munchii" className="h-24 w-24 mx-auto object-cover rounded-2xl shadow-soft" />
           </Link>
           <div>
             <h1 className="text-3xl font-display font-bold tracking-tight">Join Munchii</h1>

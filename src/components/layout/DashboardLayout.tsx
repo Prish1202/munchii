@@ -1,7 +1,5 @@
 import { ReactNode, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import logoWordmark from '@/assets/logo-wordmark.jpg';
-import restaurantLogo from '@/assets/munchii-restaurant-logo.png';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import { useWallet } from '@/hooks/useWallet';
@@ -103,9 +101,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
       <header className="sticky top-0 z-50 border-b border-border/80 glass-strong">
         <div className="container flex h-16 items-center justify-between gap-3">
-          <Link to="/" className="flex items-center gap-3">
-            <img src={isRestaurant ? restaurantLogo : logoWordmark} alt="Munchii" className={cn("object-contain", isRestaurant ? "h-12" : "h-10")} />
-          </Link>
+          <div aria-hidden="true" />
 
           <div className="flex items-center gap-1.5">
             {isCustomer && (
