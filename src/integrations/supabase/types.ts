@@ -585,34 +585,43 @@ export type Database = {
         Row: {
           account_holder_name: string | null
           account_number: string | null
+          account_number_enc: string | null
           bank_name: string | null
           created_at: string
           id: string
           ifsc_code: string | null
+          ifsc_enc: string | null
           restaurant_id: string
           updated_at: string
+          upi_enc: string | null
           upi_id: string | null
         }
         Insert: {
           account_holder_name?: string | null
           account_number?: string | null
+          account_number_enc?: string | null
           bank_name?: string | null
           created_at?: string
           id?: string
           ifsc_code?: string | null
+          ifsc_enc?: string | null
           restaurant_id: string
           updated_at?: string
+          upi_enc?: string | null
           upi_id?: string | null
         }
         Update: {
           account_holder_name?: string | null
           account_number?: string | null
+          account_number_enc?: string | null
           bank_name?: string | null
           created_at?: string
           id?: string
           ifsc_code?: string | null
+          ifsc_enc?: string | null
           restaurant_id?: string
           updated_at?: string
+          upi_enc?: string | null
           upi_id?: string | null
         }
         Relationships: [
@@ -651,34 +660,40 @@ export type Database = {
       }
       restaurant_owner_details: {
         Row: {
+          aadhaar_enc: string | null
           aadhaar_number: string | null
           contact_email: string | null
           contact_phone: string | null
           created_at: string
           full_address: string | null
           id: string
+          pan_enc: string | null
           pan_number: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          aadhaar_enc?: string | null
           aadhaar_number?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string
           full_address?: string | null
           id?: string
+          pan_enc?: string | null
           pan_number?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          aadhaar_enc?: string | null
           aadhaar_number?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string
           full_address?: string | null
           id?: string
+          pan_enc?: string | null
           pan_number?: string | null
           updated_at?: string
           user_id?: string
@@ -852,6 +867,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _pii_enc_field: {
+        Args: { newv: string; oldenc: string }
+        Returns: Record<string, unknown>
+      }
+      _pii_key: { Args: never; Returns: string }
+      _pii_mask: { Args: { v: string }; Returns: string }
+      get_bank_details_decrypted: {
+        Args: { _restaurant_id: string }
+        Returns: {
+          account_holder_name: string
+          account_number: string
+          bank_name: string
+          ifsc_code: string
+          upi_id: string
+        }[]
+      }
       get_customer_phone_for_owner: {
         Args: { _customer_id: string }
         Returns: string
@@ -866,6 +897,16 @@ export type Database = {
           total_coins: number
           user_id: string
           username: string
+        }[]
+      }
+      get_owner_details_decrypted: {
+        Args: { _user_id: string }
+        Returns: {
+          aadhaar_number: string
+          contact_email: string
+          contact_phone: string
+          full_address: string
+          pan_number: string
         }[]
       }
       get_restaurant_avg_rating: {
