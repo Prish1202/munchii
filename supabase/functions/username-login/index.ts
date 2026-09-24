@@ -44,9 +44,7 @@ serve(async (req) => {
       .select("role")
       .eq("user_id", profile.id)
       .maybeSingle();
-    if (roleRow?.role !== "customer") {
-      return json({ error: "Username login is only available for Foodie accounts" }, 403);
-    }
+    if (roleRow?.role !== "customer") return invalid();
 
     const { data: userRes } = await admin.auth.admin.getUserById(profile.id);
     const email = userRes?.user?.email;

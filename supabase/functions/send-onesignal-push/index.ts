@@ -83,45 +83,19 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
+    // Only the database trigger (holding the internal secret) may send pushes.
+    const provided = req.headers.get("x-internal-secret") || "";
+    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const { data: expected } = await admin.rpc("get_internal_function_secret");
+    if (!expected || provided !== expected) {
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const token = authHeader.replace("Bearer ", "");
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
-    const publishableKey = Deno.env.get("SUPABASE_PUBLISHABLE_KEY") || "";
-
-    // Known anon key used by the DB trigger
-    const KNOWN_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2YXJpdW1wZGpxZmFqbHRxcXJ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2ODAzODYsImV4cCI6MjA4MjI1NjM4Nn0.XjmUdcLVwToapulAmREZZKzWDyCJQhbQIlVe6nZnbEM";
-
-    const isKnownKey = token === serviceRoleKey || token === anonKey || token === publishableKey || token === KNOWN_ANON_KEY;
-
-    if (!isKnownKey) {
-      // Try to validate as user JWT
-      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-      const supabase = createClient(supabaseUrl, anonKey, {
-        global: { headers: { Authorization: authHeader } },
-      });
-      const { data: userData, error: authError } = await supabase.auth.getUser();
-      if (authError || !userData?.user) {
-        console.error("[Push] Auth failed:", authError?.message || "no user");
-        return new Response(
-          JSON.stringify({ error: "Unauthorized" }),
-          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      console.log("[Push] Authenticated as user:", userData.user.id);
-    } else {
-      console.log("[Push] Authenticated via known key");
-    }
-
     const payload: PushPayload = await req.json();
-    console.log("[Push] Received payload:", JSON.stringify(payload));
+    
 
     if (!payload.user_id || !payload.title || !payload.message) {
       return new Response(
@@ -139,7 +113,7 @@ Deno.serve(async (req) => {
   } catch (err) {
     console.error("[Push] Error:", err.message);
     return new Response(
-      JSON.stringify({ error: err.message }),
+      JSON.stringify({ error: "Internal error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
