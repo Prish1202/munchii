@@ -5,13 +5,33 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const esc = (v: unknown) => String(v ?? '')
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { reporterId, reportedUserId, reportType, reason } = await req.json();
+    const authHeader = req.headers.get('Authorization') || '';
+    const userClient = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user } } = await userClient.auth.getUser();
+    if (!user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const body = await req.json();
+    const reporterId = user.id;
+    const uuidRe = /^[0-9a-f-]{36}$/i;
+    const reportedUserId = typeof body.reportedUserId === 'string' && uuidRe.test(body.reportedUserId) ? body.reportedUserId : null;
+    const reportType = esc(String(body.reportType || 'other').slice(0, 50));
+    const reason = esc(String(body.reason || '').slice(0, 2000));
 
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -26,7 +46,7 @@ Deno.serve(async (req) => {
         .select('name, username')
         .eq('id', reporterId)
         .single();
-      if (reporter) reporterName = reporter.username || reporter.name;
+      if (reporter) reporterName = esc(reporter.username || reporter.name);
     }
 
     let reportedName = 'N/A';
@@ -36,7 +56,7 @@ Deno.serve(async (req) => {
         .select('name, username')
         .eq('id', reportedUserId)
         .single();
-      if (reported) reportedName = reported.username || reported.name;
+      if (reported) reportedName = esc(reported.username || reported.name);
     }
 
     // Send email via Resend
@@ -68,7 +88,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: 'Internal error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

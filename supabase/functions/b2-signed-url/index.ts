@@ -20,6 +20,26 @@ const SUPABASE_ANON_KEY =
 
 /* ── helpers ─────────────────────────────────────────────── */
 
+const ALLOWED_READ_PREFIXES = ['u/', 'chat/', 'clubs/', 'pulses/']
+const UNSAFE_TYPES = /(html|javascript|ecmascript|svg|xml)/i
+
+function isSafePath(p: string) {
+  return !!p && p.length < 512 && !p.includes('..') && !p.startsWith('/') && !p.includes('\\') &&
+    /^[A-Za-z0-9._\-\/]+$/.test(p)
+}
+
+function sanitizeSegment(s: string) {
+  return s.replace(/[^A-Za-z0-9._-]/g, '_').replace(/^\.+/, '').slice(0, 100) || 'x'
+}
+
+// Confine uploads to the caller's own namespace: u/<userId>/<folder>/<file>
+function confinePath(userId: string, requested: string) {
+  const parts = requested.split('/').filter((x) => x && x !== '.' && x !== '..').map(sanitizeSegment)
+  const file = parts.pop() || `${Date.now()}.bin`
+  const folder = parts.slice(0, 5).join('/')
+  return `u/${userId}/${folder ? folder + '/' : ''}${file}`
+}
+
 let authCache: {
   accountId: string
   apiUrl: string
@@ -143,7 +163,7 @@ async function proxyDownload(req: Request, filePath: string) {
     { method: req.method, headers: hdrs },
   )
   if (!upstream.ok && upstream.status !== 206) {
-    return json({ error: `File not found: ${filePath}` }, 404)
+    return json({ error: 'Not found' }, 404)
   }
 
   const out = new Headers(corsHeaders)
@@ -192,6 +212,9 @@ Deno.serve(async (req) => {
 
     // ── GET/HEAD ?filePath=… → proxy download (public, no auth) ──
     if ((req.method === 'GET' || req.method === 'HEAD') && qFilePath) {
+      if (!isSafePath(qFilePath) || !ALLOWED_READ_PREFIXES.some((p) => qFilePath.startsWith(p))) {
+        return json({ error: 'Not found' }, 404)
+      }
       return await proxyDownload(req, qFilePath)
     }
 
@@ -204,13 +227,16 @@ Deno.serve(async (req) => {
       const buf = await req.arrayBuffer()
       if (!buf.byteLength) return json({ error: 'Empty file body' }, 400)
 
-      const ct =
+      let ct =
         req.headers.get('x-b2-content-type') ||
         req.headers.get('content-type') ||
         'application/octet-stream'
+      // Never store content that browsers could execute as a web page/script.
+      if (UNSAFE_TYPES.test(ct) || !/^[\w.+-]+\/[\w.+-]+$/.test(ct)) ct = 'application/octet-stream'
 
-      const publicUrl = await uploadToB2(headerPath, ct, buf)
-      return json({ publicUrl, filePath: headerPath, contentType: ct })
+      const safePath = confinePath(user.id, headerPath)
+      const publicUrl = await uploadToB2(safePath, ct, buf)
+      return json({ publicUrl, filePath: safePath, contentType: ct })
     }
 
     // ── Legacy JSON body actions (kept for backward compat) ──
@@ -228,6 +254,6 @@ Deno.serve(async (req) => {
     return json({ error: 'Invalid request' }, 400)
   } catch (err) {
     console.error('b2-signed-url error:', err)
-    return json({ error: err instanceof Error ? err.message : 'Internal error' }, 500)
+    return json({ error: 'Internal error' }, 500)
   }
 })
