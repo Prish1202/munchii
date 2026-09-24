@@ -12,7 +12,8 @@ import { ArrowLeft, Phone, CreditCard, Banknote, Loader2, Coins, Clock3 } from '
 import { cn } from '@/lib/utils';
 import { useWallet, useRedeemCoins } from '@/hooks/useWallet';
 import { toast } from 'sonner';
-import { getPickupWindows, formatPickupWindow } from '@/lib/pickupWindows';
+import { useAvailablePickupWindows } from '@/hooks/useAvailablePickupWindows';
+import { formatPickupWindow } from '@/lib/pickupWindows';
 
 const PAYMENT_METHODS = [
   { id: 'razorpay', label: 'Pay Online (UPI / Card)', icon: CreditCard },
@@ -52,16 +53,12 @@ export default function Checkout() {
     return () => window.clearInterval(id);
   }, []);
 
-  const windows = useMemo(
-    () =>
-      getPickupWindows({
-        preparationMinutes: longestPreparationMinutes,
-        bufferMinutes: restaurantBufferMinutes,
-        now,
-        count: 6,
-      }),
-    [longestPreparationMinutes, restaurantBufferMinutes, now],
-  );
+  const { windows, paused: ordersPaused } = useAvailablePickupWindows({
+    restaurantId,
+    preparationMinutes: longestPreparationMinutes,
+    bufferMinutes: restaurantBufferMinutes,
+    now,
+  });
 
   const pickupTime = selectedPickupTime && windows.some((w) => w.value === selectedPickupTime)
     ? selectedPickupTime
@@ -101,6 +98,7 @@ export default function Checkout() {
         totalAmount: grandTotal,
         paymentMethod: payment === 'razorpay' ? 'razorpay' : 'cod',
         pickupTime: pickupTime || undefined,
+        prepMinutes: longestPreparationMinutes,
       });
 
       // Redeem coins if applicable
