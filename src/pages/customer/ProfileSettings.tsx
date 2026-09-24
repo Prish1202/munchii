@@ -147,7 +147,6 @@ export default function ProfileSettings() {
       username: form.username || undefined,
       campus: form.campus || null,
     } as any);
-    supabase.from('profiles').update({ bio: form.bio || null }).eq('id', user!.id).then(() => {});
     if (user?.id) {
       await supabase
         .from('user_contact_info')
@@ -235,11 +234,6 @@ export default function ProfileSettings() {
               </div>
               {usernameStatus === 'taken' && <p className="text-[11px] text-destructive">Username not available</p>}
               {usernameStatus === 'available' && <p className="text-[11px] text-primary">Username available!</p>}
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Bio</label>
-              <Textarea value={form.bio} onChange={e => setForm(p => ({ ...p, bio: e.target.value }))} placeholder="Tell us about yourself..." className="rounded-xl resize-none" rows={3} maxLength={160} />
-              <p className="text-[10px] text-muted-foreground text-right">{form.bio.length}/160</p>
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground">Campus</label>

@@ -21,7 +21,6 @@ export default function PrivacyPolicy() {
               <li><strong>Account Information:</strong> Name, email, phone number, campus/university, and profile photo.</li>
               <li><strong>Order Data:</strong> Order history, payment method preferences, and pickup times.</li>
               <li><strong>Usage Data:</strong> App interactions, device information, and analytics for improving our service.</li>
-              <li><strong>Chat Data:</strong> Messages are end-to-end encrypted. We cannot read your messages.</li>
             </ul>
           </section>
 
@@ -50,7 +49,7 @@ export default function PrivacyPolicy() {
             <h2 className="text-xl font-display font-semibold">4. Data Security</h2>
             <ul className="list-disc pl-5 space-y-1">
               <li>All data is transmitted over encrypted connections (HTTPS/TLS).</li>
-              <li>Chat messages use end-to-end encryption — only you and the recipient can read them.</li>
+              <li>Payments are processed securely by Razorpay; we never store your card or UPI details.</li>
               <li>We use industry-standard security practices to protect your data.</li>
               <li>Access to user data is restricted to authorized personnel only.</li>
             </ul>

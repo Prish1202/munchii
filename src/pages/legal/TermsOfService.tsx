@@ -22,7 +22,7 @@ export default function TermsOfService() {
 
           <section>
             <h2 className="text-xl font-display font-semibold">2. Description of Service</h2>
-            <p>Munchii is a campus-based social food pre-order platform that connects students with nearby food vendors for pickup orders. The platform also provides social features including messaging, reward points, and community interactions.</p>
+            <p>Munchii is a campus-based food pre-order platform that connects students with nearby food vendors for pickup orders. Customers earn reward Coins on completed orders.</p>
           </section>
 
           <section>
