@@ -58,6 +58,15 @@ Deno.serve(async (req) => {
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE)
 
+  // Internal worker: only callable with the database-held internal secret.
+  const provided = req.headers.get('x-internal-secret') || ''
+  const { data: expected } = await admin.rpc('get_internal_function_secret')
+  if (!expected || provided !== expected) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+
   try {
     // Safety net for anything that was opened but never finalized by the client.
     await admin.rpc('sweep_stale_view_once_media')
