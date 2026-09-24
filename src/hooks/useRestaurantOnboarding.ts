@@ -48,13 +48,10 @@ export function useOwnerDetails() {
   return useQuery({
     queryKey: ['owner-details', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('restaurant_owner_details' as any)
-        .select('*')
-        .eq('user_id', user!.id)
-        .maybeSingle();
+      const { data, error } = await (supabase.rpc as any)('get_owner_details_decrypted', { _user_id: user!.id });
       if (error) throw error;
-      return data as unknown as OwnerDetails | null;
+      const row = Array.isArray(data) ? data[0] : data;
+      return row ? ({ ...row, user_id: user!.id } as OwnerDetails) : null;
     },
     enabled: !!user?.id,
   });
@@ -197,13 +194,10 @@ export function useBankDetails(restaurantId: string | undefined) {
   return useQuery({
     queryKey: ['bank-details', restaurantId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('restaurant_bank_details' as any)
-        .select('*')
-        .eq('restaurant_id', restaurantId!)
-        .maybeSingle();
+      const { data, error } = await (supabase.rpc as any)('get_bank_details_decrypted', { _restaurant_id: restaurantId! });
       if (error) throw error;
-      return data as unknown as BankDetails | null;
+      const row = Array.isArray(data) ? data[0] : data;
+      return row ? ({ ...row, restaurant_id: restaurantId! } as BankDetails) : null;
     },
     enabled: !!restaurantId,
   });
