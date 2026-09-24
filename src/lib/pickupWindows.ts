@@ -26,10 +26,10 @@ function formatTime(date: Date) {
   }).format(date);
 }
 
-export function formatPickupWindow(startValue: string | Date) {
+export function formatPickupWindow(startValue: string | Date, slotMinutes: number = PICKUP_WINDOW_MINUTES) {
   const start = startValue instanceof Date ? startValue : new Date(startValue);
   if (Number.isNaN(start.getTime())) return '';
-  const end = new Date(start.getTime() + PICKUP_WINDOW_MINUTES * 60_000);
+  const end = new Date(start.getTime() + Math.max(1, slotMinutes) * 60_000);
   return `${formatTime(start)}–${formatTime(end)}`;
 }
 
@@ -38,7 +38,11 @@ export function getPickupWindows({
   bufferMinutes = DEFAULT_RESTAURANT_BUFFER_MINUTES,
   now = new Date(),
   count = 6,
+  slotMinutes,
+  minLeadMinutes = 0,
 }: {
+  slotMinutes?: number;
+  minLeadMinutes?: number;
   preparationMinutes: number;
   bufferMinutes?: number;
   now?: Date;
@@ -46,12 +50,16 @@ export function getPickupWindows({
 }): PickupWindow[] {
   const safePreparation = Math.max(1, preparationMinutes || DEFAULT_PREPARATION_MINUTES);
   const safeBuffer = Math.max(0, bufferMinutes || 0);
-  const readyAt = new Date(now.getTime() + (safePreparation + safeBuffer) * 60_000);
-  const firstStart = roundUpToInterval(readyAt, PICKUP_SLOT_INTERVAL_MINUTES);
+  // When slotMinutes is given, it controls both window length and interval.
+  const interval = slotMinutes && slotMinutes > 0 ? Math.round(slotMinutes) : PICKUP_SLOT_INTERVAL_MINUTES;
+  const length = slotMinutes && slotMinutes > 0 ? Math.round(slotMinutes) : PICKUP_WINDOW_MINUTES;
+  const leadMinutes = Math.max(safePreparation + safeBuffer, Math.max(0, minLeadMinutes || 0));
+  const readyAt = new Date(now.getTime() + leadMinutes * 60_000);
+  const firstStart = roundUpToInterval(readyAt, interval);
 
   return Array.from({ length: count }, (_, index) => {
-    const start = new Date(firstStart.getTime() + index * PICKUP_SLOT_INTERVAL_MINUTES * 60_000);
-    const end = new Date(start.getTime() + PICKUP_WINDOW_MINUTES * 60_000);
+    const start = new Date(firstStart.getTime() + index * interval * 60_000);
+    const end = new Date(start.getTime() + length * 60_000);
     return {
       start,
       end,

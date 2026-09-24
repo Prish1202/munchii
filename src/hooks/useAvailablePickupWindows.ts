@@ -33,14 +33,15 @@ export function useAvailablePickupWindows(opts: {
   const minAdvance = s?.min_advance_minutes ?? 0;
   const maxAdvance = s?.max_advance_minutes ?? 480;
   const buffer = s?.preparation_buffer_minutes ?? bufferMinutes;
+  const slotMinutes = Math.max(5, Number(s?.pickup_slot_minutes) || PICKUP_SLOT_INTERVAL_MINUTES);
 
   const candidates = useMemo(() => {
-    const effectiveNow = new Date(now.getTime() + Math.max(0, minAdvance - preparationMinutes - buffer) * 60_000);
-    const n = Math.min(64, Math.max(1, Math.floor(maxAdvance / PICKUP_SLOT_INTERVAL_MINUTES)));
+    const n = Math.min(96, Math.max(1, Math.floor(maxAdvance / slotMinutes) + 1));
     const limit = now.getTime() + maxAdvance * 60_000;
-    return getPickupWindows({ preparationMinutes, bufferMinutes: buffer, now: effectiveNow, count: n })
-      .filter((w) => w.start.getTime() <= limit);
-  }, [now, minAdvance, maxAdvance, preparationMinutes, buffer]);
+    const earliest = now.getTime() + minAdvance * 60_000;
+    return getPickupWindows({ preparationMinutes, bufferMinutes: buffer, now, count: n, slotMinutes, minLeadMinutes: minAdvance })
+      .filter((w) => w.start.getTime() >= earliest && w.start.getTime() <= limit);
+  }, [now, minAdvance, maxAdvance, preparationMinutes, buffer, slotMinutes]);
 
   const from = candidates[0]?.value;
   const to = candidates[candidates.length - 1]?.value;
@@ -74,5 +75,5 @@ export function useAvailablePickupWindows(opts: {
       .slice(0, count);
   }, [candidates, usage.data, s, paused, preparationMinutes, count]);
 
-  return { windows, paused, isLoading: settings.isLoading || usage.isLoading, refetch: usage.refetch };
+  return { windows, paused, slotMinutes, isLoading: settings.isLoading || usage.isLoading, refetch: usage.refetch };
 }
