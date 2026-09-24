@@ -32,7 +32,7 @@ export default function RoleSelect() {
         <div className="text-center space-y-3 flex flex-col items-center">
           <img src={logoAsset.url} alt="Munchii" className="h-24 w-24 object-cover rounded-2xl shadow-soft" />
           <div>
-            <h1 className="text-3xl font-display font-bold tracking-tight">Welcome to Munchii</h1>
+            <h1 className="text-3xl font-display font-bold tracking-tight">Munchii — Pre-order Food &amp; Skip the Wait</h1>
             <p className="text-muted-foreground text-sm mt-1">Choose how you want to continue</p>
           </div>
         </div>
