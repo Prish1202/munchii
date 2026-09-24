@@ -686,6 +686,8 @@ export type Database = {
           payment_method: string
           pickup_otp: string | null
           pickup_time: string | null
+          prep_minutes: number
+          prep_start_at: string | null
           restaurant_id: string | null
           status: Database["public"]["Enums"]["order_status"]
           total_amount: number
@@ -698,6 +700,8 @@ export type Database = {
           payment_method?: string
           pickup_otp?: string | null
           pickup_time?: string | null
+          prep_minutes?: number
+          prep_start_at?: string | null
           restaurant_id?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           total_amount: number
@@ -710,6 +714,8 @@ export type Database = {
           payment_method?: string
           pickup_otp?: string | null
           pickup_time?: string | null
+          prep_minutes?: number
+          prep_start_at?: string | null
           restaurant_id?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           total_amount?: number
@@ -1134,10 +1140,17 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean
+          max_advance_minutes: number
+          max_orders_per_slot: number
+          max_workload_per_slot: number
+          min_advance_minutes: number
           name: string
           opening_hours: string | null
+          orders_paused_indefinitely: boolean
+          orders_paused_until: string | null
           owner_id: string
           photo_url: string | null
+          pickup_slot_minutes: number
           preparation_buffer_minutes: number
           university_name: string | null
           updated_at: string
@@ -1152,10 +1165,17 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          max_advance_minutes?: number
+          max_orders_per_slot?: number
+          max_workload_per_slot?: number
+          min_advance_minutes?: number
           name: string
           opening_hours?: string | null
+          orders_paused_indefinitely?: boolean
+          orders_paused_until?: string | null
           owner_id: string
           photo_url?: string | null
+          pickup_slot_minutes?: number
           preparation_buffer_minutes?: number
           university_name?: string | null
           updated_at?: string
@@ -1170,10 +1190,17 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          max_advance_minutes?: number
+          max_orders_per_slot?: number
+          max_workload_per_slot?: number
+          min_advance_minutes?: number
           name?: string
           opening_hours?: string | null
+          orders_paused_indefinitely?: boolean
+          orders_paused_until?: string | null
           owner_id?: string
           photo_url?: string | null
+          pickup_slot_minutes?: number
           preparation_buffer_minutes?: number
           university_name?: string | null
           updated_at?: string
@@ -1349,6 +1376,14 @@ export type Database = {
         Returns: {
           avg_rating: number
           review_count: number
+        }[]
+      }
+      get_slot_usage: {
+        Args: { _from: string; _restaurant_id: string; _to: string }
+        Returns: {
+          order_count: number
+          slot_start: string
+          workload: number
         }[]
       }
       get_user_role: {
