@@ -7,6 +7,10 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.89.0'
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
 
+const esc = (v: unknown) => String(v ?? '')
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -17,6 +21,17 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     )
+
+    const authHeader = req.headers.get('Authorization') || ''
+    const userClient = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
+      global: { headers: { Authorization: authHeader } },
+    })
+    const { data: { user } } = await userClient.auth.getUser()
+    if (!user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
 
     const { orderId } = await req.json()
 
@@ -38,6 +53,12 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Order not found' }), {
         status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    if (order.customer_id !== user.id || order.status !== 'completed') {
+      return new Response(JSON.stringify({ error: 'Order not found' }), {
+        status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
@@ -81,7 +102,7 @@ Deno.serve(async (req) => {
     const itemsHtml = (orderItems || []).map((item: any) => `
       <tr>
         <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; color: #333;">
-          ${item.menu_item?.name || 'Item'} × ${item.quantity}
+          ${esc(item.menu_item?.name || 'Item')} × ${item.quantity}
         </td>
         <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; color: #333; text-align: right;">
           ₹${(Number(item.price_at_time) * item.quantity).toFixed(0)}
@@ -115,7 +136,7 @@ Deno.serve(async (req) => {
             <!-- Greeting -->
             <tr>
               <td style="padding: 32px 40px 16px;">
-                <p style="margin: 0; font-size: 16px; color: #333;">Hi <strong>${customerName}</strong>,</p>
+                <p style="margin: 0; font-size: 16px; color: #333;">Hi <strong>${esc(customerName)}</strong>,</p>
                 <p style="margin: 12px 0 0; font-size: 14px; color: #666; line-height: 1.6;">
                   Your order has been completed successfully! Here's a summary of your order.
                 </p>
@@ -143,8 +164,8 @@ Deno.serve(async (req) => {
                           <td style="font-size: 12px; color: #999; text-transform: uppercase; letter-spacing: 0.5px; text-align: right;">Payment</td>
                         </tr>
                         <tr>
-                          <td style="font-size: 14px; color: #333; font-weight: 600; padding-top: 4px;">${restaurantName}</td>
-                          <td style="font-size: 14px; color: #333; text-align: right; padding-top: 4px;">${paymentLabel}</td>
+                          <td style="font-size: 14px; color: #333; font-weight: 600; padding-top: 4px;">${esc(restaurantName)}</td>
+                          <td style="font-size: 14px; color: #333; text-align: right; padding-top: 4px;">${esc(paymentLabel)}</td>
                         </tr>
                       </table>
                     </td>
