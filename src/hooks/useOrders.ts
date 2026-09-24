@@ -120,6 +120,7 @@ interface CreateOrderInput {
   totalAmount: number;
   paymentMethod: string;
   pickupTime?: string;
+  prepMinutes?: number;
 }
 
 export function useCreateOrder() {
@@ -127,7 +128,7 @@ export function useCreateOrder() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ restaurantId, items, totalAmount, paymentMethod, pickupTime }: CreateOrderInput) => {
+    mutationFn: async ({ restaurantId, items, totalAmount, paymentMethod, pickupTime, prepMinutes }: CreateOrderInput) => {
       // Generate 4-digit OTP
       const pickupOtp = String(Math.floor(1000 + Math.random() * 9000));
       // For online payment, start as pending_payment; for COD, start as placed
@@ -143,6 +144,7 @@ export function useCreateOrder() {
           payment_method: paymentMethod,
           pickup_time: pickupTime ?? null,
           pickup_otp: pickupOtp,
+          prep_minutes: prepMinutes ?? 10,
         } as any)
         .select()
         .single();
@@ -167,9 +169,14 @@ export function useCreateOrder() {
       queryClient.invalidateQueries({ queryKey: ['customer-orders'] });
       toast.success('Order placed successfully!');
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Order creation failed:', error);
-      toast.error('Failed to place order. Please try again.');
+      const msg = String(error?.message || '');
+      if (msg.includes('SLOT_FULL')) toast.error('That pickup slot just filled up. Please pick the next available slot.');
+      else if (msg.includes('not accepting orders')) toast.error('This restaurant has paused orders for a few minutes.');
+      else if (msg.includes('no longer available')) toast.error('An item in your cart is no longer available.');
+      else if (msg.includes('too soon') || msg.includes('too far')) toast.error('Please choose another pickup window.');
+      else toast.error('Failed to place order. Please try again.');
     },
   });
 }

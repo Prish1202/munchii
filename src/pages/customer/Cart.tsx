@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useCart } from '@/contexts/CartContext';
 import { ArrowLeft, Minus, Plus, Trash2, ShoppingCart, Store, Coins, Clock3 } from 'lucide-react';
-import { getPickupWindows } from '@/lib/pickupWindows';
+import { useAvailablePickupWindows } from '@/hooks/useAvailablePickupWindows';
 import { cn } from '@/lib/utils';
 
 export default function Cart() {
@@ -33,16 +33,12 @@ export default function Cart() {
     return () => window.clearInterval(id);
   }, []);
 
-  const windows = useMemo(
-    () =>
-      getPickupWindows({
-        preparationMinutes: longestPreparationMinutes,
-        bufferMinutes: restaurantBufferMinutes,
-        now,
-        count: 6,
-      }),
-    [longestPreparationMinutes, restaurantBufferMinutes, now],
-  );
+  const { windows, paused: ordersPaused } = useAvailablePickupWindows({
+    restaurantId,
+    preparationMinutes: longestPreparationMinutes,
+    bufferMinutes: restaurantBufferMinutes,
+    now,
+  });
 
   // Keep a valid future window selected at all times
   useEffect(() => {
@@ -152,6 +148,7 @@ export default function Cart() {
               </p>
             </div>
           )}
+          {windows.length === 0 && (<p className="text-sm rounded-xl bg-muted p-3 text-muted-foreground">{ordersPaused ? 'This restaurant has paused new orders for a short while. Please check back soon.' : 'All pickup slots are full right now. Please check back in a few minutes.'}</p>)}
           <div className="grid grid-cols-2 gap-2">
             {windows.map((w) => (
               <button
