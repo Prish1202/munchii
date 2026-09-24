@@ -41,13 +41,11 @@ export function useAdminUserDetail(userId: string | null) {
     queryFn: async () => {
       if (!userId) return null;
 
-      const [profileRes, roleRes, walletRes, ordersRes, followersRes, followingRes, transactionsRes, contactRes] = await Promise.all([
+      const [profileRes, roleRes, walletRes, ordersRes, transactionsRes, contactRes] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', userId).single(),
         supabase.from('user_roles').select('role').eq('user_id', userId).maybeSingle(),
         supabase.from('user_wallet').select('total_coins').eq('user_id', userId).maybeSingle(),
         supabase.from('orders').select('id, total_amount, status, created_at, restaurant:restaurants(name)').eq('customer_id', userId).order('created_at', { ascending: false }),
-        supabase.from('followers').select('id').eq('following_id', userId),
-        supabase.from('followers').select('id').eq('follower_id', userId),
         supabase.from('coin_transactions').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(20),
         supabase.from('user_contact_info').select('phone').eq('user_id', userId).maybeSingle(),
       ]);
@@ -57,8 +55,6 @@ export function useAdminUserDetail(userId: string | null) {
         role: roleRes.data?.role || 'customer',
         wallet: walletRes.data,
         orders: ordersRes.data || [],
-        followersCount: followersRes.data?.length || 0,
-        followingCount: followingRes.data?.length || 0,
         coinTransactions: transactionsRes.data || [],
         totalOrders: ordersRes.data?.length || 0,
         completedOrders: ordersRes.data?.filter(o => o.status === 'completed').length || 0,
