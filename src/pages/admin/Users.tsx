@@ -133,17 +133,7 @@ export default function AdminUsers() {
           ) : userDetail ? (
             <div className="space-y-6">
               {/* Quick Stats */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="bg-secondary/50 rounded-xl p-3 text-center">
-                  <Heart className="w-4 h-4 mx-auto text-primary mb-1" />
-                  <div className="text-lg font-bold">{userDetail.followersCount}</div>
-                  <div className="text-[10px] text-muted-foreground">Followers</div>
-                </div>
-                <div className="bg-secondary/50 rounded-xl p-3 text-center">
-                  <Users className="w-4 h-4 mx-auto text-primary mb-1" />
-                  <div className="text-lg font-bold">{userDetail.followingCount}</div>
-                  <div className="text-[10px] text-muted-foreground">Following</div>
-                </div>
+              <div className="grid grid-cols-2 gap-3">
                 <div className="bg-secondary/50 rounded-xl p-3 text-center">
                   <ShoppingBag className="w-4 h-4 mx-auto text-primary mb-1" />
                   <div className="text-lg font-bold">{userDetail.completedOrders}/{userDetail.totalOrders}</div>
