@@ -33,9 +33,9 @@ export default function CommunityGuidelines() {
             <h2 className="text-xl font-display font-semibold">Keep It Safe</h2>
             <ul className="list-disc pl-5 space-y-1">
               <li>Do not share personal information of others without their consent.</li>
-              <li>Do not send unsolicited or inappropriate messages.</li>
+              <li>Be courteous to restaurant staff when collecting your order.</li>
               <li>Report any suspicious or harmful behavior immediately.</li>
-              <li>Do not share content that is violent, sexually explicit, or illegal.</li>
+              <li>Do not post reviews that are violent, sexually explicit, or illegal.</li>
             </ul>
           </section>
 
@@ -44,24 +44,15 @@ export default function CommunityGuidelines() {
             <ul className="list-disc pl-5 space-y-1">
               <li>Use your real identity. Do not impersonate others.</li>
               <li>Do not create fake accounts or engage in fraudulent activities.</li>
-              <li>Do not manipulate the rewards system or exploit platform features.</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-display font-semibold">Chat Responsibly</h2>
-            <ul className="list-disc pl-5 space-y-1">
-              <li>Messages on Munchii are end-to-end encrypted for your privacy.</li>
-              <li>Do not use the chat feature for spam, scams, or solicitation.</li>
-              <li>Respect others' boundaries — if someone doesn't want to chat, respect that.</li>
-              <li>You can block and report any user who makes you uncomfortable.</li>
+              <li>Do not manipulate the Coins rewards system or exploit platform features.</li>
+              <li>Leave genuine reviews based on your actual orders.</li>
             </ul>
           </section>
 
           <section>
             <h2 className="text-xl font-display font-semibold">Reporting & Enforcement</h2>
             <ul className="list-disc pl-5 space-y-1">
-              <li>Use the report button on messages or profiles to flag violations.</li>
+              <li>Contact support to report violations or problems with an order.</li>
               <li>Our team reviews all reports within 24 hours.</li>
               <li>Violations may result in warnings, temporary suspension, or permanent ban.</li>
               <li>Severe violations (threats, illegal content) result in immediate account termination.</li>

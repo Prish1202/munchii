@@ -59,9 +59,9 @@ export default function AboutUs() {
             {[
               { emoji: '🍕', title: 'Pickup Only', desc: 'Zero delivery fees — walk up and grab your fresh meal' },
               { emoji: '💰', title: 'Real Rewards', desc: 'Earn 3% points on every order. 1 point = ₹1. Use or share them!' },
-              { emoji: '💬', title: 'E2EE Chat', desc: 'End-to-end encrypted messaging with fellow foodies' },
-              { emoji: '🏆', title: 'Gamified', desc: 'Leaderboards, badges, celebrations — food ordering made fun' },
-              { emoji: '🤝', title: 'Social Network', desc: 'Follow friends, share points, discover what your campus eats' },
+              { emoji: '⏱️', title: 'Skip the Wait', desc: 'Pre-order and pick a pickup window — your food is ready when you arrive' },
+              { emoji: '🔐', title: 'Secure Pickup', desc: 'A 4-digit code makes sure only you collect your order' },
+              { emoji: '🏫', title: 'Campus Focused', desc: 'Discover the best food spots near your campus' },
               { emoji: '🔒', title: 'Privacy First', desc: 'Your data stays yours. No tracking, no selling, no compromises' },
             ].map((item) => (
               <div key={item.title} className="flex items-start gap-3 p-3 rounded-xl bg-muted/50">
