@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { LocationProvider } from "@/contexts/LocationContext";
+import { RouteSeo } from "@/components/seo/Seo";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { OneSignalInit } from "@/components/OneSignalInit";
@@ -114,6 +115,7 @@ const App = () => {
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <RouteSeo />
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<RoleSelect />} />

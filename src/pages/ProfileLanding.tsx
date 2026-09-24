@@ -73,7 +73,7 @@ export default function ProfileLanding() {
             <div className="w-24 h-24 mx-auto rounded-full p-[3px] gradient-primary">
               <Avatar className="w-full h-full border-2 border-card">
                 {profile?.avatar_url ? (
-                  <AvatarImage src={resolveStorageUrl(profile.avatar_url)} alt={profile?.name || 'Profile'} />
+                  <AvatarImage src={resolveStorageUrl(profile.avatar_url)} alt={profile?.name ? `${profile.name}'s profile photo on Munchii` : 'Munchii user profile photo'} />
                 ) : null}
                 <AvatarFallback className="bg-primary/10 text-primary text-3xl font-display font-bold">
                   {profile?.name?.charAt(0)?.toUpperCase() || '🍔'}

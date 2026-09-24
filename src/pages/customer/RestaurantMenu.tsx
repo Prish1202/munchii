@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { applySeo, SITE_URL } from '@/components/seo/Seo';
 import { useParams, Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,36 @@ export default function RestaurantMenu() {
   const { data: ratingData } = useRestaurantRating(id);
   const { data: menuItems, isLoading: loadingMenu } = useMenuItems(id!);
   const { data: categories } = useMenuCategories(id!);
+
+  useEffect(() => {
+    if (!restaurant) return;
+    const path = `/customer/restaurant/${id}`;
+    const items = (menuItems ?? []) as any[];
+    applySeo({
+      title: `${restaurant.name} — Menu & Pre-order | Munchii`,
+      description: `Pre-order from ${restaurant.name}${restaurant.address ? ` in ${restaurant.address}` : ''}. Browse ${items.length || 'the'} menu items, pick a pickup window and earn 3% Coins.`.slice(0, 160),
+      path,
+      jsonLd: {
+        '@context': 'https://schema.org',
+        '@type': 'Restaurant',
+        name: restaurant.name,
+        url: `${SITE_URL}${path}`,
+        ...(restaurant.address ? { address: restaurant.address } : {}),
+        ...(ratingData && ratingData.reviewCount > 0
+          ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: ratingData.avgRating, reviewCount: ratingData.reviewCount } }
+          : {}),
+        hasMenu: {
+          '@type': 'Menu',
+          hasMenuItem: items.slice(0, 50).map((m) => ({
+            '@type': 'MenuItem',
+            name: m.name,
+            ...(m.description ? { description: m.description } : {}),
+            offers: { '@type': 'Offer', price: m.price, priceCurrency: 'INR' },
+          })),
+        },
+      },
+    });
+  }, [restaurant, menuItems, ratingData, id]);
   const { items: cartItems, addItem, updateQuantity, totalItems, totalAmount, restaurantId } = useCart();
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [search, setSearch] = useState('');
