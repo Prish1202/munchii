@@ -241,8 +241,8 @@ export function useAdminRestaurants() {
       const restaurantIds = restaurants.map(r => r.id);
 
       const [ownerRes, bankRes, ordersRes, complianceRes] = await Promise.all([
-        supabase.from('restaurant_owner_details' as any).select('*').in('user_id', ownerIds),
-        supabase.from('restaurant_bank_details' as any).select('*').in('restaurant_id', restaurantIds),
+        supabase.from('restaurant_owner_details' as any).select('id, user_id, pan_number, aadhaar_number, contact_phone, contact_email, full_address, created_at, updated_at').in('user_id', ownerIds),
+        supabase.from('restaurant_bank_details' as any).select('id, restaurant_id, account_holder_name, account_number, ifsc_code, bank_name, upi_id, created_at, updated_at').in('restaurant_id', restaurantIds),
         supabase.from('orders').select('restaurant_id, status, total_amount').in('restaurant_id', restaurantIds),
         supabase.from('restaurant_compliance').select('*').in('restaurant_id', restaurantIds),
       ]);
