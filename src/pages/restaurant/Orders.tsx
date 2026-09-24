@@ -1,4 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { PauseOrdersControl } from '@/components/restaurant/PickupCapacitySettings';
 import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,7 +21,7 @@ import { formatPickupWindow } from '@/lib/pickupWindows';
 const STATUS_CONFIG: Record<string, { label: string; color: string; nextStatus?: OrderStatus; nextLabel?: string }> = {
   placed: { label: 'New', color: 'bg-secondary', nextStatus: 'accepted', nextLabel: 'Accept' },
   accepted: { label: 'Accepted', color: 'bg-accent', nextStatus: 'preparing', nextLabel: 'Start Preparing' },
-  preparing: { label: 'Preparing', color: 'bg-primary', nextStatus: 'ready_for_pickup', nextLabel: 'Mark Ready for Pickup' },
+  preparing: { label: 'Preparing', color: 'bg-primary', nextStatus: 'ready_for_pickup', nextLabel: 'Mark Ready' },
   ready_for_pickup: { label: 'Ready for Pickup', color: 'bg-primary' },
   picked_up: { label: 'Picked Up', color: 'bg-secondary' },
   completed: { label: 'Completed', color: 'bg-secondary' },
@@ -35,9 +39,24 @@ export default function RestaurantOrders() {
   const { data: orders, isLoading } = useRestaurantOrders();
   const updateStatus = useUpdateOrderStatus();
 
-  const pendingOrders = orders?.filter(o => o.status === 'placed') || [];
-  const activeOrders = orders?.filter(o => ['accepted', 'preparing', 'ready_for_pickup'].includes(o.status)) || [];
+  const queryClient = useQueryClient();
+  const [, setTick] = useState(0);
+  useEffect(() => { const id = setInterval(() => setTick(t => t + 1), 30_000); return () => clearInterval(id); }, []);
+  const updateRestaurant = async (patch: Record<string, unknown>) => {
+    const { error } = await supabase.from('restaurants').update(patch as any).eq('id', restaurant!.id);
+    if (error) { toast.error('Could not update'); return; }
+    queryClient.invalidateQueries({ queryKey: ['my-restaurant'] });
+  };
+  const byPickup = (a: RestaurantOrder, b: RestaurantOrder) =>
+    new Date(a.pickup_time || a.created_at).getTime() - new Date(b.pickup_time || b.created_at).getTime();
+  const nowMs = Date.now();
+  const startsNow = (o: RestaurantOrder) => !(o as any).prep_start_at || new Date((o as any).prep_start_at).getTime() <= nowMs;
+  const pendingOrders = (orders?.filter(o => o.status === 'placed') || []).sort(byPickup);
+  const preparingOrders = (orders?.filter(o => o.status === 'preparing' || (o.status === 'accepted' && startsNow(o))) || []).sort(byPickup);
+  const upcomingOrders = (orders?.filter(o => o.status === 'accepted' && !startsNow(o)) || []).sort(byPickup);
+  const readyOrders = (orders?.filter(o => o.status === 'ready_for_pickup') || []).sort(byPickup);
   const completedOrders = orders?.filter(o => ['picked_up', 'completed', 'cancelled'].includes(o.status)) || [];
+  const sections: [string, RestaurantOrder[]][] = [['Preparing Now', preparingOrders], ['Upcoming', upcomingOrders], ['Ready for Pickup', readyOrders]];
 
   if (!restaurant) {
     return (
@@ -58,8 +77,9 @@ export default function RestaurantOrders() {
             <ArrowLeft className="w-4 h-4 mr-2" />Back to Dashboard
           </Link>
           <h1 className="text-2xl font-bold">Orders</h1>
-          <p className="text-muted-foreground">Manage incoming and active orders</p>
+          <p className="text-muted-foreground">Kitchen queue, sorted by pickup window</p>
         </div>
+        <PauseOrdersControl restaurant={restaurant} update={updateRestaurant} />
 
         {isLoading ? (
           <div className="space-y-4">
@@ -84,16 +104,16 @@ export default function RestaurantOrders() {
               </section>
             )}
 
-            {activeOrders.length > 0 && (
-              <section>
-                <h2 className="text-lg font-semibold mb-4">Active Orders ({activeOrders.length})</h2>
+            {sections.map(([title, list]) => list.length > 0 && (
+              <section key={title}>
+                <h2 className="text-lg font-semibold mb-4">{title} ({list.length})</h2>
                 <div className="space-y-4">
-                  {activeOrders.map((order) => (
+                  {list.map((order) => (
                     <OrderCard key={order.id} order={order} onUpdateStatus={(status) => updateStatus.mutate({ orderId: order.id, status })} isUpdating={updateStatus.isPending} />
                   ))}
                 </div>
               </section>
-            )}
+            ))}
 
             {orders?.length === 0 && (
               <Card>
@@ -107,7 +127,7 @@ export default function RestaurantOrders() {
 
             {completedOrders.length > 0 && (
               <section>
-                <h2 className="text-lg font-semibold mb-4">Recent Completed ({completedOrders.length})</h2>
+                <h2 className="text-lg font-semibold mb-4">Completed ({completedOrders.length})</h2>
                 <div className="space-y-4">
                   {completedOrders.map((order) => (<OrderCard key={order.id} order={order} compact />))}
                 </div>
@@ -181,7 +201,13 @@ function OrderCard({ order, onUpdateStatus, isUpdating, compact = false }: { ord
             {pickupTimeLabel && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
                 <Clock className="w-4 h-4" />
-                <span>Customer pickup time: {pickupTimeLabel}</span>
+                <span>Pickup: <b className="text-foreground">{pickupTimeLabel}</b></span>
+              </div>
+            )}
+            {(order as any).prep_start_at && ['placed', 'accepted'].includes(order.status) && (
+              <div className="flex items-center gap-2 text-sm mb-3 text-primary font-medium">
+                <ChefHat className="w-4 h-4" />
+                <span>Start preparing at {format(new Date((order as any).prep_start_at), 'h:mm a')}</span>
               </div>
             )}
 
