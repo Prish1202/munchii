@@ -1360,6 +1360,7 @@ export type Database = {
         Args: { _customer_id: string }
         Returns: string
       }
+      get_internal_function_secret: { Args: never; Returns: string }
       get_leaderboard_top10: {
         Args: never
         Returns: {
@@ -1414,6 +1415,7 @@ export type Database = {
         Returns: boolean
       }
       kick_media_cleanup: { Args: never; Returns: undefined }
+      recalc_order_total: { Args: { _order_id: string }; Returns: undefined }
       redeem_coins: {
         Args: { _coins: number; _order_id?: string }
         Returns: number
