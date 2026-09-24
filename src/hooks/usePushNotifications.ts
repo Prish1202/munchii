@@ -92,7 +92,7 @@ export function usePushNotifications() {
     try {
       const notif = new Notification(title, {
         body,
-        icon: '/favicon.ico',
+        icon: '/favicon.png',
         // A stable tag means a second notification with the same tag REPLACES the
         // previous one rather than stacking — protects against any duplicate fires.
         tag: dedupeKey || `munchii-${title}-${body}`,
