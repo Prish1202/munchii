@@ -53,7 +53,7 @@ export default function Checkout() {
     return () => window.clearInterval(id);
   }, []);
 
-  const { windows, paused: ordersPaused } = useAvailablePickupWindows({
+  const { windows, paused: ordersPaused, slotMinutes } = useAvailablePickupWindows({
     restaurantId,
     preparationMinutes: longestPreparationMinutes,
     bufferMinutes: restaurantBufferMinutes,
@@ -297,7 +297,7 @@ export default function Checkout() {
             {pickupTime && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Pickup Window</span>
-                <span>{formatPickupWindow(pickupTime)}</span>
+                <span>{formatPickupWindow(pickupTime, slotMinutes)}</span>
               </div>
             )}
           </div>
