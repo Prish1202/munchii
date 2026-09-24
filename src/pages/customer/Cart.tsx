@@ -148,6 +148,7 @@ export default function Cart() {
               </p>
             </div>
           )}
+          {windows.length === 0 && (<p className="text-sm rounded-xl bg-muted p-3 text-muted-foreground">{ordersPaused ? 'This restaurant has paused new orders for a short while. Please check back soon.' : 'All pickup slots are full right now. Please check back in a few minutes.'}</p>)}
           <div className="grid grid-cols-2 gap-2">
             {windows.map((w) => (
               <button
