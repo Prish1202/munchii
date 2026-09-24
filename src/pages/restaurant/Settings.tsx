@@ -1,3 +1,4 @@
+import { PickupCapacitySettings } from '@/components/restaurant/PickupCapacitySettings';
 import { useState, useRef } from 'react';
 import { useB2Upload } from '@/hooks/useB2Upload';
 import { Link } from 'react-router-dom';
@@ -197,6 +198,8 @@ export default function RestaurantSettings() {
             </div>
           </CardContent>
         </Card>
+
+        <PickupCapacitySettings restaurant={restaurant} update={(p) => updateRestaurant.mutate(p as any)} />
 
 
         {/* Payment Preferences */}
