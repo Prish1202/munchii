@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { useRestaurant, useMenuItems, useMenuCategories } from '@/hooks/useRestaurants';
-import { useCart } from '@/contexts/CartContext';
+import { lineKeyOf, useCart } from '@/contexts/CartContext';
+import { usesPrepTime } from '@/lib/merchantTerms';
 import { useRestaurantRating } from '@/hooks/useReviews';
 import { ArrowLeft, MapPin, Plus, Minus, ShoppingCart, Star, Clock, Percent, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
 import { toast } from 'sonner';
@@ -65,14 +66,15 @@ export default function RestaurantMenu() {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('default');
 
-  const getCartQuantity = (menuItemId: string) => {
-    const item = cartItems.find(i => i.menuItemId === menuItemId);
+  const getCartQuantity = (menuItemId: string, optionLabel?: string | null) => {
+    const item = cartItems.find(i => lineKeyOf(i) === lineKeyOf({ menuItemId, optionLabel }));
     return item?.quantity || 0;
   };
 
-  const handleAddItem = (item: any) => {
+  const handleAddItem = (item: any, opt?: { label: string; price: number }) => {
     const discount = (item as any).discount_percent || 0;
-    const effectivePrice = discount > 0 ? item.price * (1 - discount / 100) : item.price;
+    const basePrice = opt ? Number(opt.price) : item.price;
+    const effectivePrice = discount > 0 ? basePrice * (1 - discount / 100) : basePrice;
 
     if (restaurantId && restaurantId !== id) {
       toast.warning('Cart cleared — items were from another restaurant.');
@@ -83,10 +85,11 @@ export default function RestaurantMenu() {
       price: effectivePrice,
       restaurantId: id!,
       restaurantName: restaurant?.name || '',
-      preparationTimeMinutes: item.preparation_time_minutes || 10,
+      preparationTimeMinutes: usesPrepTime(item.fulfillment_type) ? (item.preparation_time_minutes || 10) : 0,
       restaurantBufferMinutes: restaurant?.preparation_buffer_minutes || 5,
+      optionLabel: opt?.label ?? null,
     });
-    toast.success(`Added ${item.name}`);
+    toast.success(`Added ${item.name}${opt ? ` (${opt.label})` : ''}`);
   };
 
   const heroImage = useMemo(() => {
@@ -253,6 +256,8 @@ export default function RestaurantMenu() {
               const image = resolveStorageUrl(item.image_url) || FALLBACK_IMAGE;
               const discount = item.discount_percent || 0;
               const discountedPrice = discount > 0 ? item.price * (1 - discount / 100) : item.price;
+              const options: { label: string; price: number }[] = item.quantity_type && item.quantity_type !== 'FIXED' && Array.isArray(item.quantity_options) ? item.quantity_options : [];
+              const hasOptions = options.length > 0;
               return (
                 <div key={item.id} className="flex gap-3 bg-card rounded-xl border border-border p-3 hover:shadow-sm transition-shadow">
                   <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden shrink-0">
@@ -272,15 +277,15 @@ export default function RestaurantMenu() {
                     </div>
                     <div className="flex items-center justify-between mt-2">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-primary">₹{discountedPrice.toFixed(0)}</span>
+                        <span className="font-semibold text-primary">{hasOptions ? 'from ' : ''}₹{(hasOptions ? Math.min(...options.map(o => discount > 0 ? o.price * (1 - discount / 100) : o.price)) : discountedPrice).toFixed(0)}</span>
                         {discount > 0 && (
                           <span className="text-xs text-muted-foreground line-through">₹{item.price}</span>
                         )}
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        {usesPrepTime(item.fulfillment_type) && <span className="text-xs text-muted-foreground flex items-center gap-1">
                           <Clock className="w-3 h-3" /> ~{item.preparation_time_minutes || 10} min
-                        </span>
+                        </span>}
                       </div>
-                      {quantity > 0 ? (
+                      {hasOptions ? null : quantity > 0 ? (
                         <div className="flex items-center gap-1.5 bg-primary/10 rounded-lg px-1">
                           <Button size="icon" variant="ghost" className="h-7 w-7 text-primary hover:bg-primary/20" onClick={() => updateQuantity(item.id, quantity - 1)}>
                             <Minus className="w-3.5 h-3.5" />
@@ -296,6 +301,26 @@ export default function RestaurantMenu() {
                         </Button>
                       )}
                     </div>
+                    {hasOptions && (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {options.map(opt => {
+                          const q = getCartQuantity(item.id, opt.label);
+                          const p = discount > 0 ? opt.price * (1 - discount / 100) : opt.price;
+                          return q > 0 ? (
+                            <div key={opt.label} className="flex items-center gap-1 rounded-lg bg-primary/10 px-1 text-xs font-semibold text-primary">
+                              <button type="button" aria-label={`Remove ${opt.label}`} className="p-1" onClick={() => updateQuantity(lineKeyOf({ menuItemId: item.id, optionLabel: opt.label }), q - 1)}><Minus className="w-3 h-3" /></button>
+                              {opt.label} ×{q}
+                              <button type="button" aria-label={`Add ${opt.label}`} className="p-1" onClick={() => handleAddItem(item, opt)}><Plus className="w-3 h-3" /></button>
+                            </div>
+                          ) : (
+                            <button key={opt.label} type="button" onClick={() => handleAddItem(item, opt)}
+                              className="rounded-lg border border-primary px-2 py-1 text-xs font-semibold text-primary hover:bg-primary hover:text-primary-foreground">
+                              {opt.label} · ₹{p.toFixed(0)}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 </div>
               );

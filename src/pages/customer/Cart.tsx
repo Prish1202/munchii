@@ -104,7 +104,7 @@ export default function Cart() {
           {items.map((item) => (
             <div key={item.id} className="flex items-center justify-between gap-3 p-4">
               <div className="flex-1 min-w-0">
-                <h4 className="font-medium text-sm truncate">{item.name}</h4>
+                <h4 className="font-medium text-sm truncate">{item.name}{item.optionLabel ? ` · ${item.optionLabel}` : ''}</h4>
                 <p className="text-xs text-muted-foreground">
                   ₹{item.price} each · ~{item.preparationTimeMinutes || 10} min
                 </p>
