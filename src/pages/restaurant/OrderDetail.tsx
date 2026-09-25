@@ -1,3 +1,5 @@
+import { isGrocery } from '@/lib/merchantTerms';
+import { useMyRestaurant } from '@/hooks/useMenuManagement';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,6 +44,8 @@ export default function RestaurantOrderDetail() {
 
   const order = orders?.find(o => o.id === orderId);
   const config = order ? STATUS_CONFIG[order.status] : null;
+  const { data: _mr } = useMyRestaurant();
+  const rl = (t: string) => (isGrocery((_mr as any)?.merchant_type) ? t.replace('Preparing', 'Packing') : t);
   const platformFee = 4;
   const itemTotal = order ? Math.max(Number(order.total_amount) - platformFee, 0) : 0;
   const isCOD = order?.payment_method === 'cod';
@@ -99,7 +103,7 @@ export default function RestaurantOrderDetail() {
           </button>
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold">Order #{order.id.slice(-6).toUpperCase()}</h1>
-            {config && <Badge className={`${config.color} text-white`}>{config.label}</Badge>}
+            {config && <Badge className={`${config.color} text-white`}>{rl(config.label)}</Badge>}
           </div>
           <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
             <Clock className="w-3 h-3" />
@@ -244,7 +248,7 @@ export default function RestaurantOrderDetail() {
               <Button className="w-full bg-restaurant hover:bg-restaurant/90" onClick={() => handleUpdateStatus(config.nextStatus!)} disabled={updateStatus.isPending}>
                 {order.status === 'accepted' && <ChefHat className="w-4 h-4 mr-2" />}
                 {order.status === 'preparing' && <ShoppingBag className="w-4 h-4 mr-2" />}
-                {config.nextLabel}
+                {rl(config.nextLabel || '')}
               </Button>
             ) : null}
           </div>

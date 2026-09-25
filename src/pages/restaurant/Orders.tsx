@@ -1,3 +1,4 @@
+import { isGrocery } from '@/lib/merchantTerms';
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -144,6 +145,8 @@ export default function RestaurantOrders() {
 
 function OrderCard({ order, onUpdateStatus, isUpdating, compact = false }: { order: RestaurantOrder; onUpdateStatus?: (status: OrderStatus) => void; isUpdating?: boolean; compact?: boolean }) {
   const config = STATUS_CONFIG[order.status];
+  const { data: _mr } = useMyRestaurant();
+  const rl = (t: string) => (isGrocery((_mr as any)?.merchant_type) ? t.replace('Preparing', 'Packing') : t);
   const isNew = order.status === 'placed';
   const isCOD = (order as any).payment_method === 'cod';
   const isReadyForPickup = order.status === 'ready_for_pickup';
@@ -169,7 +172,7 @@ function OrderCard({ order, onUpdateStatus, isUpdating, compact = false }: { ord
           <div>
             <div className="flex items-center gap-2">
               <span className="font-semibold">#{order.id.slice(-6).toUpperCase()}</span>
-              <Badge className={`${config.color} text-white`}>{config.label}</Badge>
+              <Badge className={`${config.color} text-white`}>{rl(config.label)}</Badge>
             </div>
             <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
               <Clock className="w-3 h-3" />
@@ -241,7 +244,7 @@ function OrderCard({ order, onUpdateStatus, isUpdating, compact = false }: { ord
                     {order.status === 'accepted' && <ChefHat className="w-4 h-4 mr-2" />}
                     {order.status === 'preparing' && <ShoppingBag className="w-4 h-4 mr-2" />}
                     {!isCOD && order.status === 'ready_for_pickup' && <Package className="w-4 h-4 mr-2" />}
-                    {config.nextLabel}
+                    {rl(config.nextLabel || '')}
                   </Button>
                 ) : null}
               </div>
