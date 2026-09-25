@@ -104,14 +104,17 @@ export function useMyRestaurantFull() {
 
       const { data: compliance } = await supabase
         .from('restaurant_compliance')
-        .select('fssai_license, gst_number')
+        .select('fssai_license, gst_number, shop_license, store_category' as any)
         .eq('restaurant_id', data.id)
         .maybeSingle();
+      const c = compliance as any;
 
       return {
         ...(data as any),
-        fssai_license: compliance?.fssai_license ?? null,
-        gst_number: compliance?.gst_number ?? null,
+        fssai_license: c?.fssai_license ?? null,
+        gst_number: c?.gst_number ?? null,
+        shop_license: c?.shop_license ?? null,
+        store_category: c?.store_category ?? null,
       } as RestaurantWithStatus;
     },
     enabled: !!user?.id,
@@ -130,11 +133,14 @@ export function useSaveRestaurantDetails() {
       contact_phone: string;
       fssai_license: string;
       gst_number?: string;
+      shop_license?: string;
+      store_category?: string;
+      merchant_type: string;
       university_name?: string;
       opening_hours: string;
       closing_hours: string;
     }) => {
-      const { fssai_license, gst_number, ...restaurantFields } = details;
+      const { fssai_license, gst_number, shop_license, store_category, ...restaurantFields } = details;
 
       const { data: existing } = await supabase
         .from('restaurants')
@@ -173,10 +179,12 @@ export function useSaveRestaurantDetails() {
         .from('restaurant_compliance')
         .upsert({
           restaurant_id: restaurantId,
-          fssai_license,
+          fssai_license: fssai_license || null,
           gst_number: gst_number || null,
+          shop_license: shop_license || null,
+          store_category: store_category || null,
           updated_at: new Date().toISOString(),
-        }, { onConflict: 'restaurant_id' });
+        } as any, { onConflict: 'restaurant_id' });
       if (cErr) throw cErr;
 
       return restaurantId;
