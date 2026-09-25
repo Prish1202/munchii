@@ -69,7 +69,7 @@ export function useRestaurants(city?: string | null, merchantType?: string | nul
         query = query.ilike('city', city);
       }
       if (merchantType) {
-        query = query.eq('merchant_type' as any, merchantType);
+        query = (query as any).eq('merchant_type', merchantType);
       }
 
       const { data, error } = await query;
@@ -108,7 +108,7 @@ export function useMenuItems(restaurantId: string) {
         .order('name', { ascending: true });
 
       if (error) throw error;
-      return data as MenuItem[];
+      return data as unknown as MenuItem[];
     },
     enabled: !!restaurantId,
   });
