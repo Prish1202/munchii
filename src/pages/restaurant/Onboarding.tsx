@@ -46,7 +46,7 @@ function MerchantTypeStep({ onSelect }: { onSelect: (t: MerchantType) => void })
 
 const STEPS = [
   { label: 'Owner Profile', icon: User },
-  { label: 'Restaurant Details', icon: Store },
+  { label: 'Business Details', icon: Store },
   { label: 'Bank Details', icon: Landmark },
   { label: 'Verification', icon: ShieldCheck },
 ];
@@ -481,6 +481,11 @@ export default function RestaurantOnboarding() {
   };
 
   const [step, setStep] = useState<number | null>(null);
+  const [merchantType, setMerchantType] = useState<MerchantType | null>(
+    () => (localStorage.getItem(MT_KEY) as MerchantType | null) || null,
+  );
+  const effectiveType = (restaurant?.merchant_type as MerchantType | undefined) || merchantType;
+  const chooseType = (t: MerchantType) => { localStorage.setItem(MT_KEY, t); setMerchantType(t); };
 
   useEffect(() => {
     if (!loadingRestaurant && !loadingOwner) {
@@ -510,10 +515,11 @@ export default function RestaurantOnboarding() {
     <DashboardLayout>
       <div className="max-w-2xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl font-display font-bold">Restaurant Onboarding</h1>
-          <p className="text-muted-foreground">Complete all steps to get your restaurant listed</p>
+          <h1 className="text-2xl font-display font-bold">Merchant Onboarding</h1>
+          <p className="text-muted-foreground">Complete all steps to get your business listed</p>
         </div>
 
+        {!effectiveType ? <MerchantTypeStep onSelect={chooseType} /> : (<>
         <StepIndicator current={step} steps={STEPS} />
 
         <AnimatePresence mode="wait">
@@ -525,12 +531,12 @@ export default function RestaurantOnboarding() {
             transition={{ duration: 0.2 }}
           >
             {step === 0 && <OwnerProfileStep onNext={() => setStep(1)} />}
-            {step === 1 && <RestaurantDetailsStep onNext={() => setStep(2)} onBack={() => setStep(0)} />}
+            {step === 1 && <RestaurantDetailsStep merchantType={effectiveType!} onNext={() => setStep(2)} onBack={() => setStep(0)} />}
             {step === 2 && restaurant && (
               <BankDetailsStep restaurantId={restaurant.id} onNext={() => setStep(3)} onBack={() => setStep(1)} />
             )}
             {step === 2 && !restaurant && (
-              <RestaurantDetailsStep onNext={() => setStep(2)} onBack={() => setStep(0)} />
+              <RestaurantDetailsStep merchantType={effectiveType!} onNext={() => setStep(2)} onBack={() => setStep(0)} />
             )}
             {showVerification && (
               <VerificationPendingScreen status={verificationStatus} onResubmit={() => setStep(0)} />
@@ -540,6 +546,7 @@ export default function RestaurantOnboarding() {
             )}
           </motion.div>
         </AnimatePresence>
+        </>)}
       </div>
     </DashboardLayout>
   );
