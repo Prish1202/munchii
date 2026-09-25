@@ -30,7 +30,7 @@ const ROLE_PERMISSION_COPY = {
  *
  * IMPORTANT: We only listen to the `notifications` table here. The DB trigger
  * `notify_new_message` already inserts a row when a message arrives, and
- * `trigger_push_notification` fires the OneSignal push from that same row.
+ * `trigger_push_notification` fires the push from that same row.
  * Listening to the `messages` table separately would cause duplicate alerts.
  */
 export function usePushNotifications() {
@@ -86,7 +86,7 @@ export function usePushNotifications() {
   const showNotification = useCallback((title: string, body: string, link?: string, dedupeKey?: string) => {
     if (!isSupported) return;
     if (permission !== 'granted') return;
-    // Only show if tab is not focused (OneSignal handles background pushes)
+    // Only show if tab is not focused (native push handles background delivery)
     if (document.hasFocus()) return;
 
     try {
@@ -112,7 +112,7 @@ export function usePushNotifications() {
 
   // Subscribe to the notifications table for real-time browser notifications.
   // Push delivery to the device (when the app is closed) is handled server-side
-  // by the trigger_push_notification → send-onesignal-push edge function chain.
+  // server-side.
   useEffect(() => {
     if (!user?.id) return;
 
