@@ -109,11 +109,14 @@ export type Database = {
           created_at: string
           description: string | null
           discount_percent: number | null
+          fulfillment_type: Database["public"]["Enums"]["fulfillment_type"]
           id: string
           image_url: string | null
           name: string
           preparation_time_minutes: number
           price: number
+          quantity_options: Json
+          quantity_type: Database["public"]["Enums"]["quantity_type"]
           restaurant_id: string
           updated_at: string
         }
@@ -123,11 +126,14 @@ export type Database = {
           created_at?: string
           description?: string | null
           discount_percent?: number | null
+          fulfillment_type?: Database["public"]["Enums"]["fulfillment_type"]
           id?: string
           image_url?: string | null
           name: string
           preparation_time_minutes?: number
           price: number
+          quantity_options?: Json
+          quantity_type?: Database["public"]["Enums"]["quantity_type"]
           restaurant_id: string
           updated_at?: string
         }
@@ -137,11 +143,14 @@ export type Database = {
           created_at?: string
           description?: string | null
           discount_percent?: number | null
+          fulfillment_type?: Database["public"]["Enums"]["fulfillment_type"]
           id?: string
           image_url?: string | null
           name?: string
           preparation_time_minutes?: number
           price?: number
+          quantity_options?: Json
+          quantity_type?: Database["public"]["Enums"]["quantity_type"]
           restaurant_id?: string
           updated_at?: string
         }
@@ -242,6 +251,7 @@ export type Database = {
           created_at: string
           id: string
           menu_item_id: string | null
+          option_label: string | null
           order_id: string
           price_at_time: number
           quantity: number
@@ -250,6 +260,7 @@ export type Database = {
           created_at?: string
           id?: string
           menu_item_id?: string | null
+          option_label?: string | null
           order_id: string
           price_at_time: number
           quantity: number
@@ -258,6 +269,7 @@ export type Database = {
           created_at?: string
           id?: string
           menu_item_id?: string | null
+          option_label?: string | null
           order_id?: string
           price_at_time?: number
           quantity?: number
@@ -640,6 +652,8 @@ export type Database = {
           fssai_license: string | null
           gst_number: string | null
           restaurant_id: string
+          shop_license: string | null
+          store_category: string | null
           updated_at: string
         }
         Insert: {
@@ -647,6 +661,8 @@ export type Database = {
           fssai_license?: string | null
           gst_number?: string | null
           restaurant_id: string
+          shop_license?: string | null
+          store_category?: string | null
           updated_at?: string
         }
         Update: {
@@ -654,6 +670,8 @@ export type Database = {
           fssai_license?: string | null
           gst_number?: string | null
           restaurant_id?: string
+          shop_license?: string | null
+          store_category?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -713,6 +731,7 @@ export type Database = {
           max_advance_minutes: number
           max_orders_per_slot: number
           max_workload_per_slot: number
+          merchant_type: Database["public"]["Enums"]["merchant_type"]
           min_advance_minutes: number
           name: string
           opening_hours: string | null
@@ -738,6 +757,7 @@ export type Database = {
           max_advance_minutes?: number
           max_orders_per_slot?: number
           max_workload_per_slot?: number
+          merchant_type?: Database["public"]["Enums"]["merchant_type"]
           min_advance_minutes?: number
           name: string
           opening_hours?: string | null
@@ -763,6 +783,7 @@ export type Database = {
           max_advance_minutes?: number
           max_orders_per_slot?: number
           max_workload_per_slot?: number
+          merchant_type?: Database["public"]["Enums"]["merchant_type"]
           min_advance_minutes?: number
           name?: string
           opening_hours?: string | null
@@ -948,6 +969,12 @@ export type Database = {
     Enums: {
       app_role: "customer" | "restaurant" | "admin"
       coin_type: "earn" | "redeem" | "transfer"
+      fulfillment_type:
+        | "READY_TO_PICK"
+        | "PICK_AND_PACK"
+        | "WEIGH_AND_PACK"
+        | "PREPARE"
+      merchant_type: "restaurant" | "canteen" | "grocery"
       order_status:
         | "pending_payment"
         | "placed"
@@ -957,6 +984,7 @@ export type Database = {
         | "picked_up"
         | "completed"
         | "cancelled"
+      quantity_type: "FIXED" | "WEIGHT" | "UNIT" | "PRICE"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1086,6 +1114,13 @@ export const Constants = {
     Enums: {
       app_role: ["customer", "restaurant", "admin"],
       coin_type: ["earn", "redeem", "transfer"],
+      fulfillment_type: [
+        "READY_TO_PICK",
+        "PICK_AND_PACK",
+        "WEIGH_AND_PACK",
+        "PREPARE",
+      ],
+      merchant_type: ["restaurant", "canteen", "grocery"],
       order_status: [
         "pending_payment",
         "placed",
@@ -1096,6 +1131,7 @@ export const Constants = {
         "completed",
         "cancelled",
       ],
+      quantity_type: ["FIXED", "WEIGHT", "UNIT", "PRICE"],
     },
   },
 } as const
