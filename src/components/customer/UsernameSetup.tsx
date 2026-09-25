@@ -40,12 +40,8 @@ export function UsernameSetup({ children }: UsernameSetupProps) {
       return;
     }
     setChecking(true);
-    const { data } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('username', value)
-      .maybeSingle();
-    setAvailable(!data);
+    const { data } = await supabase.rpc('is_username_available', { _username: value });
+    setAvailable(!!data);
     setChecking(false);
   };
 

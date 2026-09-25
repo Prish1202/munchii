@@ -51,12 +51,7 @@ export function CoinTransfer({ availableCoins, prefillUsername }: CoinTransferPr
     }
     debounceRef.current = setTimeout(async () => {
       setSearchLoading(true);
-      const { data } = await supabase
-        .from('profiles')
-        .select('id, username, name, avatar_url')
-        .not('username', 'is', null)
-        .ilike('username', `%${q}%`)
-        .limit(5);
+      const { data } = await supabase.rpc('search_profiles_by_username', { _q: q });
       setSuggestions((data as ProfileSuggestion[]) || []);
       setShowSuggestions(true);
       setSearchLoading(false);
