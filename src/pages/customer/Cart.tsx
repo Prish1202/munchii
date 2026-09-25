@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { useCart } from '@/contexts/CartContext';
+import { lineKeyOf, useCart } from '@/contexts/CartContext';
 import { ArrowLeft, Minus, Plus, Trash2, ShoppingCart, Store, Coins, Clock3 } from 'lucide-react';
 import { useAvailablePickupWindows } from '@/hooks/useAvailablePickupWindows';
 import { cn } from '@/lib/utils';
@@ -114,7 +114,7 @@ export default function Cart() {
                   size="icon"
                   variant="ghost"
                   className="h-7 w-7 text-primary hover:bg-primary/20"
-                  onClick={() => updateQuantity(item.menuItemId, item.quantity - 1)}
+                  onClick={() => updateQuantity(lineKeyOf(item), item.quantity - 1)}
                 >
                   <Minus className="w-3.5 h-3.5" />
                 </Button>
@@ -123,7 +123,7 @@ export default function Cart() {
                   size="icon"
                   variant="ghost"
                   className="h-7 w-7 text-primary hover:bg-primary/20"
-                  onClick={() => updateQuantity(item.menuItemId, item.quantity + 1)}
+                  onClick={() => updateQuantity(lineKeyOf(item), item.quantity + 1)}
                 >
                   <Plus className="w-3.5 h-3.5" />
                 </Button>

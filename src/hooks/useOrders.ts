@@ -156,7 +156,8 @@ export function useCreateOrder() {
         menu_item_id: item.menuItemId,
         quantity: item.quantity,
         price_at_time: item.price,
-      }));
+        option_label: item.optionLabel || null,
+      })) as any;
 
       const { error: itemsError } = await supabase
         .from('order_items')

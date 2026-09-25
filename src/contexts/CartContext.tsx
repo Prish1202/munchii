@@ -10,6 +10,7 @@ export interface CartItem {
   restaurantName: string;
   preparationTimeMinutes: number;
   restaurantBufferMinutes: number;
+  optionLabel?: string | null;
 }
 
 interface CartContextType {
@@ -17,8 +18,8 @@ interface CartContextType {
   restaurantId: string | null;
   restaurantName: string | null;
   addItem: (item: Omit<CartItem, 'id' | 'quantity'>) => void;
-  removeItem: (menuItemId: string) => void;
-  updateQuantity: (menuItemId: string, quantity: number) => void;
+  removeItem: (lineKey: string) => void;
+  updateQuantity: (lineKey: string, quantity: number) => void;
   clearCart: () => void;
   totalItems: number;
   totalAmount: number;
@@ -27,6 +28,8 @@ interface CartContextType {
   selectedPickupTime: string | null;
   setSelectedPickupTime: (value: string | null) => void;
 }
+
+export const lineKeyOf = (i: { menuItemId: string; optionLabel?: string | null }) => i.optionLabel ? `${i.menuItemId}::${i.optionLabel}` : i.menuItemId;
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
@@ -86,10 +89,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
 
     setItems(prev => {
-      const existing = prev.find(i => i.menuItemId === item.menuItemId);
+      const key = lineKeyOf(item);
+      const existing = prev.find(i => lineKeyOf(i) === key);
       if (existing) {
         return prev.map(i => 
-          i.menuItemId === item.menuItemId 
+          lineKeyOf(i) === key 
             ? { ...i, quantity: i.quantity + 1 }
             : i
         );
@@ -107,7 +111,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const removeItem = (menuItemId: string) => {
     setItems(prev => {
-      const updated = prev.filter(i => i.menuItemId !== menuItemId);
+      const updated = prev.filter(i => lineKeyOf(i) !== menuItemId);
       if (updated.length === 0) {
         setRestaurantId(null);
         setRestaurantName(null);
@@ -125,7 +129,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
     setItems(prev => 
       prev.map(i => 
-        i.menuItemId === menuItemId ? { ...i, quantity } : i
+        lineKeyOf(i) === menuItemId ? { ...i, quantity } : i
       )
     );
   };

@@ -11,6 +11,7 @@ export interface Restaurant {
   owner_id: string;
   photo_url?: string | null;
   preparation_buffer_minutes: number;
+  merchant_type?: string;
 }
 
 export interface MenuItem {
@@ -25,6 +26,9 @@ export interface MenuItem {
   discount_percent?: number | null;
   category_id?: string | null;
   preparation_time_minutes: number;
+  fulfillment_type?: string;
+  quantity_type?: string;
+  quantity_options?: { label: string; price: number }[] | null;
 }
 
 export interface MenuCategory {
@@ -51,9 +55,9 @@ export function useMenuCategories(restaurantId: string) {
   });
 }
 
-export function useRestaurants(city?: string | null) {
+export function useRestaurants(city?: string | null, merchantType?: string | null) {
   return useQuery({
-    queryKey: ['restaurants', city],
+    queryKey: ['restaurants', city, merchantType],
     queryFn: async () => {
       let query = supabase
         .from('restaurants')
@@ -63,6 +67,9 @@ export function useRestaurants(city?: string | null) {
 
       if (city) {
         query = query.ilike('city', city);
+      }
+      if (merchantType) {
+        query = query.eq('merchant_type' as any, merchantType);
       }
 
       const { data, error } = await query;
