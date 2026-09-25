@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { formatPickupWindow } from '@/lib/pickupWindows';
+import { merchantTerms } from '@/lib/merchantTerms';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; nextStatus?: OrderStatus; nextLabel?: string }> = {
   placed: { label: 'New', color: 'bg-secondary', nextStatus: 'accepted', nextLabel: 'Accept' },
@@ -56,7 +57,8 @@ export default function RestaurantOrders() {
   const upcomingOrders = (orders?.filter(o => o.status === 'accepted' && !startsNow(o)) || []).sort(byPickup);
   const readyOrders = (orders?.filter(o => o.status === 'ready_for_pickup') || []).sort(byPickup);
   const completedOrders = orders?.filter(o => ['picked_up', 'completed', 'cancelled'].includes(o.status)) || [];
-  const sections: [string, RestaurantOrder[]][] = [['Preparing Now', preparingOrders], ['Upcoming', upcomingOrders], ['Ready for Pickup', readyOrders]];
+  const terms = merchantTerms((restaurant as any)?.merchant_type);
+  const sections: [string, RestaurantOrder[]][] = [[`${terms.preparing} Now`, preparingOrders], ['Upcoming', upcomingOrders], ['Ready for Pickup', readyOrders]];
 
   if (!restaurant) {
     return (
@@ -77,7 +79,7 @@ export default function RestaurantOrders() {
             <ArrowLeft className="w-4 h-4 mr-2" />Back to Dashboard
           </Link>
           <h1 className="text-2xl font-bold">Orders</h1>
-          <p className="text-muted-foreground">Kitchen queue, sorted by pickup window</p>
+          <p className="text-muted-foreground">{terms.queue}, sorted by pickup window</p>
         </div>
         <PauseOrdersControl restaurant={restaurant} update={updateRestaurant} />
 
