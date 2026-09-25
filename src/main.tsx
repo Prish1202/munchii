@@ -2,6 +2,15 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 
+// Clean up any previously registered web service workers (legacy push/offline workers).
+navigator.serviceWorker?.getRegistrations().then((regs) =>
+  regs.forEach((r) => r.unregister())
+).catch(() => undefined);
+
+createRoot } from "react-dom/client";
+import App from "./App.tsx";
+import "./index.css";
+
 // OneSignal service worker handles both push notifications and offline caching.
 // Only register on production (not in iframes or preview domains).
 const isInIframe = (() => {

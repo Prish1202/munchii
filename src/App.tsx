@@ -11,7 +11,7 @@ import { LocationProvider } from "@/contexts/LocationContext";
 import { RouteSeo } from "@/components/seo/Seo";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { OneSignalInit } from "@/components/OneSignalInit";
+import { NativePushInit } from "@/components/NativePushInit";
 import { OfflineBanner } from "@/components/OfflineBanner";
 
 // Pages
@@ -108,7 +108,6 @@ const App = () => {
   >
     <TooltipProvider>
       <AuthProvider>
-        <OneSignalInit />
         <OfflineBanner />
         <CartProvider>
           <LocationProvider>
@@ -116,6 +115,7 @@ const App = () => {
           <Sonner />
           <BrowserRouter>
             <RouteSeo />
+            <NativePushInit />
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<RoleSelect />} />
