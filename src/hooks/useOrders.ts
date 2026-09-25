@@ -114,6 +114,7 @@ interface CreateOrderInput {
   restaurantId: string;
   items: {
     menuItemId: string;
+    optionLabel?: string | null;
     quantity: number;
     price: number;
   }[];
