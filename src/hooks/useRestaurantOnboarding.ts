@@ -33,6 +33,9 @@ export interface RestaurantWithStatus {
   verification_status: string;
   fssai_license: string | null;
   gst_number: string | null;
+  shop_license?: string | null;
+  store_category?: string | null;
+  merchant_type?: string;
   contact_phone: string | null;
   photo_url: string | null;
   area: string | null;
