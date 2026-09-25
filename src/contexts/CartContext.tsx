@@ -50,7 +50,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         const parsed = JSON.parse(stored);
         setItems((parsed.items || []).map((item: CartItem) => ({
           ...item,
-          preparationTimeMinutes: item.preparationTimeMinutes || 10,
+          preparationTimeMinutes: item.preparationTimeMinutes ?? 10,
         })));
         setRestaurantId(parsed.restaurantId || null);
         setRestaurantName(parsed.restaurantName || null);
@@ -145,8 +145,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const totalAmount = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const longestPreparationMinutes = items.reduce(
-    (longest, item) => Math.max(longest, item.preparationTimeMinutes || 10),
-    10,
+    (longest, item) => Math.max(longest, item.preparationTimeMinutes ?? 10),
+    0,
   );
 
   return (
