@@ -201,7 +201,7 @@ export default function MenuManagement() {
               <FolderPlus className="w-4 h-4 mr-2" />
               Category
             </Button>
-            <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+            <Dialog open={isAddOpen} onOpenChange={o => { if (o) setNewOpts(defaultOpts()); setIsAddOpen(o); }}>
               <DialogTrigger asChild>
                 <Button className="gradient-primary text-primary-foreground rounded-xl">
                   <Plus className="w-4 h-4 mr-2" />
@@ -321,7 +321,7 @@ export default function MenuManagement() {
               <UtensilsCrossed className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="font-semibold mb-2">No menu items yet</h3>
               <p className="text-sm text-muted-foreground mb-4">Add your first menu item to start receiving orders</p>
-              <Button onClick={() => setIsAddOpen(true)} className="rounded-xl">
+              <Button onClick={() => { setNewOpts(defaultOpts()); setIsAddOpen(true); }} className="rounded-xl">
                 <Plus className="w-4 h-4 mr-2" />
                 Add First Item
               </Button>

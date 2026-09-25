@@ -26,6 +26,8 @@ import {
 import { UserRole } from '@/types/auth';
 import { NotificationBell } from '@/components/NotificationBell';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { useMyRestaurant } from '@/hooks/useMenuManagement';
+import { merchantTerms } from '@/lib/merchantTerms';
 
 interface NavItem {
   label: string;
@@ -74,9 +76,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     shouldShowBlockedNotice,
   } = usePushNotifications();
 
+  const { data: myRestaurant } = useMyRestaurant();
+
   if (!user) return null;
 
-  const navItems = NAV_ITEMS[user.role];
+  const catalogLabel = merchantTerms((myRestaurant as any)?.merchant_type).catalog;
+  const navItems = NAV_ITEMS[user.role].map(i => (user.role === 'restaurant' && i.href === '/restaurant/menu' ? { ...i, label: catalogLabel } : i));
   const isCustomer = user.role === 'customer';
   const isRestaurant = user.role === 'restaurant';
   const notificationSettingsHref =
