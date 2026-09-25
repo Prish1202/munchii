@@ -21,12 +21,8 @@ export default function ProfileLanding() {
   const { data: profile, isLoading } = useQuery({
     queryKey: ['landing-profile', userId],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('id, name, username, avatar_url, bio, campus')
-        .eq('id', userId!)
-        .maybeSingle();
-      return data;
+      const { data } = await supabase.rpc('get_public_profile', { _id: userId! });
+      return data?.[0] ? { ...data[0], bio: null as string | null } : null;
     },
     enabled: !!userId,
   });

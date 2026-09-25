@@ -224,7 +224,11 @@ Deno.serve(async (req) => {
       const user = await getUser(req)
       if (!user) return json({ error: 'Unauthorized' }, 401)
 
+      const MAX_UPLOAD_BYTES = 50 * 1024 * 1024
+      const declared = Number(req.headers.get('content-length') || '0')
+      if (declared > MAX_UPLOAD_BYTES) return json({ error: 'File too large (max 50 MB)' }, 413)
       const buf = await req.arrayBuffer()
+      if (buf.byteLength > MAX_UPLOAD_BYTES) return json({ error: 'File too large (max 50 MB)' }, 413)
       if (!buf.byteLength) return json({ error: 'Empty file body' }, 400)
 
       let ct =

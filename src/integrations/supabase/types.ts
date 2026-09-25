@@ -930,6 +930,16 @@ export type Database = {
           pan_number: string
         }[]
       }
+      get_public_profile: {
+        Args: { _id: string }
+        Returns: {
+          avatar_url: string
+          campus: string
+          id: string
+          name: string
+          username: string
+        }[]
+      }
       get_restaurant_avg_rating: {
         Args: { _restaurant_id: string }
         Returns: {
@@ -956,10 +966,20 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_username_available: { Args: { _username: string }; Returns: boolean }
       recalc_order_total: { Args: { _order_id: string }; Returns: undefined }
       redeem_coins: {
         Args: { _coins: number; _order_id?: string }
         Returns: number
+      }
+      search_profiles_by_username: {
+        Args: { _q: string }
+        Returns: {
+          avatar_url: string
+          id: string
+          name: string
+          username: string
+        }[]
       }
       transfer_coins: {
         Args: { _coins: number; _recipient_id: string; _sender_id: string }

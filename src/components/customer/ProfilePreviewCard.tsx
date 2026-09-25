@@ -14,12 +14,8 @@ export function ProfilePreviewCard({ userId }: ProfilePreviewCardProps) {
   const { data: profile } = useQuery({
     queryKey: ['profile-preview', userId],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('id, name, username, avatar_url, campus, bio')
-        .eq('id', userId)
-        .single();
-      return data;
+      const { data } = await supabase.rpc('get_public_profile', { _id: userId });
+      return data?.[0] ? { ...data[0], bio: null as string | null } : null;
     },
     enabled: !!userId,
   });
