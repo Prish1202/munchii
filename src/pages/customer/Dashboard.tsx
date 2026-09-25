@@ -11,8 +11,10 @@ import { useRestaurants } from '@/hooks/useRestaurants';
 import { useRegisteredCities } from '@/hooks/useRegisteredCities';
 import { useWallet } from '@/hooks/useWallet';
 import { supabase } from '@/integrations/supabase/client';
+import { MERCHANT_TYPES, MerchantType } from '@/lib/merchantTerms';
 
 const CITY_PERSIST_KEY = 'foodyzone_dashboard_city';
+const CATEGORY_KEY = 'munchii_home_category';
 
 export default function CustomerDashboard() {
   const { user } = useAuth();
@@ -21,7 +23,10 @@ export default function CustomerDashboard() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [search, setSearch] = useState('');
   const { data: registeredCities } = useRegisteredCities();
-  const { data: restaurants, isLoading } = useRestaurants(selectedCity);
+  const [category, setCategory] = useState<MerchantType>(() => (localStorage.getItem(CATEGORY_KEY) as MerchantType) || 'restaurant');
+  const pickCategory = (c: MerchantType) => { setCategory(c); localStorage.setItem(CATEGORY_KEY, c); };
+  const activeCategory = MERCHANT_TYPES.find(t => t.value === category)!;
+  const { data: restaurants, isLoading } = useRestaurants(selectedCity, category);
   const { data: wallet } = useWallet();
 
   useEffect(() => {
@@ -98,11 +103,22 @@ export default function CustomerDashboard() {
             <input
               value={search}
               onChange={event => setSearch(event.target.value)}
-              placeholder="Search restaurants or food"
+              placeholder={category === 'grocery' ? 'Search stores or products' : 'Search restaurants or food'}
               className="h-13 w-full rounded-xl border border-border bg-background pl-12 pr-4 text-sm font-medium outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/15"
             />
           </div>
         </section>
+
+        <div className="grid grid-cols-3 gap-2" role="tablist" aria-label="Category">
+          {MERCHANT_TYPES.map(t => (
+            <button key={t.value} type="button" role="tab" aria-selected={category === t.value} onClick={() => pickCategory(t.value)}
+              className={`rounded-2xl border p-3 text-left transition-colors ${category === t.value ? 'border-primary bg-primary/10 ring-2 ring-primary/20' : 'border-border bg-card hover:border-primary/40'}`}>
+              <span className="text-2xl" aria-hidden>{t.emoji}</span>
+              <p className="mt-1 font-display text-sm font-bold">{t.short}</p>
+              <p className="text-[11px] leading-tight text-muted-foreground">{t.tagline}</p>
+            </button>
+          ))}
+        </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
@@ -153,8 +169,8 @@ export default function CustomerDashboard() {
         <section>
           <div className="mb-3 flex items-end justify-between gap-3">
             <div>
-              <h2 className="font-display text-xl font-bold">{search ? 'Search results' : 'Top restaurants nearby'}</h2>
-              <p className="text-sm text-muted-foreground">Pickup-only restaurants with Coins on every order.</p>
+              <h2 className="font-display text-xl font-bold">{search ? 'Search results' : `${activeCategory.tagline} nearby`}</h2>
+              <p className="text-sm text-muted-foreground">Pre-order, pick up, and earn Coins on every order.</p>
             </div>
             <Link to="/customer/browse" className="shrink-0 text-sm font-semibold text-primary hover:underline">See all</Link>
           </div>
@@ -162,12 +178,12 @@ export default function CustomerDashboard() {
           {!selectedCity ? (
             <div className="rounded-xl border border-border bg-card py-12 text-center">
               <MapPin className="mx-auto h-8 w-8 text-primary" />
-              <p className="mt-3 font-semibold">Choose your city to see nearby restaurants</p>
+              <p className="mt-3 font-semibold">Choose your city to see nearby places</p>
             </div>
           ) : isLoading ? (
             <div className="grid gap-4 sm:grid-cols-2">{Array.from({ length: 4 }).map((_, index) => <RestaurantCardSkeleton key={index} />)}</div>
           ) : filteredRestaurants.length === 0 ? (
-            <EmptyState icon={<Store className="h-7 w-7 text-muted-foreground" />} title="No restaurants found" description="Try another restaurant or food name." />
+            <EmptyState icon={<Store className="h-7 w-7 text-muted-foreground" />} title={`No ${activeCategory.tagline.toLowerCase()} found`} description={search ? "Try another name." : "Nothing in this category in your city yet."} />
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
               {filteredRestaurants.map(restaurant => <RestaurantCard key={restaurant.id} restaurant={restaurant} />)}

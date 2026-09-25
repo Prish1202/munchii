@@ -1,3 +1,5 @@
+import { ProductOptionsFields, ProductOptionsValue, cleanOptions } from '@/components/restaurant/ProductOptionsFields';
+import { isGrocery, merchantTerms, usesPrepTime } from '@/lib/merchantTerms';
 import { useState, useRef } from 'react';
 import { useB2Upload } from '@/hooks/useB2Upload';
 import { Link } from 'react-router-dom';
@@ -49,8 +51,12 @@ export default function MenuManagement() {
   const deleteCategory = useDeleteMenuCategory();
   
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<{ id: string; name: string; price: number; description?: string; discount_percent?: number; image_url?: string; category_id?: string | null; preparation_time_minutes?: number } | null>(null);
+  const [editingItem, setEditingItem] = useState<{ id: string; name: string; price: number; description?: string; discount_percent?: number; image_url?: string; category_id?: string | null; preparation_time_minutes?: number; opts: ProductOptionsValue } | null>(null);
   const [newItem, setNewItem] = useState({ name: '', price: '', description: '', discount_percent: '', image_url: '', category_id: '', preparation_time_minutes: '10' });
+  const grocery = isGrocery((restaurant as any)?.merchant_type);
+  const terms = merchantTerms((restaurant as any)?.merchant_type);
+  const defaultOpts = (): ProductOptionsValue => ({ fulfillment_type: grocery ? 'READY_TO_PICK' : 'PREPARE', quantity_type: 'FIXED', quantity_options: [] });
+  const [newOpts, setNewOpts] = useState<ProductOptionsValue>({ fulfillment_type: 'PREPARE', quantity_type: 'FIXED', quantity_options: [] });
   const [uploading, setUploading] = useState(false);
   const [editUploading, setEditUploading] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -90,7 +96,7 @@ export default function MenuManagement() {
       return;
     }
     if (!newItem.image_url) {
-      toast.error('Please upload a food image');
+      toast.error(grocery ? 'Please upload a product image' : 'Please upload a food image');
       return;
     }
     
@@ -101,8 +107,10 @@ export default function MenuManagement() {
       description: newItem.description.trim() || undefined,
       discount_percent: newItem.discount_percent ? parseFloat(newItem.discount_percent) : undefined,
       category_id: newItem.category_id || undefined,
-      preparation_time_minutes: Math.min(180, Math.max(1, parseInt(newItem.preparation_time_minutes) || 10)),
+      preparation_time_minutes: usesPrepTime(newOpts.fulfillment_type) ? Math.min(180, Math.max(1, parseInt(newItem.preparation_time_minutes) || 10)) : 1,
+      ...cleanOptions(newOpts),
     });
+    setNewOpts(defaultOpts());
     
     setNewItem({ name: '', price: '', description: '', discount_percent: '', image_url: '', category_id: '', preparation_time_minutes: '10' });
     setIsAddOpen(false);
@@ -120,8 +128,9 @@ export default function MenuManagement() {
       description: editingItem.description,
       discount_percent: editingItem.discount_percent,
       category_id: editingItem.category_id,
-      preparation_time_minutes: Math.min(180, Math.max(1, editingItem.preparation_time_minutes || 10)),
-    });
+      preparation_time_minutes: usesPrepTime(editingItem.opts.fulfillment_type) ? Math.min(180, Math.max(1, editingItem.preparation_time_minutes || 10)) : 1,
+      ...cleanOptions(editingItem.opts),
+    } as any);
     
     setEditingItem(null);
   };
@@ -183,7 +192,7 @@ export default function MenuManagement() {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Dashboard
             </Link>
-            <h1 className="text-2xl font-display font-bold">Menu Management</h1>
+            <h1 className="text-2xl font-display font-bold">{terms.catalog} Management</h1>
             <p className="text-muted-foreground">Add, edit, or disable menu items</p>
           </div>
 
@@ -192,7 +201,7 @@ export default function MenuManagement() {
               <FolderPlus className="w-4 h-4 mr-2" />
               Category
             </Button>
-            <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+            <Dialog open={isAddOpen} onOpenChange={o => { if (o) setNewOpts(defaultOpts()); setIsAddOpen(o); }}>
               <DialogTrigger asChild>
                 <Button className="gradient-primary text-primary-foreground rounded-xl">
                   <Plus className="w-4 h-4 mr-2" />
@@ -201,7 +210,7 @@ export default function MenuManagement() {
               </DialogTrigger>
               <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle className="font-display">Add Menu Item</DialogTitle>
+                  <DialogTitle className="font-display">Add {terms.item}</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleAddItem} className="space-y-4">
                   {/* Image Upload */}
@@ -251,11 +260,12 @@ export default function MenuManagement() {
                     <Label htmlFor="discount">Discount % <span className="text-muted-foreground text-xs">(optional)</span></Label>
                     <Input id="discount" type="number" placeholder="e.g., 10" min="0" max="100" value={newItem.discount_percent} onChange={(e) => setNewItem(prev => ({ ...prev, discount_percent: e.target.value }))} className="rounded-xl" />
                   </div>
-                  <div className="space-y-2">
+                  {grocery && <ProductOptionsFields value={newOpts} onChange={setNewOpts} />}
+                  {usesPrepTime(newOpts.fulfillment_type) && <div className="space-y-2">
                     <Label htmlFor="prep">Preparation Time (minutes)</Label>
                     <Input id="prep" type="number" placeholder="e.g., 12" min="1" max="180" value={newItem.preparation_time_minutes} onChange={(e) => setNewItem(prev => ({ ...prev, preparation_time_minutes: e.target.value }))} className="rounded-xl" />
                     <p className="text-xs text-muted-foreground">Shown to customers as ~N min and used to offer pickup windows.</p>
-                  </div>
+                  </div>}
                   <Button type="submit" className="w-full rounded-xl gradient-primary text-primary-foreground" disabled={createItem.isPending || uploading}>
                     {createItem.isPending ? 'Adding...' : 'Add Item'}
                   </Button>
@@ -311,7 +321,7 @@ export default function MenuManagement() {
               <UtensilsCrossed className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="font-semibold mb-2">No menu items yet</h3>
               <p className="text-sm text-muted-foreground mb-4">Add your first menu item to start receiving orders</p>
-              <Button onClick={() => setIsAddOpen(true)} className="rounded-xl">
+              <Button onClick={() => { setNewOpts(defaultOpts()); setIsAddOpen(true); }} className="rounded-xl">
                 <Plus className="w-4 h-4 mr-2" />
                 Add First Item
               </Button>
@@ -361,7 +371,7 @@ export default function MenuManagement() {
 
                           <Dialog open={editingItem?.id === item.id} onOpenChange={(open) => !open && setEditingItem(null)}>
                             <DialogTrigger asChild>
-                              <Button variant="ghost" size="icon" className="rounded-xl" onClick={() => setEditingItem({ id: item.id, name: item.name, price: Number(item.price), description: item.description || '', discount_percent: item.discount_percent || 0, image_url: item.image_url || '', category_id: item.category_id, preparation_time_minutes: item.preparation_time_minutes || 10 })}>
+                              <Button variant="ghost" size="icon" className="rounded-xl" onClick={() => setEditingItem({ id: item.id, name: item.name, price: Number(item.price), description: item.description || '', discount_percent: item.discount_percent || 0, image_url: item.image_url || '', category_id: item.category_id, preparation_time_minutes: item.preparation_time_minutes || 10, opts: { fulfillment_type: ((item as any).fulfillment_type || 'PREPARE'), quantity_type: ((item as any).quantity_type || 'FIXED'), quantity_options: Array.isArray((item as any).quantity_options) ? (item as any).quantity_options : [] } })}>
                                 <Pencil className="w-4 h-4" />
                               </Button>
                             </DialogTrigger>
@@ -417,10 +427,11 @@ export default function MenuManagement() {
                                   <Label htmlFor="edit-discount">Discount %</Label>
                                   <Input id="edit-discount" type="number" min="0" max="100" value={editingItem?.discount_percent || ''} onChange={(e) => setEditingItem(prev => prev ? { ...prev, discount_percent: parseFloat(e.target.value) || 0 } : null)} className="rounded-xl" />
                                 </div>
-                                <div className="space-y-2">
+                                {grocery && editingItem && <ProductOptionsFields value={editingItem.opts} onChange={opts => setEditingItem(prev => prev ? { ...prev, opts } : null)} />}
+                                {usesPrepTime(editingItem?.opts.fulfillment_type) && <div className="space-y-2">
                                   <Label htmlFor="edit-prep">Preparation Time (minutes)</Label>
                                   <Input id="edit-prep" type="number" min="1" max="180" value={editingItem?.preparation_time_minutes ?? 10} onChange={(e) => setEditingItem(prev => prev ? { ...prev, preparation_time_minutes: parseInt(e.target.value) || 10 } : null)} className="rounded-xl" />
-                                </div>
+                                </div>}
                                 <Button type="submit" className="w-full rounded-xl gradient-primary text-primary-foreground" disabled={updateItem.isPending || editUploading}>
                                   {updateItem.isPending ? 'Saving...' : 'Save Changes'}
                                 </Button>

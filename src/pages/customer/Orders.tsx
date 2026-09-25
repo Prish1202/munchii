@@ -118,7 +118,7 @@ function OrderCard({ order, showReorder }: { order: any; showReorder?: boolean }
     const menuItemIds = orderItems.map(i => i.menu_item_id).filter(Boolean);
     const { data: currentMenuItems } = await supabase
       .from('menu_items')
-      .select('id, name, price, available, preparation_time_minutes')
+      .select('id, name, price, available, preparation_time_minutes, quantity_options')
       .in('id', menuItemIds);
 
     const currentPriceMap = new Map(
@@ -134,11 +134,15 @@ function OrderCard({ order, showReorder }: { order: any; showReorder?: boolean }
         unavailableItems.push(item.menu_item?.name || 'Item');
         return;
       }
+      const optLabel = (item as any).option_label as string | null;
+      const opt = optLabel ? ((current as any).quantity_options || []).find((o: any) => o.label === optLabel) : null;
+      if (optLabel && !opt) { unavailableItems.push(current.name || 'Item'); return; }
       for (let i = 0; i < item.quantity; i++) {
         addItem({
           menuItemId: item.menu_item_id,
           name: current.name || item.menu_item?.name || 'Item',
-          price: Number(current.price),
+          price: opt ? Number(opt.price) : Number(current.price),
+          optionLabel: optLabel,
           restaurantId: order.restaurant_id,
           restaurantName: order.restaurant?.name || 'Restaurant',
           preparationTimeMinutes: current.preparation_time_minutes || 10,

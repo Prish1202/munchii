@@ -16,6 +16,9 @@ export interface MenuItem {
   created_at: string;
   updated_at: string;
   preparation_time_minutes: number;
+  fulfillment_type?: string;
+  quantity_type?: string;
+  quantity_options?: any;
 }
 
 export interface MenuCategory {
@@ -97,6 +100,9 @@ export function useAddMenuItem() {
       category_id?: string;
       discount_percent?: number;
       preparation_time_minutes?: number;
+      fulfillment_type?: string;
+      quantity_type?: string;
+      quantity_options?: any;
     }) => {
       const { error } = await supabase.from('menu_items').insert({
         restaurant_id: restaurant!.id,
@@ -107,7 +113,10 @@ export function useAddMenuItem() {
         category_id: item.category_id || null,
         discount_percent: item.discount_percent || 0,
         preparation_time_minutes: item.preparation_time_minutes || 10,
-      });
+        fulfillment_type: item.fulfillment_type || 'PREPARE',
+        quantity_type: item.quantity_type || 'FIXED',
+        quantity_options: item.quantity_options || [],
+      } as any);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -125,7 +134,7 @@ export function useUpdateMenuItem() {
     mutationFn: async ({ id, ...updates }: Partial<MenuItem> & { id: string }) => {
       const { error } = await supabase
         .from('menu_items')
-        .update(updates)
+        .update(updates as any)
         .eq('id', id);
       if (error) throw error;
     },

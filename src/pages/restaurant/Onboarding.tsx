@@ -17,10 +17,36 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { MERCHANT_TYPES, MerchantType, merchantTerms } from '@/lib/merchantTerms';
+
+const MT_KEY = 'munchii_merchant_type';
+
+function MerchantTypeStep({ onSelect }: { onSelect: (t: MerchantType) => void }) {
+  return (
+    <Card className="rounded-2xl border-0 shadow-lg">
+      <CardHeader>
+        <CardTitle className="font-display">What kind of business are you?</CardTitle>
+        <p className="text-sm text-muted-foreground">Choose one. This sets up your dashboard.</p>
+      </CardHeader>
+      <CardContent className="grid gap-3">
+        {MERCHANT_TYPES.map(t => (
+          <button key={t.value} type="button" onClick={() => onSelect(t.value)}
+            className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:border-primary hover:bg-primary/5">
+            <span className="text-3xl" aria-hidden>{t.emoji}</span>
+            <span>
+              <span className="block font-display font-bold">{t.label}</span>
+              <span className="block text-xs text-muted-foreground">{t.tagline}</span>
+            </span>
+          </button>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
 
 const STEPS = [
   { label: 'Owner Profile', icon: User },
-  { label: 'Restaurant Details', icon: Store },
+  { label: 'Business Details', icon: Store },
   { label: 'Bank Details', icon: Landmark },
   { label: 'Verification', icon: ShieldCheck },
 ];
@@ -142,13 +168,16 @@ function OwnerProfileStep({ onNext }: { onNext: () => void }) {
   );
 }
 
-function RestaurantDetailsStep({ onNext, onBack }: { onNext: () => void; onBack: () => void }) {
+function RestaurantDetailsStep({ onNext, onBack, merchantType }: { onNext: () => void; onBack: () => void; merchantType: MerchantType }) {
   const { data: restaurant, isLoading } = useMyRestaurantFull();
   const saveRestaurant = useSaveRestaurantDetails();
+  const grocery = merchantType === 'grocery';
+  const terms = merchantTerms(merchantType);
 
   const [form, setForm] = useState({
     name: '', address: '', area: '', city: '', contact_phone: '',
     fssai_license: '', gst_number: '', university_name: '',
+    shop_license: '', store_category: '',
     opening_hours: '09:00', closing_hours: '22:00',
   });
 
@@ -163,6 +192,8 @@ function RestaurantDetailsStep({ onNext, onBack }: { onNext: () => void; onBack:
         fssai_license: restaurant.fssai_license || '',
         gst_number: restaurant.gst_number || '',
         university_name: restaurant.university_name || '',
+        shop_license: restaurant.shop_license || '',
+        store_category: restaurant.store_category || '',
         opening_hours: restaurant.opening_hours || '09:00',
         closing_hours: restaurant.closing_hours || '22:00',
       });
@@ -171,8 +202,10 @@ function RestaurantDetailsStep({ onNext, onBack }: { onNext: () => void; onBack:
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.address.trim() || !form.city.trim() || !form.fssai_license.trim() || !form.contact_phone.trim()) return;
-    await saveRestaurant.mutateAsync(form);
+    if (!form.name.trim() || !form.address.trim() || !form.city.trim() || !form.contact_phone.trim()) return;
+    if (!grocery && !form.fssai_license.trim()) return;
+    if (merchantType === 'canteen' && !form.university_name.trim()) return;
+    await saveRestaurant.mutateAsync({ ...form, merchant_type: merchantType });
     onNext();
   };
 
@@ -183,20 +216,20 @@ function RestaurantDetailsStep({ onNext, onBack }: { onNext: () => void; onBack:
       <CardHeader>
         <CardTitle className="font-display flex items-center gap-2">
           <Store className="w-5 h-5 text-primary" />
-          Restaurant Details
+          {terms.business} Details
         </CardTitle>
-        <p className="text-sm text-muted-foreground">Tell us about your restaurant</p>
+        <p className="text-sm text-muted-foreground">Tell us about your {terms.business.toLowerCase()}</p>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Restaurant Name <span className="text-destructive">*</span></Label>
-              <Input placeholder="e.g., Spice Garden" value={form.name}
+              <Label>{terms.business} Name <span className="text-destructive">*</span></Label>
+              <Input placeholder={grocery ? 'e.g., Fresh Mart' : 'e.g., Spice Garden'} value={form.name}
                 onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required />
             </div>
             <div className="space-y-2">
-              <Label>Restaurant Contact Phone <span className="text-destructive">*</span></Label>
+              <Label>Contact Phone <span className="text-destructive">*</span></Label>
               <Input type="tel" placeholder="+91 98765 43210" value={form.contact_phone}
                 onChange={e => setForm(p => ({ ...p, contact_phone: e.target.value }))} required />
             </div>
@@ -218,9 +251,33 @@ function RestaurantDetailsStep({ onNext, onBack }: { onNext: () => void; onBack:
                 onChange={e => setForm(p => ({ ...p, city: e.target.value }))} required />
             </div>
           </div>
+          {grocery ? (
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Shop / Trade Licence No. <span className="text-muted-foreground text-xs">(Optional)</span></Label>
+                <Input placeholder="Shop & Establishment no." value={form.shop_license}
+                  onChange={e => setForm(p => ({ ...p, shop_license: e.target.value }))} maxLength={40} />
+              </div>
+              <div className="space-y-2">
+                <Label>Store Category <span className="text-muted-foreground text-xs">(Optional)</span></Label>
+                <Input placeholder="e.g., Kirana, Dairy, Fruits & Veg" value={form.store_category}
+                  onChange={e => setForm(p => ({ ...p, store_category: e.target.value }))} maxLength={60} />
+              </div>
+              <div className="space-y-2">
+                <Label>FSSAI Registration <span className="text-muted-foreground text-xs">(Optional)</span></Label>
+                <Input placeholder="If you have one" value={form.fssai_license}
+                  onChange={e => setForm(p => ({ ...p, fssai_license: e.target.value }))} maxLength={14} />
+              </div>
+              <div className="space-y-2">
+                <Label>GST Number <span className="text-muted-foreground text-xs">(Optional)</span></Label>
+                <Input placeholder="22AAAAA0000A1Z5" value={form.gst_number}
+                  onChange={e => setForm(p => ({ ...p, gst_number: e.target.value.toUpperCase() }))} maxLength={15} />
+              </div>
+            </div>
+          ) : (
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>FSSAI License No. <span className="text-destructive">*</span></Label>
+              <Label>FSSAI License / Registration No. <span className="text-destructive">*</span></Label>
               <Input placeholder="14-digit FSSAI number" value={form.fssai_license}
                 onChange={e => setForm(p => ({ ...p, fssai_license: e.target.value }))} required maxLength={14} />
             </div>
@@ -230,8 +287,11 @@ function RestaurantDetailsStep({ onNext, onBack }: { onNext: () => void; onBack:
                 onChange={e => setForm(p => ({ ...p, gst_number: e.target.value.toUpperCase() }))} maxLength={15} />
             </div>
           </div>
+          )}
           <div className="space-y-2">
-            <Label>University / College Name <span className="text-muted-foreground text-xs">(Optional — shown with restaurant name if set)</span></Label>
+            <Label>University / College Name {merchantType === 'canteen'
+              ? <span className="text-destructive">*</span>
+              : <span className="text-muted-foreground text-xs">(Optional — shown with name if set)</span>}</Label>
             <Input placeholder="e.g., IIT Delhi" value={form.university_name}
               onChange={e => setForm(p => ({ ...p, university_name: e.target.value }))} />
           </div>
@@ -421,6 +481,11 @@ export default function RestaurantOnboarding() {
   };
 
   const [step, setStep] = useState<number | null>(null);
+  const [merchantType, setMerchantType] = useState<MerchantType | null>(
+    () => (localStorage.getItem(MT_KEY) as MerchantType | null) || null,
+  );
+  const effectiveType = (restaurant?.merchant_type as MerchantType | undefined) || merchantType;
+  const chooseType = (t: MerchantType) => { localStorage.setItem(MT_KEY, t); setMerchantType(t); };
 
   useEffect(() => {
     if (!loadingRestaurant && !loadingOwner) {
@@ -450,10 +515,11 @@ export default function RestaurantOnboarding() {
     <DashboardLayout>
       <div className="max-w-2xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl font-display font-bold">Restaurant Onboarding</h1>
-          <p className="text-muted-foreground">Complete all steps to get your restaurant listed</p>
+          <h1 className="text-2xl font-display font-bold">Merchant Onboarding</h1>
+          <p className="text-muted-foreground">Complete all steps to get your business listed</p>
         </div>
 
+        {!effectiveType ? <MerchantTypeStep onSelect={chooseType} /> : (<>
         <StepIndicator current={step} steps={STEPS} />
 
         <AnimatePresence mode="wait">
@@ -465,12 +531,12 @@ export default function RestaurantOnboarding() {
             transition={{ duration: 0.2 }}
           >
             {step === 0 && <OwnerProfileStep onNext={() => setStep(1)} />}
-            {step === 1 && <RestaurantDetailsStep onNext={() => setStep(2)} onBack={() => setStep(0)} />}
+            {step === 1 && <RestaurantDetailsStep merchantType={effectiveType!} onNext={() => setStep(2)} onBack={() => setStep(0)} />}
             {step === 2 && restaurant && (
               <BankDetailsStep restaurantId={restaurant.id} onNext={() => setStep(3)} onBack={() => setStep(1)} />
             )}
             {step === 2 && !restaurant && (
-              <RestaurantDetailsStep onNext={() => setStep(2)} onBack={() => setStep(0)} />
+              <RestaurantDetailsStep merchantType={effectiveType!} onNext={() => setStep(2)} onBack={() => setStep(0)} />
             )}
             {showVerification && (
               <VerificationPendingScreen status={verificationStatus} onResubmit={() => setStep(0)} />
@@ -480,6 +546,7 @@ export default function RestaurantOnboarding() {
             )}
           </motion.div>
         </AnimatePresence>
+        </>)}
       </div>
     </DashboardLayout>
   );

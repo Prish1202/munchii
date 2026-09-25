@@ -94,6 +94,7 @@ export default function Checkout() {
           menuItemId: item.menuItemId,
           quantity: item.quantity,
           price: item.price,
+          optionLabel: item.optionLabel ?? null,
         })),
         totalAmount: grandTotal,
         paymentMethod: payment === 'razorpay' ? 'razorpay' : 'cod',
