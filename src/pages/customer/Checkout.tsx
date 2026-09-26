@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { XCircle, AlertTriangle, ArrowLeft, Phone, CreditCard, Banknote, Loader2
 import { cn } from '@/lib/utils';
 import { useWallet, useRedeemCoins } from '@/hooks/useWallet';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { useAvailablePickupWindows } from '@/hooks/useAvailablePickupWindows';
 import { formatPickupWindow } from '@/lib/pickupWindows';
 
@@ -44,7 +45,21 @@ export default function Checkout() {
   const [phone, setPhone] = useState(user?.phone || '');
   const [payment, setPayment] = useState('razorpay');
   const [isPlacing, setIsPlacing] = useState(false);
-  const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
+  // One unpaid draft per cart. It stays invisible to restaurants and the customer's
+  // order list until payment is verified, and is reused on retry or page refresh.
+  const draftKey = useMemo(() => {
+    const sig = items.map((i) => `${i.menuItemId}:${i.optionLabel ?? ''}:${i.quantity}`).sort().join('|');
+    return `munchii_checkout_draft:${restaurantId}:${sig}`;
+  }, [items, restaurantId]);
+  const [pendingOrderId, setPendingOrderIdState] = useState<string | null>(null);
+  useEffect(() => {
+    setPendingOrderIdState(sessionStorage.getItem(draftKey));
+  }, [draftKey]);
+  const setPendingOrderId = (id: string | null) => {
+    if (id) sessionStorage.setItem(draftKey, id); else sessionStorage.removeItem(draftKey);
+    setPendingOrderIdState(id);
+  };
+  const completedRef = useRef(false);
   const [payError, setPayError] = useState<null | 'cancelled' | 'failed'>(null);
   const [useCoins, setUseCoins] = useState(false);
   const [coinInputValue, setCoinInputValue] = useState('');
@@ -91,6 +106,21 @@ export default function Checkout() {
     setPayError(null);
     try {
       let orderId = pendingOrderId;
+      if (orderId) {
+        const { data: existing } = await supabase.from('orders').select('status').eq('id', orderId).maybeSingle();
+        if (existing && existing.status !== 'pending_payment') {
+          if (existing.status !== 'cancelled') {
+            // Already paid (e.g. confirmation arrived after a refresh)
+            setPendingOrderId(null);
+            clearCart();
+            navigate(`/customer/order-success/${orderId}`, { replace: true });
+            return;
+          }
+          orderId = null;
+        } else if (!existing) {
+          orderId = null;
+        }
+      }
       if (!orderId) {
         const order = await createOrder.mutateAsync({
           restaurantId,
@@ -118,6 +148,9 @@ export default function Checkout() {
         userEmail: user?.email,
         userPhone: phone,
         onSuccess: (paidId) => {
+          if (completedRef.current) return;
+          completedRef.current = true;
+          setPendingOrderId(null);
           clearCart();
           navigate(`/customer/order-success/${paidId}`, { replace: true });
         },

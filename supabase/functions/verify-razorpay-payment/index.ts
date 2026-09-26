@@ -105,6 +105,19 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Only the owner of the order may confirm it
+    const { data: ownerOrder } = await supabaseAdmin
+      .from("orders")
+      .select("customer_id")
+      .eq("id", payment.order_id)
+      .single();
+    if (!ownerOrder || ownerOrder.customer_id !== claimsData.claims.sub) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (payment.status === "paid") {
       return new Response(JSON.stringify({ success: true, orderId: payment.order_id }), {
         status: 200,
@@ -113,7 +126,8 @@ Deno.serve(async (req) => {
     }
 
     // Update payment status
-    const { error: updatePaymentErr } = await supabaseAdmin
+    // Atomic, idempotent: only one concurrent callback can flip created -> paid
+    const { data: claimed, error: updatePaymentErr } = await supabaseAdmin
       .from("payments")
       .update({
         razorpay_payment_id,
@@ -121,11 +135,20 @@ Deno.serve(async (req) => {
         status: "paid",
         updated_at: new Date().toISOString(),
       })
-      .eq("id", payment.id);
+      .eq("id", payment.id)
+      .neq("status", "paid")
+      .select("id");
 
     if (updatePaymentErr) {
       console.error("Payment update error:", updatePaymentErr);
       throw new Error("Failed to update payment");
+    }
+    if (!claimed || claimed.length === 0) {
+      // Another callback already confirmed it
+      return new Response(JSON.stringify({ success: true, orderId: payment.order_id }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Move order from pending_payment to placed so restaurant can now see it
