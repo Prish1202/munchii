@@ -81,6 +81,33 @@ Deno.serve(async (req) => {
     // Amount in paise
     const amountPaise = Math.round(order.total_amount * 100);
 
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    // Idempotent: reuse an open Razorpay order for this order+amount (retry/refresh)
+    const { data: openPayment } = await supabaseAdmin
+      .from("payments")
+      .select("razorpay_order_id, amount, status")
+      .eq("order_id", orderId)
+      .eq("status", "created")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (openPayment && Number(openPayment.amount) === Number(order.total_amount)) {
+      return new Response(
+        JSON.stringify({
+          razorpayOrderId: openPayment.razorpay_order_id,
+          amount: amountPaise,
+          currency: "INR",
+          keyId: RAZORPAY_KEY_ID,
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const razorpayRes = await fetch("https://api.razorpay.com/v1/orders", {
       method: "POST",
       headers: {
@@ -100,12 +127,6 @@ Deno.serve(async (req) => {
       console.error("Razorpay order creation failed:", razorpayOrder);
       throw new Error(`Razorpay error: ${JSON.stringify(razorpayOrder)}`);
     }
-
-    // Save payment record using service role
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
 
     const { error: paymentErr } = await supabaseAdmin.from("payments").insert({
       order_id: orderId,

@@ -56,6 +56,7 @@ export function useCustomerOrders() {
           restaurant:restaurants(name, address)
         `)
         .eq('customer_id', user!.id)
+        .neq('status', 'pending_payment' as any)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
