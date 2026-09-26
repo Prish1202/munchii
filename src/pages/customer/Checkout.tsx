@@ -8,7 +8,7 @@ import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCreateOrder } from '@/hooks/useOrders';
 import { useRazorpay } from '@/hooks/useRazorpay';
-import { ArrowLeft, Phone, CreditCard, Banknote, Loader2, Coins, Clock3 } from 'lucide-react';
+import { XCircle, AlertTriangle, ArrowLeft, Phone, CreditCard, Banknote, Loader2, Coins, Clock3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useWallet, useRedeemCoins } from '@/hooks/useWallet';
 import { toast } from 'sonner';
@@ -44,6 +44,8 @@ export default function Checkout() {
   const [phone, setPhone] = useState(user?.phone || '');
   const [payment, setPayment] = useState('razorpay');
   const [isPlacing, setIsPlacing] = useState(false);
+  const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
+  const [payError, setPayError] = useState<null | 'cancelled' | 'failed'>(null);
   const [useCoins, setUseCoins] = useState(false);
   const [coinInputValue, setCoinInputValue] = useState('');
 
@@ -86,46 +88,46 @@ export default function Checkout() {
     }
 
     setIsPlacing(true);
+    setPayError(null);
     try {
-      // Create order in DB with status 'placed'
-      const order = await createOrder.mutateAsync({
-        restaurantId,
-        items: items.map((item) => ({
-          menuItemId: item.menuItemId,
-          quantity: item.quantity,
-          price: item.price,
-          optionLabel: item.optionLabel ?? null,
-        })),
-        totalAmount: grandTotal,
-        paymentMethod: payment === 'razorpay' ? 'razorpay' : 'cod',
-        pickupTime: pickupTime || undefined,
-        prepMinutes: longestPreparationMinutes,
-      });
-
-      // Redeem coins if applicable
-      if (coinDiscount > 0) {
-        await redeemCoins.mutateAsync({ coins: coinDiscount, orderId: order.id });
+      let orderId = pendingOrderId;
+      if (!orderId) {
+        const order = await createOrder.mutateAsync({
+          restaurantId,
+          items: items.map((item) => ({
+            menuItemId: item.menuItemId,
+            quantity: item.quantity,
+            price: item.price,
+            optionLabel: item.optionLabel ?? null,
+          })),
+          totalAmount: grandTotal,
+          paymentMethod: 'razorpay',
+          pickupTime: pickupTime || undefined,
+          prepMinutes: longestPreparationMinutes,
+        });
+        orderId = order.id;
+        setPendingOrderId(order.id);
+        if (coinDiscount > 0) {
+          await redeemCoins.mutateAsync({ coins: coinDiscount, orderId: order.id });
+        }
       }
 
-      // Initiate Razorpay payment
       initiatePayment({
-        orderId: order.id,
+        orderId: orderId!,
         userName: user?.name,
         userEmail: user?.email,
         userPhone: phone,
-        onSuccess: (orderId) => {
+        onSuccess: (paidId) => {
           clearCart();
-          navigate(`/customer/order-success/${orderId}`);
+          navigate(`/customer/order-success/${paidId}`, { replace: true });
         },
-        onFailure: () => {
+        onFailure: (reason) => {
           setIsPlacing(false);
-          toast.error('Payment failed. You can retry from your orders page.');
+          setPayError(reason === 'cancelled' ? 'cancelled' : 'failed');
         },
       });
     } catch {
-      // error handled by hook
-    } finally {
-      // Payment processing handled by Razorpay callback
+      setIsPlacing(false);
     }
   };
 
@@ -323,6 +325,16 @@ export default function Checkout() {
           )}
         </section>
 
+        {payError && (
+          <section role="alert" className="rounded-2xl border border-destructive/40 bg-destructive/5 p-4 flex gap-3">
+            {payError === 'cancelled' ? <AlertTriangle className="w-6 h-6 text-destructive shrink-0" /> : <XCircle className="w-6 h-6 text-destructive shrink-0" />}
+            <div>
+              <p className="font-semibold text-destructive">{payError === 'cancelled' ? 'Payment not completed' : 'Payment failed'}</p>
+              <p className="text-sm text-muted-foreground mt-0.5">Your order has not been placed. No money was taken for this order. Tap Pay to try again.</p>
+            </div>
+          </section>
+        )}
+
         {/* Place order */}
         <div className="fixed bottom-16 md:bottom-4 left-0 right-0 p-4 md:left-64 z-40 bg-background/80 backdrop-blur-sm">
           <Button className="w-full h-14 text-base rounded-2xl shadow-xl" onClick={handlePlaceOrder} disabled={busy || !canPlace}>
@@ -332,7 +344,7 @@ export default function Checkout() {
                 Processing Payment...
               </>
             ) : (
-              `Pay ₹${grandTotal.toFixed(0)} Online`
+              payError ? `Retry Payment ₹${grandTotal.toFixed(0)}` : `Pay ₹${grandTotal.toFixed(0)} Online`
             )}
           </Button>
         </div>

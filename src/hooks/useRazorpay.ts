@@ -104,11 +104,9 @@ export function useRazorpay() {
             const verifyData = await verifyRes.json();
             if (!verifyRes.ok) throw new Error(verifyData.error || 'Payment verification failed');
 
-            toast.success('Payment successful!');
             onSuccess(verifyData.orderId);
           } catch (err: any) {
             console.error('Payment verification error:', err);
-            toast.error(err.message || 'Payment verification failed');
             onFailure(err.message);
           } finally {
             setIsProcessing(false);
@@ -123,7 +121,7 @@ export function useRazorpay() {
         modal: {
           ondismiss: () => {
             setIsProcessing(false);
-            toast.info('Payment cancelled');
+            onFailure('cancelled');
           },
         },
       };
@@ -132,7 +130,6 @@ export function useRazorpay() {
       rzp.on('payment.failed', (response: any) => {
         setIsProcessing(false);
         console.error('Payment failed:', response.error);
-        toast.error(response.error?.description || 'Payment failed');
         onFailure(response.error?.description || 'Payment failed');
       });
       rzp.open();

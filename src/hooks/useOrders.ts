@@ -169,7 +169,7 @@ export function useCreateOrder() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customer-orders'] });
-      toast.success('Order placed successfully!');
+      // Order only counts as placed after payment verification
     },
     onError: (error: any) => {
       console.error('Order creation failed:', error);
