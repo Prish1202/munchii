@@ -1,3 +1,4 @@
+import type React from 'react';
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { Coords, reverseGeocodeFull } from '@/lib/geo';
 
@@ -18,7 +19,9 @@ interface LocationContextType extends LocationState {
   setManualLocation: (coords: Coords, label: string | null, city?: string | null) => void;
 }
 
-const LocationContext = createContext<LocationContextType | undefined>(undefined);
+// Keep one context instance across hot reloads so providers and consumers always match.
+const g = globalThis as unknown as { __munchiiLocationCtx?: React.Context<LocationContextType | undefined> };
+const LocationContext = g.__munchiiLocationCtx ?? (g.__munchiiLocationCtx = createContext<LocationContextType | undefined>(undefined));
 
 const CITY_STORAGE_KEY = 'foodyzone_city';
 const COORDS_KEY = 'munchii_live_coords';
