@@ -14,6 +14,8 @@ interface LocationContextType extends LocationState {
   detectCity: () => void;
   /** Ask for live location via the standard Geolocation API. */
   requestLiveLocation: () => void;
+  /** Use a chosen (e.g. saved) address as the current location. */
+  setManualLocation: (coords: Coords, label: string | null, city?: string | null) => void;
 }
 
 const LocationContext = createContext<LocationContextType | undefined>(undefined);
@@ -73,13 +75,19 @@ export function LocationProvider({ children }: { children: ReactNode }) {
 
   const detectCity = requestLiveLocation;
 
+  const setManualLocation = useCallback((coords: Coords, label: string | null, city?: string | null) => {
+    localStorage.setItem(COORDS_KEY, JSON.stringify({ ...coords, label }));
+    if (city) { localStorage.setItem(CITY_STORAGE_KEY, city); sessionStorage.setItem(CITY_STORAGE_KEY, city); }
+    setState(prev => ({ ...prev, coords, addressLabel: label, city: city || prev.city, error: null }));
+  }, []);
+
   useEffect(() => {
     const saved = sessionStorage.getItem(CITY_STORAGE_KEY) || localStorage.getItem(CITY_STORAGE_KEY);
     if (saved) setState(prev => ({ ...prev, city: saved }));
   }, []);
 
   return (
-    <LocationContext.Provider value={{ ...state, setCity, detectCity, requestLiveLocation }}>
+    <LocationContext.Provider value={{ ...state, setCity, detectCity, requestLiveLocation, setManualLocation }}>
       {children}
     </LocationContext.Provider>
   );

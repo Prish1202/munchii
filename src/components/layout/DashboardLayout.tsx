@@ -18,6 +18,7 @@ import {
   Users,
   Settings,
   RotateCcw,
+  MapPin,
   Wallet,
   Coins,
   Sparkles,
@@ -56,6 +57,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Orders', href: '/admin/orders', icon: <ClipboardList className="w-5 h-5" /> },
     { label: 'Payouts', href: '/admin/payouts', icon: <Wallet className="w-5 h-5" /> },
     { label: 'Refunds', href: '/admin/refunds', icon: <RotateCcw className="w-5 h-5" /> },
+    { label: 'Requested Areas', href: '/admin/requests', icon: <MapPin className="w-5 h-5" /> },
   ],
 };
 

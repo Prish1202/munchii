@@ -31,3 +31,11 @@ export async function reverseGeocodeFull(lat: number, lng: number): Promise<{ ci
     return { city: null, label: null };
   }
 }
+
+/** Google Maps directions link from the user's current location to a place. */
+export function directionsUrl(p: { latitude?: number | null; longitude?: number | null; address?: string | null; name?: string | null }): string {
+  const dest = p.latitude != null && p.longitude != null
+    ? `${p.latitude},${p.longitude}`
+    : [p.name, p.address].filter(Boolean).join(', ');
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(dest)}`;
+}
