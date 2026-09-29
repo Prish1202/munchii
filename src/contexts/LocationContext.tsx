@@ -1,7 +1,10 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { Coords, reverseGeocodeFull } from '@/lib/geo';
 
 interface LocationState {
   city: string | null;
+  coords: Coords | null;
+  addressLabel: string | null;
   isDetecting: boolean;
   error: string | null;
 }
@@ -9,31 +12,32 @@ interface LocationState {
 interface LocationContextType extends LocationState {
   setCity: (city: string) => void;
   detectCity: () => void;
+  /** Ask for live location via the standard Geolocation API. */
+  requestLiveLocation: () => void;
 }
 
 const LocationContext = createContext<LocationContextType | undefined>(undefined);
 
 const CITY_STORAGE_KEY = 'foodyzone_city';
+const COORDS_KEY = 'munchii_live_coords';
 
-// Reverse geocode using free Nominatim API
-async function reverseGeocode(lat: number, lng: number): Promise<string | null> {
+function loadCoords(): { coords: Coords | null; label: string | null } {
   try {
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`,
-      { headers: { 'Accept-Language': 'en' } }
-    );
-    const data = await res.json();
-    const addr = data.address;
-    return addr?.city || addr?.town || addr?.village || addr?.state_district || addr?.state || null;
-  } catch {
-    return null;
-  }
+    const raw = localStorage.getItem(COORDS_KEY);
+    if (!raw) return { coords: null, label: null };
+    const p = JSON.parse(raw);
+    if (typeof p.lat === 'number' && typeof p.lng === 'number') return { coords: { lat: p.lat, lng: p.lng }, label: p.label ?? null };
+  } catch { /* ignore */ }
+  return { coords: null, label: null };
 }
 
 export function LocationProvider({ children }: { children: ReactNode }) {
+  const initial = loadCoords();
   const [state, setState] = useState<LocationState>({
     city: null,
-    isDetecting: true,
+    coords: initial.coords,
+    addressLabel: initial.label,
+    isDetecting: false,
     error: null,
   });
 
@@ -41,44 +45,41 @@ export function LocationProvider({ children }: { children: ReactNode }) {
     const normalized = city.trim();
     localStorage.setItem(CITY_STORAGE_KEY, normalized);
     sessionStorage.setItem(CITY_STORAGE_KEY, normalized);
-    setState({ city: normalized, isDetecting: false, error: null });
+    setState(prev => ({ ...prev, city: normalized, isDetecting: false, error: null }));
   }, []);
 
-  const detectCity = useCallback(() => {
-    setState(prev => ({ ...prev, isDetecting: true, error: null }));
-
+  const requestLiveLocation = useCallback(() => {
     if (!navigator.geolocation) {
       setState(prev => ({ ...prev, isDetecting: false, error: 'Geolocation not supported' }));
       return;
     }
-
+    setState(prev => ({ ...prev, isDetecting: true, error: null }));
     navigator.geolocation.getCurrentPosition(
       async (position) => {
-        const city = await reverseGeocode(position.coords.latitude, position.coords.longitude);
+        const coords = { lat: position.coords.latitude, lng: position.coords.longitude };
+        setState(prev => ({ ...prev, coords, isDetecting: false }));
+        const { city, label } = await reverseGeocodeFull(coords.lat, coords.lng);
+        localStorage.setItem(COORDS_KEY, JSON.stringify({ ...coords, label }));
         if (city) {
-          setCity(city);
-        } else {
-          setState(prev => ({ ...prev, isDetecting: false, error: 'Could not detect city' }));
+          localStorage.setItem(CITY_STORAGE_KEY, city);
+          sessionStorage.setItem(CITY_STORAGE_KEY, city);
         }
+        setState(prev => ({ ...prev, coords, addressLabel: label, city: city || prev.city }));
       },
-      () => {
-        setState(prev => ({ ...prev, isDetecting: false, error: 'Location permission denied' }));
-      },
-      { timeout: 10000 }
+      () => setState(prev => ({ ...prev, isDetecting: false, error: 'Location permission denied' })),
+      { timeout: 15000, enableHighAccuracy: true, maximumAge: 60000 }
     );
-  }, [setCity]);
+  }, []);
+
+  const detectCity = requestLiveLocation;
 
   useEffect(() => {
     const saved = sessionStorage.getItem(CITY_STORAGE_KEY) || localStorage.getItem(CITY_STORAGE_KEY);
-    if (saved) {
-      setState({ city: saved, isDetecting: false, error: null });
-    } else {
-      detectCity();
-    }
-  }, [detectCity]);
+    if (saved) setState(prev => ({ ...prev, city: saved }));
+  }, []);
 
   return (
-    <LocationContext.Provider value={{ ...state, setCity, detectCity }}>
+    <LocationContext.Provider value={{ ...state, setCity, detectCity, requestLiveLocation }}>
       {children}
     </LocationContext.Provider>
   );
