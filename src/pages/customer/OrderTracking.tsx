@@ -36,7 +36,9 @@ import {
   AlertTriangle,
   CreditCard,
   Info,
+  Navigation,
 } from 'lucide-react';
+import { directionsUrl } from '@/lib/geo';
 import { formatDistanceToNow, format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { OrderProgressBar } from '@/components/customer/OrderProgressBar';
@@ -82,7 +84,7 @@ export default function OrderTracking() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('orders')
-        .select(`*, restaurant:restaurants(name, address)`)
+        .select(`*, restaurant:restaurants(name, address, latitude, longitude)`)
         .eq('id', id)
         .maybeSingle();
       if (error) throw error;
@@ -351,6 +353,13 @@ export default function OrderTracking() {
             <h3 className="font-display font-semibold text-sm">{order.restaurant?.name}</h3>
             <p className="text-xs text-muted-foreground">{order.restaurant?.address}</p>
           </div>
+          {order.restaurant && (
+            <Button asChild size="sm" className="ml-auto shrink-0 gap-1.5 rounded-xl">
+              <a href={directionsUrl(order.restaurant as any)} target="_blank" rel="noopener noreferrer">
+                <Navigation className="h-4 w-4" /> Find route
+              </a>
+            </Button>
+          )}
         </div>
 
         {/* Order Items */}

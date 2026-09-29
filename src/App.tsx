@@ -70,6 +70,7 @@ import AdminRestaurants from "./pages/admin/Restaurants";
 import AdminOrders from "./pages/admin/Orders";
 import AdminPayouts from "./pages/admin/Payouts";
 import AdminRefunds from "./pages/admin/Refunds";
+import AdminAreaRequests from "./pages/admin/AreaRequests";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -187,6 +188,7 @@ const App = () => {
               <Route path="/admin/orders" element={<ProtectedRoute allowedRoles={['admin']}><AdminOrders /></ProtectedRoute>} />
               <Route path="/admin/payouts" element={<ProtectedRoute allowedRoles={['admin']}><AdminPayouts /></ProtectedRoute>} />
               <Route path="/admin/refunds" element={<ProtectedRoute allowedRoles={['admin']}><AdminRefunds /></ProtectedRoute>} />
+              <Route path="/admin/requests" element={<ProtectedRoute allowedRoles={['admin']}><AdminAreaRequests /></ProtectedRoute>} />
               <Route path="/admin/*" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
 
               <Route path="*" element={<NotFound />} />

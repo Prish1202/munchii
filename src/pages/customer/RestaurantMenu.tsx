@@ -9,7 +9,8 @@ import { useRestaurant, useMenuItems, useMenuCategories } from '@/hooks/useResta
 import { lineKeyOf, useCart } from '@/contexts/CartContext';
 import { usesPrepTime } from '@/lib/merchantTerms';
 import { useRestaurantRating } from '@/hooks/useReviews';
-import { ArrowLeft, MapPin, Plus, Minus, ShoppingCart, Star, Clock, Percent, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
+import { OutletInfoDialog } from '@/components/customer/OutletInfoDialog';
+import { ArrowLeft, Info, MapPin, Plus, Minus, ShoppingCart, Star, Clock, Percent, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn, resolveStorageUrl } from '@/lib/utils';
 import {
@@ -31,6 +32,7 @@ export default function RestaurantMenu() {
   const { data: ratingData } = useRestaurantRating(id);
   const { data: menuItems, isLoading: loadingMenu } = useMenuItems(id!);
   const { data: categories } = useMenuCategories(id!);
+  const [infoOpen, setInfoOpen] = useState(false);
 
   useEffect(() => {
     if (!restaurant) return;
@@ -159,12 +161,20 @@ export default function RestaurantMenu() {
           Back
         </Link>
 
+        <OutletInfoDialog open={infoOpen} onOpenChange={setInfoOpen} restaurant={restaurant as any} />
+
         {/* Hero */}
         <div className="relative rounded-2xl overflow-hidden mb-5">
           <img src={heroImage} alt={restaurant.name} className="w-full h-44 sm:h-56 object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
           <div className="absolute bottom-4 left-4 right-4 text-white">
-            <h1 className="font-display font-bold text-2xl">{restaurant.name}</h1>
+            <h1 className="font-display font-bold text-2xl flex items-center gap-2">
+              {restaurant.name}
+              <button type="button" onClick={() => setInfoOpen(true)} aria-label="Outlet info"
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-white/25 backdrop-blur hover:bg-white/40">
+                <Info className="h-4 w-4" />
+              </button>
+            </h1>
             <p className="text-sm opacity-90 flex items-center gap-1 mt-1">
               <MapPin className="w-3.5 h-3.5" />
               {restaurant.address}

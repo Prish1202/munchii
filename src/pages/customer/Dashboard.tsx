@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronDown, Crosshair, Loader2, MapPin, Search, Store } from 'lucide-react';
+import { ChevronDown, Crosshair, Loader2, MapPin, Plus, Search, Store, Home as HomeIcon, Briefcase, Trash2 } from 'lucide-react';
+import { AddAddressDialog } from '@/components/customer/AddAddressDialog';
+import { AreaComingSoon } from '@/components/customer/AreaComingSoon';
+import { useSavedAddresses, useDeleteAddress } from '@/hooks/useSavedAddresses';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useLocation } from '@/contexts/LocationContext';
 import { distanceKm } from '@/lib/geo';
@@ -18,6 +21,7 @@ import { MERCHANT_TYPES, MerchantType } from '@/lib/merchantTerms';
 
 const CITY_PERSIST_KEY = 'foodyzone_dashboard_city';
 const CATEGORY_KEY = 'munchii_home_category';
+const NEARBY_KM = 15;
 
 const SEARCH_PLACEHOLDERS: Record<MerchantType, string> = {
   restaurant: 'Search restaurants or dishes',
@@ -37,8 +41,11 @@ export default function CustomerDashboard() {
   const activeCategory = MERCHANT_TYPES.find(t => t.value === category)!;
   const { data: restaurants, isLoading } = useRestaurants(null, category);
   const { data: wallet } = useWallet();
-  const { coords, addressLabel, isDetecting, error: locError, requestLiveLocation } = useLocation();
+  const { coords, addressLabel, city: liveCity, isDetecting, error: locError, requestLiveLocation, setManualLocation } = useLocation();
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+  const { data: savedAddresses = [] } = useSavedAddresses();
+  const deleteAddress = useDeleteAddress();
   const useLive = !!coords && !selectedCity;
 
   useEffect(() => {
@@ -82,10 +89,14 @@ export default function CustomerDashboard() {
       r,
       d: coords && r.latitude != null && r.longitude != null ? distanceKm(coords, { lat: Number(r.latitude), lng: Number(r.longitude) }) : null,
     }));
+    // Only nearby outlets (within 15 km) when we know where the user is; un-pinned outlets stay if in the same city.
+    const nearby = coords && !selectedCity
+      ? withDist.filter(x => x.d != null ? x.d <= NEARBY_KM : (!!liveCity && (x.r.city || '').toLowerCase() === liveCity.toLowerCase()))
+      : withDist;
     // Nearest first; outlets without a map pin go last.
-    withDist.sort((x, y) => (x.d ?? Infinity) - (y.d ?? Infinity));
-    return withDist;
-  }, [matchingRestaurantIds, restaurants, search, selectedCity, coords]);
+    nearby.sort((x, y) => (x.d ?? Infinity) - (y.d ?? Infinity));
+    return nearby;
+  }, [matchingRestaurantIds, restaurants, search, selectedCity, coords, liveCity]);
 
   const selectCity = (city: string) => {
     setSelectedCity(city);
@@ -111,7 +122,7 @@ export default function CustomerDashboard() {
               <MapPin className="mt-0.5 h-6 w-6 shrink-0 fill-primary/15 text-primary" />
               <span className="min-w-0">
                 <span className="flex items-center gap-1 font-display text-lg font-extrabold leading-tight">
-                  {useLive ? 'Current location' : selectedCity || 'Set location'}
+                  {useLive ? (savedAddresses.find(a => addressLabel === [a.house, a.area].filter(Boolean).join(', '))?.label || 'Current location') : selectedCity || 'Set location'}
                   <ChevronDown className="h-5 w-5" />
                 </span>
                 <span className="block max-w-[70vw] truncate text-xs text-muted-foreground">
@@ -129,6 +140,39 @@ export default function CustomerDashboard() {
                 <span className="block text-xs text-muted-foreground">{locError || addressLabel || 'Using GPS'}</span>
               </span>
             </button>
+            <button type="button" onClick={() => { setPickerOpen(false); setAddOpen(true); }}
+              className="flex w-full items-center gap-3 rounded-xl p-3 text-left hover:bg-muted">
+              <Plus className="h-5 w-5 text-primary" />
+              <span className="text-sm font-bold text-primary">Add address</span>
+            </button>
+            {savedAddresses.length > 0 && (
+              <div className="mt-1 border-t border-border pt-2">
+                <p className="px-3 pb-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Saved addresses</p>
+                <div className="max-h-48 overflow-auto">
+                  {savedAddresses.map(a => {
+                    const Icon = a.label === 'Home' ? HomeIcon : a.label === 'Work' ? Briefcase : MapPin;
+                    return (
+                      <div key={a.id} className="flex items-start gap-2 rounded-lg px-3 py-2 hover:bg-muted">
+                        <button type="button" className="flex min-w-0 flex-1 items-start gap-3 text-left" onClick={() => {
+                          clearCity();
+                          setManualLocation({ lat: a.latitude, lng: a.longitude }, [a.house, a.area].filter(Boolean).join(', '), a.city);
+                          setPickerOpen(false);
+                        }}>
+                          <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                          <span className="min-w-0">
+                            <span className="block text-sm font-semibold">{a.label}</span>
+                            <span className="block truncate text-xs text-muted-foreground">{[a.house, a.area, a.landmark].filter(Boolean).join(', ')}</span>
+                          </span>
+                        </button>
+                        <button type="button" aria-label="Delete address" onClick={() => deleteAddress.mutate(a.id)} className="p-1 text-muted-foreground hover:text-destructive">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             <div className="relative mt-2">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input value={cityInput} onChange={e => { setCityInput(e.target.value); setShowSuggestions(true); }}
@@ -143,6 +187,10 @@ export default function CustomerDashboard() {
             </div>
           </PopoverContent>
         </Popover>
+        <AddAddressDialog open={addOpen} onOpenChange={setAddOpen} onSaved={a => {
+          clearCity();
+          setManualLocation({ lat: a.latitude, lng: a.longitude }, [a.house, a.area].filter(Boolean).join(', '), a.city);
+        }} />
 
         <section className="rounded-2xl border border-border bg-card p-5 shadow-soft md:p-6">
           <div className="flex items-start justify-between gap-4">
@@ -193,6 +241,8 @@ export default function CustomerDashboard() {
 
           {isLoading ? (
             <div className="grid gap-4 sm:grid-cols-2">{Array.from({ length: 4 }).map((_, index) => <RestaurantCardSkeleton key={index} />)}</div>
+          ) : filteredRestaurants.length === 0 && !search.trim() ? (
+            <AreaComingSoon category={category} city={selectedCity || liveCity} areaLabel={useLive ? addressLabel : selectedCity} coords={useLive ? coords : null} />
           ) : filteredRestaurants.length === 0 ? (
             <EmptyState icon={<Store className="h-7 w-7 text-muted-foreground" />} title={`No ${activeCategory.tagline.toLowerCase()} found`} description={search ? "Try another name." : "Nothing in this category in your city yet."} />
           ) : (
