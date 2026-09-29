@@ -16,21 +16,33 @@ export type Database = {
     Tables: {
       city_interests: {
         Row: {
+          area_label: string | null
+          category: string
           city: string
           created_at: string
           id: string
+          latitude: number | null
+          longitude: number | null
           user_id: string
         }
         Insert: {
+          area_label?: string | null
+          category?: string
           city: string
           created_at?: string
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           user_id: string
         }
         Update: {
+          area_label?: string | null
+          category?: string
           city?: string
           created_at?: string
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           user_id?: string
         }
         Relationships: []
@@ -826,6 +838,57 @@ export type Database = {
         }
         Relationships: []
       }
+      user_addresses: {
+        Row: {
+          area: string | null
+          city: string | null
+          created_at: string
+          formatted: string | null
+          house: string
+          id: string
+          label: string
+          landmark: string | null
+          latitude: number
+          longitude: number
+          receiver_name: string | null
+          receiver_phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          area?: string | null
+          city?: string | null
+          created_at?: string
+          formatted?: string | null
+          house: string
+          id?: string
+          label?: string
+          landmark?: string | null
+          latitude: number
+          longitude: number
+          receiver_name?: string | null
+          receiver_phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          area?: string | null
+          city?: string | null
+          created_at?: string
+          formatted?: string | null
+          house?: string
+          id?: string
+          label?: string
+          landmark?: string | null
+          latitude?: number
+          longitude?: number
+          receiver_name?: string | null
+          receiver_phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_contact_info: {
         Row: {
           created_at: string
@@ -925,6 +988,10 @@ export type Database = {
           user_id: string
           username: string
         }[]
+      }
+      get_outlet_owner_name: {
+        Args: { _restaurant_id: string }
+        Returns: string
       }
       get_owner_details_decrypted: {
         Args: { _user_id: string }
