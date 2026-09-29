@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { OutletMapPicker } from '@/components/restaurant/OutletMapPicker';
 import { MERCHANT_TYPES, MerchantType, merchantTerms } from '@/lib/merchantTerms';
 
 const MT_KEY = 'munchii_merchant_type';
@@ -180,6 +181,8 @@ function RestaurantDetailsStep({ onNext, onBack, merchantType }: { onNext: () =>
     shop_license: '', store_category: '',
     opening_hours: '09:00', closing_hours: '22:00',
   });
+  const [pin, setPin] = useState<{ lat: number; lng: number } | null>(null);
+  const [pinError, setPinError] = useState(false);
 
   useEffect(() => {
     if (restaurant) {
@@ -197,6 +200,7 @@ function RestaurantDetailsStep({ onNext, onBack, merchantType }: { onNext: () =>
         opening_hours: restaurant.opening_hours || '09:00',
         closing_hours: restaurant.closing_hours || '22:00',
       });
+      if (restaurant.latitude != null && restaurant.longitude != null) setPin({ lat: Number(restaurant.latitude), lng: Number(restaurant.longitude) });
     }
   }, [restaurant]);
 
@@ -205,7 +209,8 @@ function RestaurantDetailsStep({ onNext, onBack, merchantType }: { onNext: () =>
     if (!form.name.trim() || !form.address.trim() || !form.city.trim() || !form.contact_phone.trim()) return;
     if (!grocery && !form.fssai_license.trim()) return;
     if (merchantType === 'canteen' && !form.university_name.trim()) return;
-    await saveRestaurant.mutateAsync({ ...form, merchant_type: merchantType });
+    if (!pin) { setPinError(true); return; }
+    await saveRestaurant.mutateAsync({ ...form, merchant_type: merchantType, latitude: pin.lat, longitude: pin.lng });
     onNext();
   };
 
@@ -250,6 +255,12 @@ function RestaurantDetailsStep({ onNext, onBack, merchantType }: { onNext: () =>
               <Input placeholder="e.g., Bikaner" value={form.city}
                 onChange={e => setForm(p => ({ ...p, city: e.target.value }))} required />
             </div>
+          </div>
+          <div className="space-y-2 rounded-xl border border-primary/20 bg-primary/5 p-3">
+            <Label>Pin your outlet on the map <span className="text-destructive">*</span></Label>
+            <p className="text-xs text-muted-foreground">Customers nearby will see your {terms.business.toLowerCase()} first, with the distance from them.</p>
+            <OutletMapPicker value={pin} onChange={v => { setPin(v); setPinError(false); }} />
+            {pinError && <p className="text-xs font-medium text-destructive">Please drop a pin on your outlet location.</p>}
           </div>
           {grocery ? (
             <div className="grid gap-5 sm:grid-cols-2">
