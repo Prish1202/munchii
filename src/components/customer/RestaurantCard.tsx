@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { MapPin, Star, Clock, Coins } from 'lucide-react';
+import { MapPin, Star, Clock, Coins, Navigation } from 'lucide-react';
+import { formatDistance } from '@/lib/geo';
 import type { Restaurant } from '@/hooks/useRestaurants';
 import { resolveStorageUrl } from '@/lib/utils';
 import { useRestaurantRating } from '@/hooks/useReviews';
@@ -29,9 +30,10 @@ function getPickupTime(restaurant: Restaurant) {
 
 interface RestaurantCardProps {
   restaurant: Restaurant & { photo_url?: string | null };
+  distanceKm?: number | null;
 }
 
-export function RestaurantCard({ restaurant }: RestaurantCardProps) {
+export function RestaurantCard({ restaurant, distanceKm }: RestaurantCardProps) {
   const image = getImageForRestaurant(restaurant);
   const { data: ratingData } = useRestaurantRating(restaurant.id);
   const avgRating = ratingData?.avgRating || 0;
@@ -72,6 +74,11 @@ export function RestaurantCard({ restaurant }: RestaurantCardProps) {
                 <MapPin className="w-3 h-3 shrink-0" />
                 {restaurant.address}
               </p>
+              {distanceKm != null && (
+                <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[11px] font-bold text-primary-foreground">
+                  <Navigation className="h-3 w-3" /> {formatDistance(distanceKm)} away
+                </p>
+              )}
             </div>
             <div className="glass px-2.5 py-1.5 rounded-2xl shrink-0 shadow-soft">
               <div className="flex items-center gap-1 text-[10px] font-bold text-foreground">

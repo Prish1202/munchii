@@ -29,6 +29,8 @@ export interface RestaurantWithStatus {
   name: string;
   address: string;
   city: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   is_active: boolean;
   verification_status: string;
   fssai_license: string | null;
@@ -142,6 +144,8 @@ export function useSaveRestaurantDetails() {
       university_name?: string;
       opening_hours: string;
       closing_hours: string;
+      latitude: number;
+      longitude: number;
     }) => {
       const { fssai_license, gst_number, shop_license, store_category, ...restaurantFields } = details;
 

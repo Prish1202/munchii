@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Clock, ArrowRight, Sparkles, XCircle, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
+import { triggerRatingPrompt } from '@/components/RatingPrompt';
 
 const burst = Array.from({ length: 14 });
 
@@ -28,6 +29,7 @@ export default function OrderSuccess() {
 
   useEffect(() => {
     if (paid && 'vibrate' in navigator) navigator.vibrate?.([60, 40, 120]);
+    if (paid) triggerRatingPrompt();
   }, [paid]);
 
   if (isLoading) {

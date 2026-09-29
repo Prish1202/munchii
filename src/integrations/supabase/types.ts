@@ -728,6 +728,8 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean
+          latitude: number | null
+          longitude: number | null
           max_advance_minutes: number
           max_orders_per_slot: number
           max_workload_per_slot: number
@@ -754,6 +756,8 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          latitude?: number | null
+          longitude?: number | null
           max_advance_minutes?: number
           max_orders_per_slot?: number
           max_workload_per_slot?: number
@@ -780,6 +784,8 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          latitude?: number | null
+          longitude?: number | null
           max_advance_minutes?: number
           max_orders_per_slot?: number
           max_workload_per_slot?: number

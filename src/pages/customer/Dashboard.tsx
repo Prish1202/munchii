@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Coins, MapPin, Search, Store, Timer, X } from 'lucide-react';
+import { ChevronDown, Coins, Crosshair, Loader2, MapPin, Search, Store, Timer } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useLocation } from '@/contexts/LocationContext';
+import { distanceKm } from '@/lib/geo';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { RestaurantCard } from '@/components/customer/RestaurantCard';
 import { RestaurantCardSkeleton } from '@/components/customer/RestaurantCardSkeleton';
@@ -26,8 +29,11 @@ export default function CustomerDashboard() {
   const [category, setCategory] = useState<MerchantType>(() => (localStorage.getItem(CATEGORY_KEY) as MerchantType) || 'restaurant');
   const pickCategory = (c: MerchantType) => { setCategory(c); localStorage.setItem(CATEGORY_KEY, c); };
   const activeCategory = MERCHANT_TYPES.find(t => t.value === category)!;
-  const { data: restaurants, isLoading } = useRestaurants(selectedCity, category);
+  const { data: restaurants, isLoading } = useRestaurants(null, category);
   const { data: wallet } = useWallet();
+  const { coords, addressLabel, isDetecting, error: locError, requestLiveLocation } = useLocation();
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const useLive = !!coords && !selectedCity;
 
   useEffect(() => {
     const saved = localStorage.getItem(CITY_PERSIST_KEY);
@@ -59,18 +65,27 @@ export default function CustomerDashboard() {
 
   const filteredRestaurants = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return restaurants || [];
-    return (restaurants || []).filter(restaurant =>
+    let list = restaurants || [];
+    if (selectedCity) list = list.filter(r => (r.city || '').toLowerCase() === selectedCity.toLowerCase());
+    if (term) list = list.filter(restaurant =>
       restaurant.name.toLowerCase().includes(term) ||
       restaurant.address.toLowerCase().includes(term) ||
       matchingRestaurantIds.includes(restaurant.id)
     );
-  }, [matchingRestaurantIds, restaurants, search]);
+    const withDist = list.map(r => ({
+      r,
+      d: coords && r.latitude != null && r.longitude != null ? distanceKm(coords, { lat: Number(r.latitude), lng: Number(r.longitude) }) : null,
+    }));
+    // Nearest first; outlets without a map pin go last.
+    withDist.sort((x, y) => (x.d ?? Infinity) - (y.d ?? Infinity));
+    return withDist;
+  }, [matchingRestaurantIds, restaurants, search, selectedCity, coords]);
 
   const selectCity = (city: string) => {
     setSelectedCity(city);
     setCityInput(city);
     setShowSuggestions(false);
+    setPickerOpen(false);
     localStorage.setItem(CITY_PERSIST_KEY, city);
   };
 
@@ -84,6 +99,45 @@ export default function CustomerDashboard() {
   return (
     <DashboardLayout>
       <div className="mx-auto max-w-4xl space-y-5 pb-24 md:pb-4">
+        <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+          <PopoverTrigger asChild>
+            <button type="button" className="flex max-w-full items-start gap-2 text-left" aria-label="Change location">
+              <MapPin className="mt-0.5 h-6 w-6 shrink-0 fill-primary/15 text-primary" />
+              <span className="min-w-0">
+                <span className="flex items-center gap-1 font-display text-lg font-extrabold leading-tight">
+                  {useLive ? 'Current location' : selectedCity || 'Set location'}
+                  <ChevronDown className="h-5 w-5" />
+                </span>
+                <span className="block max-w-[70vw] truncate text-xs text-muted-foreground">
+                  {isDetecting ? 'Detecting your location…' : useLive ? (addressLabel || 'Near you') : selectedCity ? 'Showing outlets in this city' : 'Allow location to see nearest outlets'}
+                </span>
+              </span>
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-80 rounded-2xl p-3">
+            <button type="button" onClick={() => { clearCity(); requestLiveLocation(); setPickerOpen(false); }}
+              className="flex w-full items-center gap-3 rounded-xl p-3 text-left hover:bg-muted">
+              {isDetecting ? <Loader2 className="h-5 w-5 animate-spin text-primary" /> : <Crosshair className="h-5 w-5 text-primary" />}
+              <span>
+                <span className="block text-sm font-bold text-primary">Use current location</span>
+                <span className="block text-xs text-muted-foreground">{locError || addressLabel || 'Using GPS'}</span>
+              </span>
+            </button>
+            <div className="relative mt-2">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input value={cityInput} onChange={e => { setCityInput(e.target.value); setShowSuggestions(true); }}
+                placeholder="Search city" className="h-10 w-full rounded-xl border border-border bg-background pl-9 pr-3 text-sm outline-none focus:border-primary" />
+            </div>
+            <div className="mt-2 max-h-56 overflow-auto">
+              {(cityInput.trim() ? filteredCities : registeredCities || []).map(city => (
+                <button key={city} type="button" onClick={() => selectCity(city)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-medium hover:bg-muted">
+                  <MapPin className="h-4 w-4 text-primary" /> {city}
+                </button>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+
         <section className="rounded-2xl border border-border bg-card p-5 shadow-soft md:p-6">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
@@ -133,39 +187,6 @@ export default function CustomerDashboard() {
           </div>
         </div>
 
-        <div className="relative">
-          <MapPin className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
-          <input
-            value={cityInput}
-            onChange={event => {
-              setCityInput(event.target.value);
-              setShowSuggestions(true);
-              if (!event.target.value.trim()) {
-                setSelectedCity(null);
-                localStorage.removeItem(CITY_PERSIST_KEY);
-              }
-            }}
-            onFocus={() => setShowSuggestions(true)}
-            onBlur={() => window.setTimeout(() => setShowSuggestions(false), 200)}
-            placeholder="Choose your city"
-            className="h-12 w-full rounded-xl border border-border bg-card pl-11 pr-10 text-sm font-medium outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
-          />
-          {cityInput && (
-            <button type="button" aria-label="Clear city" onClick={clearCity} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-              <X className="h-4 w-4" />
-            </button>
-          )}
-          {showSuggestions && filteredCities.length > 0 && (
-            <div className="absolute top-full z-40 mt-2 w-full overflow-hidden rounded-xl border border-border bg-card shadow-soft">
-              {filteredCities.map(city => (
-                <button key={city} type="button" onMouseDown={() => selectCity(city)} className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-medium hover:bg-muted">
-                  <MapPin className="h-4 w-4 text-primary" /> {city}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
         <section>
           <div className="mb-3 flex items-end justify-between gap-3">
             <div>
@@ -175,10 +196,11 @@ export default function CustomerDashboard() {
             <Link to="/customer/browse" className="shrink-0 text-sm font-semibold text-primary hover:underline">See all</Link>
           </div>
 
-          {!selectedCity ? (
+          {!selectedCity && !coords ? (
             <div className="rounded-xl border border-border bg-card py-12 text-center">
               <MapPin className="mx-auto h-8 w-8 text-primary" />
-              <p className="mt-3 font-semibold">Choose your city to see nearby places</p>
+              <p className="mt-3 font-semibold">Allow location or choose your city to see nearby places</p>
+              <button type="button" onClick={requestLiveLocation} className="mt-3 text-sm font-semibold text-primary hover:underline">Use current location</button>
             </div>
           ) : isLoading ? (
             <div className="grid gap-4 sm:grid-cols-2">{Array.from({ length: 4 }).map((_, index) => <RestaurantCardSkeleton key={index} />)}</div>
@@ -186,7 +208,7 @@ export default function CustomerDashboard() {
             <EmptyState icon={<Store className="h-7 w-7 text-muted-foreground" />} title={`No ${activeCategory.tagline.toLowerCase()} found`} description={search ? "Try another name." : "Nothing in this category in your city yet."} />
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
-              {filteredRestaurants.map(restaurant => <RestaurantCard key={restaurant.id} restaurant={restaurant} />)}
+              {filteredRestaurants.map(({ r, d }) => <RestaurantCard key={r.id} restaurant={r} distanceKm={d} />)}
             </div>
           )}
         </section>

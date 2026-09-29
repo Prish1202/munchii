@@ -10,13 +10,14 @@ import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import logoAsset from '@/assets/munchii-blue-logo.png.asset.json';
+import { FullScreenLoader } from '@/components/FullScreenLoader';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { login, isAuthenticated, user } = useAuth();
+  const { login, isAuthenticated, user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const from = searchParams.get('from');
@@ -34,6 +35,8 @@ export default function LoginPage() {
     if (error) toast.error(error);
     setIsLoading(false);
   };
+
+  if (authLoading || (isAuthenticated && user)) return <FullScreenLoader />;
 
   return (
     <div className={`min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden ${from === 'restaurant' ? 'restaurant-theme' : ''}`}>

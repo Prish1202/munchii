@@ -13,6 +13,8 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { NativePushInit } from "@/components/NativePushInit";
 import { OfflineBanner } from "@/components/OfflineBanner";
+import { RatingPrompt } from "@/components/RatingPrompt";
+import { LocationPrompt } from "@/components/LocationPrompt";
 
 // Pages
 import Index from "./pages/Index";
@@ -116,6 +118,8 @@ const App = () => {
           <BrowserRouter>
             <RouteSeo />
             <NativePushInit />
+            <RatingPrompt />
+            <LocationPrompt />
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<RoleSelect />} />
