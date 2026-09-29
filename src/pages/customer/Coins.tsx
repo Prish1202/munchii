@@ -67,21 +67,6 @@ export default function Coins() {
           </div>
           <p className="text-xs mt-2 opacity-80">1 point = ₹1 • Redeem on your next order</p>
 
-          <div className="mt-5 space-y-2.5">
-            <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-foreground/75">
-              <span>Reward Level</span>
-              <span>{Math.min(balance, 500)}/500</span>
-            </div>
-            <div className="h-3 rounded-full bg-primary-foreground/20 overflow-hidden">
-              <motion.div
-                className="h-full rounded-full bg-primary-foreground"
-                initial={{ width: 0 }}
-                animate={{ width: `${Math.min((balance / 500) * 100, 100)}%` }}
-                transition={{ duration: 0.8, ease: 'easeOut' }}
-              />
-            </div>
-            <p className="text-xs text-primary-foreground/80">Keep ordering to unlock the next badge tier faster.</p>
-          </div>
 
           <div className="grid grid-cols-3 gap-3 mt-5">
             {[

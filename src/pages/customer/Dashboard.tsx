@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronDown, Coins, Crosshair, Loader2, MapPin, Search, Store, Timer } from 'lucide-react';
+import { ChevronDown, Crosshair, Loader2, MapPin, Search, Store } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useLocation } from '@/contexts/LocationContext';
 import { distanceKm } from '@/lib/geo';
@@ -18,6 +18,12 @@ import { MERCHANT_TYPES, MerchantType } from '@/lib/merchantTerms';
 
 const CITY_PERSIST_KEY = 'foodyzone_dashboard_city';
 const CATEGORY_KEY = 'munchii_home_category';
+
+const SEARCH_PLACEHOLDERS: Record<MerchantType, string> = {
+  restaurant: 'Search restaurants or dishes',
+  canteen: 'Search campus canteens or meals',
+  grocery: 'Search grocery stores or essentials',
+};
 
 export default function CustomerDashboard() {
   const { user } = useAuth();
@@ -152,15 +158,6 @@ export default function CustomerDashboard() {
             </Link>
           </div>
 
-          <div className="mt-5 relative">
-            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary" />
-            <input
-              value={search}
-              onChange={event => setSearch(event.target.value)}
-              placeholder={category === 'grocery' ? 'Search stores or products' : 'Search restaurants or food'}
-              className="h-13 w-full rounded-xl border border-border bg-background pl-12 pr-4 text-sm font-medium outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/15"
-            />
-          </div>
         </section>
 
         <div className="grid grid-cols-3 gap-2" role="tablist" aria-label="Category">
@@ -174,17 +171,15 @@ export default function CustomerDashboard() {
           ))}
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
-            <Timer className="h-5 w-5 text-primary" />
-            <p className="mt-2 font-display text-sm font-bold">Pre-order & Pickup</p>
-            <p className="mt-1 text-xs text-muted-foreground">Choose a ready-time window and skip the queue.</p>
-          </div>
-          <div className="rounded-xl border border-coin/30 bg-coin/10 p-4">
-            <Coins className="h-5 w-5 text-coin-foreground" />
-            <p className="mt-2 font-display text-sm font-bold">Earn 3% Coins</p>
-            <p className="mt-1 text-xs text-muted-foreground">On every completed order.</p>
-          </div>
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary" />
+          <input
+            value={search}
+            onChange={event => setSearch(event.target.value)}
+            placeholder={SEARCH_PLACEHOLDERS[category]}
+            aria-label={SEARCH_PLACEHOLDERS[category]}
+            className="h-13 w-full rounded-xl border border-border bg-background pl-12 pr-4 text-sm font-medium outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/15"
+          />
         </div>
 
         <section>
@@ -196,13 +191,7 @@ export default function CustomerDashboard() {
             <Link to="/customer/browse" className="shrink-0 text-sm font-semibold text-primary hover:underline">See all</Link>
           </div>
 
-          {!selectedCity && !coords ? (
-            <div className="rounded-xl border border-border bg-card py-12 text-center">
-              <MapPin className="mx-auto h-8 w-8 text-primary" />
-              <p className="mt-3 font-semibold">Allow location or choose your city to see nearby places</p>
-              <button type="button" onClick={requestLiveLocation} className="mt-3 text-sm font-semibold text-primary hover:underline">Use current location</button>
-            </div>
-          ) : isLoading ? (
+          {isLoading ? (
             <div className="grid gap-4 sm:grid-cols-2">{Array.from({ length: 4 }).map((_, index) => <RestaurantCardSkeleton key={index} />)}</div>
           ) : filteredRestaurants.length === 0 ? (
             <EmptyState icon={<Store className="h-7 w-7 text-muted-foreground" />} title={`No ${activeCategory.tagline.toLowerCase()} found`} description={search ? "Try another name." : "Nothing in this category in your city yet."} />

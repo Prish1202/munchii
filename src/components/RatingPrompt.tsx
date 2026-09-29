@@ -4,8 +4,8 @@ import { Star, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 
-// TODO: replace with the real Play Store listing once published.
-export const PLAY_STORE_URL = 'https://google.com';
+export const PLAY_STORE_URL =
+  'https://play.google.com/store/apps/details?id=co.median.android.qdozdjm';
 
 const DONE_KEY = 'munchii_rating_done';
 const PENDING_KEY = 'munchii_rating_pending';

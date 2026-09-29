@@ -6,7 +6,7 @@ export const PUBLIC_BASE_URL = 'https://munchii.in';
 export const APP_SCHEME = 'munchii';
 
 export const PLAY_STORE_URL =
-  'https://play.google.com/store/apps/details?id=in.munchii.app';
+  'https://play.google.com/store/apps/details?id=co.median.android.qdozdjm';
 
 /** Public shareable profile link (goes through the /u interstitial). */
 export function profileShareUrl(userId: string): string {
