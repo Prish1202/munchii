@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronDown, Coins, Crosshair, Loader2, MapPin, Search, Store, Timer } from 'lucide-react';
+import { ChevronDown, Crosshair, Loader2, MapPin, Search, Store } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useLocation } from '@/contexts/LocationContext';
 import { distanceKm } from '@/lib/geo';
@@ -18,6 +18,12 @@ import { MERCHANT_TYPES, MerchantType } from '@/lib/merchantTerms';
 
 const CITY_PERSIST_KEY = 'foodyzone_dashboard_city';
 const CATEGORY_KEY = 'munchii_home_category';
+
+const SEARCH_PLACEHOLDERS: Record<MerchantType, string> = {
+  restaurant: 'Search restaurants or dishes',
+  canteen: 'Search campus canteens or meals',
+  grocery: 'Search grocery stores or essentials',
+};
 
 export default function CustomerDashboard() {
   const { user } = useAuth();
