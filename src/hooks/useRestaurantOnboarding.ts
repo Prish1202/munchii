@@ -29,6 +29,8 @@ export interface RestaurantWithStatus {
   name: string;
   address: string;
   city: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   is_active: boolean;
   verification_status: string;
   fssai_license: string | null;
