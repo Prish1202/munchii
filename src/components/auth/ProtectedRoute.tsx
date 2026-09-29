@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserRole, ROLE_ROUTES } from '@/types/auth';
+import { FullScreenLoader } from '@/components/FullScreenLoader';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -11,13 +12,7 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
   const { user, isAuthenticated, isLoading } = useAuth();
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
-      </div>
-    );
-  }
+  if (isLoading) return <FullScreenLoader />;
 
   // Not authenticated - redirect to login
   if (!isAuthenticated || !user) {

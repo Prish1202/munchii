@@ -142,6 +142,8 @@ export function useSaveRestaurantDetails() {
       university_name?: string;
       opening_hours: string;
       closing_hours: string;
+      latitude: number;
+      longitude: number;
     }) => {
       const { fssai_license, gst_number, shop_license, store_category, ...restaurantFields } = details;
 

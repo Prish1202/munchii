@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ROLE_LANDING } from '@/types/auth';
 import { Card } from '@/components/ui/card';
 import logoAsset from '@/assets/munchii-blue-logo.png.asset.json';
+import { FullScreenLoader } from '@/components/FullScreenLoader';
 
 export default function RoleSelect() {
   const { isAuthenticated, user, isLoading } = useAuth();
@@ -16,6 +17,8 @@ export default function RoleSelect() {
       navigate(ROLE_LANDING[user.role], { replace: true });
     }
   }, [isLoading, isAuthenticated, user, navigate]);
+
+  if (isLoading || (isAuthenticated && user)) return <FullScreenLoader />;
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">

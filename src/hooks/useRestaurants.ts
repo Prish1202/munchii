@@ -12,6 +12,8 @@ export interface Restaurant {
   photo_url?: string | null;
   preparation_buffer_minutes: number;
   merchant_type?: string;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export interface MenuItem {

@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { UserRole, UserWithRole, AuthState, ROLE_ROUTES } from '@/types/auth';
 import { useNavigate } from 'react-router-dom';
 import { PUBLIC_BASE_URL } from '@/lib/appLinks';
+import { recordLoginForRating } from '@/components/RatingPrompt';
 
 interface AuthContextType extends AuthState {
   login: (identifier: string, password: string) => Promise<{ error: string | null }>;
@@ -95,6 +96,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (identifier: string, password: string): Promise<{ error: string | null }> => {
+    const res = await doLogin(identifier, password);
+    if (!res.error) recordLoginForRating();
+    return res;
+  };
+
+  const doLogin = async (identifier: string, password: string): Promise<{ error: string | null }> => {
     const id = identifier.trim();
 
     // Email login
