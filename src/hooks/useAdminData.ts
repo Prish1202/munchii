@@ -144,7 +144,7 @@ export function useAdminRestaurantPayoutSummary() {
         }
         const r = restaurantMap[rId];
         r.completedOrders++;
-        const itemTotal = Math.max(Number(order.total_amount) - 4, 0);
+        const itemTotal = Math.max(Number(order.total_amount) - 3, 0);
         const commission = Math.round(itemTotal * 0.10 * 100) / 100;
         const restaurantShare = itemTotal - commission;
         r.totalRevenue += Number(order.total_amount);
