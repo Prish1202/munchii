@@ -627,7 +627,7 @@ export default function Index() {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {[
-              { icon: IndianRupee, title: 'Platform Fee', desc: 'Only ₹4/- on every order', gradient: 'gradient-primary' },
+              { icon: IndianRupee, title: 'Platform Fee', desc: 'Only ₹3/- on every order', gradient: 'gradient-primary' },
               { icon: Store, title: 'Vendor Onboarding', desc: 'FREE onboarding for all vendors', gradient: 'gradient-royal' },
               { icon: Utensils, title: 'Food Pricing', desc: 'Set by individual vendors on their food items', gradient: 'gradient-coin' },
               { icon: CreditCard, title: 'Payment', desc: 'INR only via UPI / Card / Net Banking', gradient: 'gradient-social' },

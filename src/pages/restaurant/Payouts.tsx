@@ -24,7 +24,7 @@ export default function RestaurantPayouts() {
   // Order details from summary
   const orderBreakdown = useMemo(() => {
     if (!payoutSummary?.completedOrders) return [];
-    const platformFee = 4;
+    const platformFee = 3;
     return payoutSummary.completedOrders.map((order: any) => {
       const itemTotal = Math.max(Number(order.total_amount) - platformFee, 0);
       const commission = Math.round(itemTotal * 0.10 * 100) / 100;
@@ -117,7 +117,7 @@ export default function RestaurantPayouts() {
             <div>
               <p className="text-sm font-medium">How Payouts Work</p>
               <p className="text-xs text-muted-foreground">
-                90% of item price (after ₹4 platform fee &amp; 10% commission) is credited to your payout after order completion. Settlements are processed weekly.
+                90% of item price (after ₹3 platform fee &amp; 10% commission) is credited to your payout after order completion. Settlements are processed weekly.
               </p>
             </div>
           </div>

@@ -29,7 +29,7 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
   const [editingPayout, setEditingPayout] = useState<any>(null);
   const [newPayoutStatus, setNewPayoutStatus] = useState('');
   const [payoutNotes, setPayoutNotes] = useState('');
-  const platformFee = 4;
+  const platformFee = 3;
 
   // Fetch completed orders with order_items for detailed breakdown
   const { data: orders, isLoading: loadingOrders } = useQuery({
@@ -230,7 +230,7 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
           <CardTitle className="text-base flex items-center gap-2">
             <CalendarDays className="w-4 h-4" /> Per-Order Breakdown
           </CardTitle>
-          <p className="text-xs text-muted-foreground">Item price, ₹4 platform fee, 10% commission for each order</p>
+          <p className="text-xs text-muted-foreground">Item price, ₹3 platform fee, 10% commission for each order</p>
         </CardHeader>
         <CardContent className="p-0">
           {loadingOrders ? (
@@ -247,7 +247,7 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
                     <TableHead>Items</TableHead>
                     <TableHead className="text-right">Order ₹</TableHead>
                     <TableHead className="text-right">Item Total</TableHead>
-                    <TableHead className="text-right">₹4 Fee</TableHead>
+                    <TableHead className="text-right">₹3 Fee</TableHead>
                     <TableHead className="text-right">10% Comm.</TableHead>
                     <TableHead className="text-right">Net</TableHead>
                     <TableHead>Paid?</TableHead>
@@ -482,7 +482,7 @@ export default function AdminPayouts() {
         <Card className="rounded-2xl">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2"><Store className="w-4 h-4" /> Restaurants</CardTitle>
-            <p className="text-xs text-muted-foreground">Tap a restaurant to see per-order breakdown with item price, ₹4 fee, 10% commission</p>
+            <p className="text-xs text-muted-foreground">Tap a restaurant to see per-order breakdown with item price, ₹3 fee, 10% commission</p>
           </CardHeader>
           <CardContent className="p-0">
             {summaryLoading ? (

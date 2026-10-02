@@ -300,7 +300,7 @@ export function useMyPayoutSummary() {
   return useQuery({
     queryKey: ['my-payout-summary', restaurant?.id],
     queryFn: async () => {
-      const platformFee = 4;
+      const platformFee = 3;
 
       // Get completed orders with payment method
       const { data: completedOrders } = await supabase

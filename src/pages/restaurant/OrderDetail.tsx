@@ -46,7 +46,7 @@ export default function RestaurantOrderDetail() {
   const config = order ? STATUS_CONFIG[order.status] : null;
   const { data: _mr } = useMyRestaurant();
   const rl = (t: string) => (isGrocery((_mr as any)?.merchant_type) ? t.replace('Preparing', 'Packing') : t);
-  const platformFee = 4;
+  const platformFee = 3;
   const itemTotal = order ? Math.max(Number(order.total_amount) - platformFee, 0) : 0;
   const isCOD = order?.payment_method === 'cod';
   const isNew = order?.status === 'placed';
