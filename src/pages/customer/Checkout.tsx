@@ -20,7 +20,7 @@ const PAYMENT_METHODS = [
   { id: 'razorpay', label: 'Pay Online (UPI / Card)', icon: CreditCard },
 ];
 
-const PLATFORM_FEE = 4;
+const PLATFORM_FEE = 3;
 
 export default function Checkout() {
   const navigate = useNavigate();

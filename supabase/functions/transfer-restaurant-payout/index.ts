@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const platformFee = 4;
+    const platformFee = 3;
     const itemTotal = Math.max(order.total_amount - platformFee, 0);
     const commission = Math.round(itemTotal * 0.10 * 100) / 100;
     const restaurantAmount = itemTotal - commission;

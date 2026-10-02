@@ -35,7 +35,7 @@ export default function RestaurantDashboard() {
     return orderDate === new Date().toDateString();
   }) || [];
 
-  const platformFee = 4;
+  const platformFee = 3;
   const todayRevenue = todayOrders
     .filter(o => o.status === 'completed')
     .reduce((sum, o) => {

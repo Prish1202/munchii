@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
       .eq('order_id', orderId)
 
     // Calculate coins earned
-    const platformFee = 4
+    const platformFee = 3
     const itemTotal = Math.max(Number(order.total_amount) - platformFee, 0)
     const coinsEarned = Math.round(itemTotal * 0.03)
 

@@ -23,7 +23,7 @@ export default function Cart() {
     setSelectedPickupTime,
   } = useCart();
 
-  const platformFee = 4;
+  const platformFee = 3;
   const grandTotal = totalAmount + platformFee;
   const estimatedPoints = Math.round(totalAmount * 0.03);
 

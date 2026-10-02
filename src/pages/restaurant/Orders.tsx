@@ -155,8 +155,8 @@ function OrderCard({ order, onUpdateStatus, isUpdating, compact = false }: { ord
   const paymentInfo = PAYMENT_LABELS[(order as any).payment_method || 'cod'] || PAYMENT_LABELS.cod;
   const PaymentIcon = paymentInfo.icon;
 
-  // Restaurant sees item amount (excluding ₹5 platform fee)
-  const platformFee = 4;
+  // Restaurant sees item amount (excluding ₹3 platform fee)
+  const platformFee = 3;
   const itemTotal = Math.max(Number(order.total_amount) - platformFee, 0);
   const orderItems = order.order_items?.map(item => `${item.quantity}x ${item.menu_item?.name || 'Item'}`).join(', ') || 'No items';
 
