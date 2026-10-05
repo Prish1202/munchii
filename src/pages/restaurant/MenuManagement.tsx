@@ -27,7 +27,6 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
-  ArrowLeft, 
   Plus, 
   Pencil, 
   Trash2,
