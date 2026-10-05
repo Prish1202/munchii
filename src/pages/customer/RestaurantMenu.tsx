@@ -1,3 +1,4 @@
+import { outletClosedLabel } from '@/lib/outletHours';
 import { useState, useMemo, useEffect } from 'react';
 import { applySeo, SITE_URL } from '@/components/seo/Seo';
 import { useParams, Link } from 'react-router-dom';
@@ -74,6 +75,7 @@ export default function RestaurantMenu() {
   };
 
   const handleAddItem = (item: any, opt?: { label: string; price: number }) => {
+    if ((restaurant as any)?.is_active === false) { toast.error('This outlet is offline right now.'); return; }
     const discount = (item as any).discount_percent || 0;
     const basePrice = opt ? Number(opt.price) : item.price;
     const effectivePrice = discount > 0 ? basePrice * (1 - discount / 100) : basePrice;
@@ -140,6 +142,8 @@ export default function RestaurantMenu() {
     );
   }
 
+  const closedLabel = outletClosedLabel(restaurant as any);
+
   if (!restaurant) {
     return (
       <DashboardLayout>
@@ -192,6 +196,13 @@ export default function RestaurantMenu() {
             </div>
           </div>
         </div>
+
+        {closedLabel && (
+          <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm">
+            <p className="font-semibold text-destructive">{closedLabel}</p>
+            <p className="text-muted-foreground">{closedLabel === 'Offline' ? 'This outlet is not taking orders right now.' : 'You can only pick a pickup time when the outlet is open.'}</p>
+          </div>
+        )}
 
         {/* Menu header with search + filter */}
         <div className="flex items-center gap-2 mb-4">
