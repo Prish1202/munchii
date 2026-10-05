@@ -14,7 +14,7 @@ import { useRestaurantOrders, useUpdateOrderStatus, RestaurantOrder } from '@/ho
 import { useMyRestaurant } from '@/hooks/useMenuManagement';
 import { OrderStatus } from '@/hooks/useOrders';
 import { 
-  ArrowLeft, Check, X, ChefHat, Package, Clock, User, ShoppingBag, Banknote, CreditCard, Wallet
+  Check, X, ChefHat, Package, Clock, User, ShoppingBag, Banknote, CreditCard, Wallet
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { formatPickupWindow } from '@/lib/pickupWindows';
