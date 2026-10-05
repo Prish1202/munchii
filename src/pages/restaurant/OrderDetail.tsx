@@ -10,7 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { useRestaurantOrders, useUpdateOrderStatus } from '@/hooks/useRestaurantOrders';
 import { OrderStatus } from '@/hooks/useOrders';
-import { ArrowLeft, Clock, User, Phone, Banknote, Wallet, CreditCard, ChefHat, ShoppingBag, Package, Check, X, KeyRound, Loader2 } from 'lucide-react';
+import { ArrowLeft, Clock, User, Phone, Banknote, Wallet, CreditCard, ChefHat, ShoppingBag, Check, X, KeyRound, Loader2 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -45,7 +45,7 @@ export default function RestaurantOrderDetail() {
   const order = orders?.find(o => o.id === orderId);
   const config = order ? STATUS_CONFIG[order.status] : null;
   const { data: _mr } = useMyRestaurant();
-  const rl = (t: string) => (isGrocery((_mr as any)?.merchant_type) ? t.replace('Preparing', 'Packing') : t);
+  const rl = (t: string) => (isGrocery((_mr as any)?.merchant_type) ? t.replace('Preparing', 'Picking & Packing').replace('Start Picking & Packing', 'Start picking') : t);
   const platformFee = 3;
   const itemTotal = order ? Math.max(Number(order.total_amount) - platformFee, 0) : 0;
   const isCOD = order?.payment_method === 'cod';
@@ -237,15 +237,15 @@ export default function RestaurantOrderDetail() {
           <div className="flex gap-3">
             {isNew ? (
               <>
-                <Button variant="outline" className="flex-1 border-destructive text-destructive hover:bg-destructive/10" onClick={() => handleUpdateStatus('cancelled')} disabled={updateStatus.isPending}>
+                <Button variant="ghost" className="shrink-0 text-destructive hover:text-destructive" onClick={() => handleUpdateStatus('cancelled')} disabled={updateStatus.isPending}>
                   <X className="w-4 h-4 mr-2" /> Reject
                 </Button>
-                <Button className="flex-1 bg-secondary hover:bg-secondary/90 text-secondary-foreground" onClick={() => handleUpdateStatus('accepted')} disabled={updateStatus.isPending}>
-                  <Check className="w-4 h-4 mr-2" /> Accept
+                <Button className="flex-1" onClick={() => handleUpdateStatus('accepted')} disabled={updateStatus.isPending}>
+                  <Check className="w-4 h-4 mr-2" /> Accept order
                 </Button>
               </>
             ) : config?.nextStatus ? (
-              <Button className="w-full bg-restaurant hover:bg-restaurant/90" onClick={() => handleUpdateStatus(config.nextStatus!)} disabled={updateStatus.isPending}>
+              <Button className="w-full" onClick={() => handleUpdateStatus(config.nextStatus!)} disabled={updateStatus.isPending}>
                 {order.status === 'accepted' && <ChefHat className="w-4 h-4 mr-2" />}
                 {order.status === 'preparing' && <ShoppingBag className="w-4 h-4 mr-2" />}
                 {rl(config.nextLabel || '')}

@@ -29,24 +29,26 @@ export function PauseOrdersControl({ restaurant, update }: { restaurant: any; up
     update({ max_orders_per_slot: Math.max(1, (restaurant.max_orders_per_slot ?? 10) + d) });
 
   return (
-    <Card className={paused ? 'rounded-lg border-destructive' : 'rounded-lg border-primary/20'}>
-      <CardContent className="p-4 space-y-3">
+    <Card className={paused ? 'rounded-lg border-destructive/60' : 'rounded-lg border-primary/30'}>
+      <CardContent className="space-y-4 p-4">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="font-semibold flex items-center gap-2">
+            <p className="flex items-center gap-2 font-semibold">
               {paused ? <PauseCircle className="w-4 h-4 text-destructive" /> : <PlayCircle className="w-4 h-4 text-primary" />}
               {paused ? 'Orders paused' : 'Accepting orders'}
             </p>
             <p className="text-xs text-muted-foreground">
-              {restaurant.orders_paused_indefinitely ? 'Until you reopen' : paused && until ? `Reopens at ${until.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : 'Rush control'}
+              {restaurant.orders_paused_indefinitely ? 'Paused until you reopen' : paused && until ? `Automatically reopens at ${until.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : 'Customers can place pickup orders'}
             </p>
           </div>
-          {paused && <Button size="sm" onClick={() => update({ orders_paused_indefinitely: false, orders_paused_until: null })}>Accept orders</Button>}
+          {paused && <Button size="sm" onClick={() => update({ orders_paused_indefinitely: false, orders_paused_until: null })}>Accepting orders</Button>}
         </div>
         {!paused && (
-          <div className="grid grid-cols-4 gap-2">
-            {[10, 20, 30].map((m) => <Button key={m} variant="outline" size="sm" onClick={() => pause(m)}>{m} min</Button>)}
-            <Button variant="outline" size="sm" onClick={() => pause(null)}>Until reopen</Button>
+          <div className="space-y-2">
+            <Button variant="destructive" className="w-full" onClick={() => pause(null)}><PauseCircle className="mr-2 h-4 w-4" />Pause orders</Button>
+            <div className="grid grid-cols-3 gap-2">
+              {[10, 20, 30].map((m) => <Button key={m} variant="outline" size="sm" onClick={() => pause(m)}>Pause {m} min</Button>)}
+            </div>
           </div>
         )}
         <div className="flex items-center justify-between rounded-lg bg-muted p-2">

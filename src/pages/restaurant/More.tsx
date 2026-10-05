@@ -5,7 +5,6 @@ import {
   ChevronRight,
   CircleHelp,
   CreditCard,
-  Settings,
   ShieldCheck,
   SlidersHorizontal,
   UserRound,

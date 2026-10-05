@@ -184,14 +184,10 @@ export default function MenuManagement() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 pb-20 md:pb-0">
+      <div className="mx-auto max-w-3xl space-y-6 pb-24 md:pb-8">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <Link to="/restaurant" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-2">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Dashboard
-            </Link>
             <h1 className="text-2xl font-display font-bold">{terms.catalog}</h1>
             <p className="text-muted-foreground">Availability, pricing and {grocery ? 'product options' : 'preparation time'}.</p>
           </div>
@@ -215,7 +211,7 @@ export default function MenuManagement() {
                 <form onSubmit={handleAddItem} className="space-y-4">
                   {/* Image Upload */}
                   <div className="space-y-2">
-                    <Label>Food Image <span className="text-destructive">*</span></Label>
+                    <Label>{grocery ? 'Product' : 'Food'} image <span className="text-destructive">*</span></Label>
                     <input ref={addFileRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'add')} />
                     {newItem.image_url ? (
                       <div className="relative rounded-xl overflow-hidden">
@@ -227,12 +223,12 @@ export default function MenuManagement() {
                     ) : (
                       <button type="button" onClick={() => addFileRef.current?.click()} disabled={uploading} className="w-full h-40 border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary hover:text-primary transition-colors">
                         <ImagePlus className="w-8 h-8" />
-                        <span className="text-sm">{uploading ? 'Uploading...' : 'Upload Food Image'}</span>
+                        <span className="text-sm">{uploading ? 'Uploading...' : `Upload ${grocery ? 'product' : 'food'} image`}</span>
                       </button>
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="name">Item Name <span className="text-destructive">*</span></Label>
+                    <Label htmlFor="name">{terms.item} name <span className="text-destructive">*</span></Label>
                     <Input id="name" placeholder="e.g., Butter Chicken" value={newItem.name} onChange={(e) => setNewItem(prev => ({ ...prev, name: e.target.value }))} required className="rounded-xl" />
                   </div>
                   <div className="space-y-2">
@@ -254,7 +250,7 @@ export default function MenuManagement() {
                   )}
                   <div className="space-y-2">
                     <Label htmlFor="description">Description <span className="text-muted-foreground text-xs">(optional)</span></Label>
-                    <Textarea id="description" placeholder="Describe the dish..." value={newItem.description} onChange={(e) => setNewItem(prev => ({ ...prev, description: e.target.value }))} className="rounded-xl resize-none" rows={2} />
+                    <Textarea id="description" placeholder={grocery ? 'Describe the product…' : 'Describe the dish…'} value={newItem.description} onChange={(e) => setNewItem(prev => ({ ...prev, description: e.target.value }))} className="rounded-xl resize-none" rows={2} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="discount">Discount % <span className="text-muted-foreground text-xs">(optional)</span></Label>
@@ -267,7 +263,7 @@ export default function MenuManagement() {
                     <p className="text-xs text-muted-foreground">Shown to customers as ~N min and used to offer pickup windows.</p>
                   </div>}
                   <Button type="submit" className="w-full rounded-xl gradient-primary text-primary-foreground" disabled={createItem.isPending || uploading}>
-                    {createItem.isPending ? 'Adding...' : 'Add Item'}
+                    {createItem.isPending ? 'Adding...' : `Add ${terms.item}`}
                   </Button>
                 </form>
               </DialogContent>
@@ -282,7 +278,7 @@ export default function MenuManagement() {
               onClick={() => setActiveCategory('all')}
               className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${activeCategory === 'all' ? 'bg-primary text-primary-foreground' : 'bg-card border border-border text-muted-foreground hover:text-foreground'}`}
             >
-              All Items
+              All {terms.catalog}
             </button>
             {categories.map(cat => (
               <button
@@ -332,7 +328,7 @@ export default function MenuManagement() {
             {filteredItems?.map((item) => {
               const catName = getCategoryName(item.category_id);
               return (
-                <Card key={item.id} className={`rounded-2xl ${!item.available ? 'opacity-60' : ''}`}>
+            <Card key={item.id} className={`rounded-lg ${!item.available ? 'opacity-60' : ''}`}>
                   <CardContent className="p-3">
                     <div className="flex gap-3">
                       {item.image_url && (

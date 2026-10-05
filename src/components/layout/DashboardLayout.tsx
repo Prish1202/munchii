@@ -164,7 +164,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           {!isCustomer && (
             <button
               onClick={logout}
-              className="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-sm font-medium text-destructive hover:bg-destructive/10 transition-all duration-200 mt-4"
+              className="flex items-center gap-3 px-3.5 py-3 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 transition-all duration-200 mt-4"
             >
               <LogOut className="w-5 h-5" />
               Log Out
