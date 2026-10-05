@@ -25,13 +25,16 @@ export function OutletActiveToggle({ className }: { className?: string }) {
 
   if (!restaurant) return null;
   const active = !!restaurant.is_active;
+  const displayedActive = updateStatus.isPending && typeof updateStatus.variables === 'boolean'
+    ? updateStatus.variables
+    : active;
 
   return (
     <label className={cn('flex items-center gap-2 rounded-full border bg-card px-3 py-1.5', className)}>
-      <span className={cn('h-2 w-2 rounded-full', active ? 'bg-primary' : 'bg-muted-foreground')} />
-      <span className="text-xs font-semibold">{active ? 'Outlet online' : 'Outlet offline'}</span>
+      <span className={cn('h-2 w-2 rounded-full', displayedActive ? 'bg-primary' : 'bg-muted-foreground')} />
+      <span className="text-xs font-semibold">{displayedActive ? 'Outlet online' : 'Outlet offline'}</span>
       <Switch
-        checked={updateStatus.isPending ? updateStatus.variables : active}
+        checked={displayedActive}
         disabled={updateStatus.isPending}
         onCheckedChange={checked => updateStatus.mutate(checked)}
         aria-label="Outlet active"
