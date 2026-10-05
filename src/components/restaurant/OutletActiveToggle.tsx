@@ -8,11 +8,10 @@ import { cn } from '@/lib/utils';
 export function OutletActiveToggle({ className }: { className?: string }) {
   const { data: restaurant } = useMyRestaurant();
   const queryClient = useQueryClient();
-  if (!restaurant) return null;
-  const active = !!restaurant.is_active;
 
   const updateStatus = useMutation({
     mutationFn: async (checked: boolean) => {
+      if (!restaurant) throw new Error('Outlet not found');
       const { error } = await supabase.from('restaurants').update({ is_active: checked }).eq('id', restaurant.id);
       if (error) throw error;
       return checked;
@@ -23,6 +22,9 @@ export function OutletActiveToggle({ className }: { className?: string }) {
     },
     onError: () => toast.error('Could not update outlet status'),
   });
+
+  if (!restaurant) return null;
+  const active = !!restaurant.is_active;
 
   return (
     <label className={cn('flex items-center gap-2 rounded-full border bg-card px-3 py-1.5', className)}>
