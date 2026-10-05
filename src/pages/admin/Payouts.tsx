@@ -76,7 +76,7 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
     return orders.map(order => {
       const isCod = order.payment_method === 'cod';
       const itemTotal = Math.max(Number(order.total_amount) - platformFee, 0);
-      const commission = Math.round(itemTotal * 0.10 * 100) / 100;
+      const commission = Math.round(itemTotal * 0.05 * 100) / 100;
       const netEarning = itemTotal - commission;
       const deduction = isCod ? platformFee + commission : 0;
       const isPaid = paidOrderIds.has(order.id);
@@ -136,7 +136,7 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
       const payoutRows = unpaidOrders.map(order => {
         const isCod = order.payment_method === 'cod';
         const itemTotal = Math.max(Number(order.total_amount) - platformFee, 0);
-        const comm = Math.round(itemTotal * 0.10 * 100) / 100;
+        const comm = Math.round(itemTotal * 0.05 * 100) / 100;
         const net = itemTotal - comm;
         if (isCod) {
           const deduction = platformFee + comm;
@@ -230,7 +230,7 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
           <CardTitle className="text-base flex items-center gap-2">
             <CalendarDays className="w-4 h-4" /> Per-Order Breakdown
           </CardTitle>
-          <p className="text-xs text-muted-foreground">Item price, ₹3 platform fee, 10% commission for each order</p>
+          <p className="text-xs text-muted-foreground">Item price, ₹3 platform fee, 5% commission for each order</p>
         </CardHeader>
         <CardContent className="p-0">
           {loadingOrders ? (
@@ -248,7 +248,7 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
                     <TableHead className="text-right">Order ₹</TableHead>
                     <TableHead className="text-right">Item Total</TableHead>
                     <TableHead className="text-right">₹3 Fee</TableHead>
-                    <TableHead className="text-right">10% Comm.</TableHead>
+                    <TableHead className="text-right">5% Comm.</TableHead>
                     <TableHead className="text-right">Net</TableHead>
                     <TableHead>Paid?</TableHead>
                   </TableRow>
@@ -482,7 +482,7 @@ export default function AdminPayouts() {
         <Card className="rounded-2xl">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2"><Store className="w-4 h-4" /> Restaurants</CardTitle>
-            <p className="text-xs text-muted-foreground">Tap a restaurant to see per-order breakdown with item price, ₹3 fee, 10% commission</p>
+            <p className="text-xs text-muted-foreground">Tap a restaurant to see per-order breakdown with item price, ₹3 fee, 5% commission</p>
           </CardHeader>
           <CardContent className="p-0">
             {summaryLoading ? (
