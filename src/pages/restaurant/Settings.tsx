@@ -1,21 +1,21 @@
-import { PickupCapacitySettings } from '@/components/restaurant/PickupCapacitySettings';
-import { useState, useRef } from 'react';
-import { useB2Upload } from '@/hooks/useB2Upload';
+import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTheme } from 'next-themes';
+import { Bell, Camera, ChevronRight, CircleHelp, CreditCard, Loader2, LogOut, Moon, Store, Sun, UserRound } from 'lucide-react';
+import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PickupCapacitySettings } from '@/components/restaurant/PickupCapacitySettings';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useB2Upload } from '@/hooks/useB2Upload';
 import { useMyRestaurant, useCreateRestaurant } from '@/hooks/useMenuManagement';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Store, Bell, LogOut, Moon, Sun, Camera, Loader2, CreditCard, Image } from 'lucide-react';
-import { toast } from 'sonner';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useTheme } from 'next-themes';
+import { merchantTerms } from '@/lib/merchantTerms';
 
 export default function RestaurantSettings() {
   const { data: restaurant, isLoading } = useMyRestaurant();
@@ -25,33 +25,24 @@ export default function RestaurantSettings() {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
-  
-  const [formData, setFormData] = useState({
-    name: '',
-    address: '',
-  });
+  const [formData, setFormData] = useState({ name: '', address: '' });
 
   const updateRestaurant = useMutation({
     mutationFn: async (data: Record<string, any>) => {
-      const { error } = await supabase
-        .from('restaurants')
-        .update(data)
-        .eq('id', restaurant!.id);
+      if (!restaurant?.id) throw new Error('Business not found');
+      const { error } = await supabase.from('restaurants').update(data).eq('id', restaurant.id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-restaurant'] });
       toast.success('Settings updated');
     },
-    onError: () => {
-      toast.error('Failed to update settings');
-    },
+    onError: () => toast.error('Failed to update settings'),
   });
-
   const { upload: b2Upload } = useB2Upload();
 
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (!file || !restaurant) return;
     if (file.size > 5 * 1024 * 1024) { toast.error('Image must be under 5MB'); return; }
     setUploading(true);
@@ -59,235 +50,95 @@ export default function RestaurantSettings() {
       const result = await b2Upload(file, `restaurant-photos/${restaurant.id}`);
       if (!result) throw new Error('Upload failed');
       await updateRestaurant.mutateAsync({ photo_url: result.publicUrl });
-      toast.success('Photo updated!');
-    } catch (err: any) {
-      toast.error(err.message || 'Upload failed');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Upload failed');
     } finally {
       setUploading(false);
     }
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.name.trim() || !formData.address.trim()) {
-      toast.error('Please fill all fields');
-      return;
-    }
-    await createRestaurant.mutateAsync({
-      name: formData.name.trim(),
-      address: formData.address.trim(),
-    });
+  const handleCreate = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!formData.name.trim() || !formData.address.trim()) { toast.error('Please fill all fields'); return; }
+    await createRestaurant.mutateAsync({ name: formData.name.trim(), address: formData.address.trim() });
   };
 
-  if (isLoading) {
-    return (
-      <DashboardLayout>
-        <div className="animate-pulse space-y-6 max-w-lg mx-auto">
-          <div className="h-8 w-48 bg-muted rounded" />
-          <div className="h-64 bg-muted rounded" />
-        </div>
-      </DashboardLayout>
-    );
-  }
+  if (isLoading) return <DashboardLayout><div className="mx-auto max-w-2xl space-y-4"><div className="h-24 animate-pulse rounded-lg bg-muted" /><div className="h-80 animate-pulse rounded-lg bg-muted" /></div></DashboardLayout>;
 
   if (!restaurant) {
     return (
       <DashboardLayout>
-        <div className="space-y-6 max-w-lg mx-auto px-1">
-          <div>
-            <Link to="/restaurant" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-2">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Link>
-            <h1 className="text-xl font-bold">Create Your Restaurant</h1>
-            <p className="text-sm text-muted-foreground">Set up your restaurant to start receiving orders</p>
-          </div>
-          <Card className="rounded-2xl">
-            <CardContent className="p-5">
-              <form onSubmit={handleCreate} className="space-y-5">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Restaurant Name</Label>
-                  <Input id="name" placeholder="e.g., Spice Garden" value={formData.name} onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))} required className="rounded-xl" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="address">Address</Label>
-                  <Input id="address" placeholder="e.g., 123 Food Street" value={formData.address} onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))} required className="rounded-xl" />
-                </div>
-                <Button type="submit" className="w-full rounded-xl" disabled={createRestaurant.isPending}>
-                  {createRestaurant.isPending ? 'Creating...' : 'Create Restaurant'}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+        <div className="mx-auto max-w-lg space-y-5">
+          <h1 className="text-2xl font-bold">Create your business</h1>
+          <Card className="rounded-lg"><CardContent className="p-5">
+            <form onSubmit={handleCreate} className="space-y-4">
+              <div className="space-y-2"><Label htmlFor="name">Business name</Label><Input id="name" value={formData.name} onChange={event => setFormData(previous => ({ ...previous, name: event.target.value }))} required /></div>
+              <div className="space-y-2"><Label htmlFor="address">Address</Label><Input id="address" value={formData.address} onChange={event => setFormData(previous => ({ ...previous, address: event.target.value }))} required /></div>
+              <Button type="submit" className="w-full" disabled={createRestaurant.isPending}>{createRestaurant.isPending ? 'Creating…' : 'Create business'}</Button>
+            </form>
+          </CardContent></Card>
         </div>
       </DashboardLayout>
     );
   }
 
+  const terms = merchantTerms((restaurant as any).merchant_type);
+
   return (
     <DashboardLayout>
-      <div className="space-y-4 max-w-lg mx-auto px-1 pb-24 md:pb-6">
-        <div>
-          <Link to="/restaurant" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-2">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Link>
-          <h1 className="text-xl font-bold">Restaurant Settings</h1>
-        </div>
+      <div className="mx-auto max-w-2xl space-y-6 pb-24 md:pb-8">
+        <header>
+          <p className="text-sm font-semibold text-primary">Manage</p>
+          <h1 className="text-2xl font-bold">Settings</h1>
+          <p className="text-sm text-muted-foreground">Update your {terms.business.toLowerCase()}, pickup and account preferences.</p>
+        </header>
 
-        {/* Thumbnail */}
-        <Card className="rounded-2xl">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2"><Image className="w-4 h-4" /> Outlet Thumbnail</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-muted border border-border">
-              {restaurant.photo_url ? (
-                <img src={restaurant.photo_url} alt={restaurant.name} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground">
-                  <Camera className="w-8 h-8 mb-2" />
-                  <p className="text-sm">No photo yet</p>
-                </div>
-              )}
-            </div>
-            <Button variant="outline" className="w-full rounded-xl" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
-              {uploading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Uploading...</> : <><Camera className="w-4 h-4 mr-2" /> {restaurant.photo_url ? 'Change Photo' : 'Upload Photo'}</>}
-            </Button>
-            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
-          </CardContent>
-        </Card>
-
-        {/* Restaurant Info */}
-        <Card className="rounded-2xl">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2"><Store className="w-4 h-4" /> Restaurant Profile</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Restaurant Name</Label>
-              <Input defaultValue={restaurant.name} className="rounded-xl" onBlur={(e) => {
-                if (e.target.value !== restaurant.name) updateRestaurant.mutate({ name: e.target.value });
-              }} />
-            </div>
-            <div className="space-y-2">
-              <Label>Address</Label>
-              <Input defaultValue={restaurant.address} className="rounded-xl" onBlur={(e) => {
-                if (e.target.value !== restaurant.address) updateRestaurant.mutate({ address: e.target.value });
-              }} />
-            </div>
-            <div className="space-y-2">
-
-              <Label>Kitchen Buffer (minutes)</Label>
-              <Input
-                type="number"
-                min={0}
-                max={60}
-                defaultValue={(restaurant as any).preparation_buffer_minutes ?? 5}
-                className="rounded-xl"
-                onBlur={(e) => {
-                  const next = Math.min(60, Math.max(0, parseInt(e.target.value) || 0));
-                  if (next !== ((restaurant as any).preparation_buffer_minutes ?? 5)) {
-                    updateRestaurant.mutate({ preparation_buffer_minutes: next } as any);
-                  }
-                }}
-              />
-              <p className="text-xs text-muted-foreground">
-                Added to the longest item preparation time when offering customers pickup windows.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <PickupCapacitySettings restaurant={restaurant} update={(p) => updateRestaurant.mutate(p as any)} />
-
-
-        {/* Payment Preferences */}
-        <Card className="rounded-2xl">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2"><CreditCard className="w-4 h-4" /> Accepted Payment Methods</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs text-muted-foreground mb-3">Configure which payment methods your restaurant accepts. All methods are enabled by default.</p>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium">Cash on Pickup</p>
-                  <p className="text-xs text-muted-foreground">Accept cash payments</p>
-                </div>
-                <Switch defaultChecked disabled />
+        <section id="business" className="scroll-mt-24 space-y-3">
+          <h2 className="flex items-center gap-2 text-base font-bold"><Store className="h-4 w-4 text-primary" />Business</h2>
+          <Card className="rounded-lg"><CardContent className="space-y-5 p-4">
+            <div className="flex items-center gap-4">
+              <div className="h-20 w-24 shrink-0 overflow-hidden rounded-lg border bg-muted">
+                {restaurant.photo_url ? <img src={restaurant.photo_url} alt={restaurant.name} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center"><Camera className="h-6 w-6 text-muted-foreground" /></div>}
               </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium">UPI</p>
-                  <p className="text-xs text-muted-foreground">Accept UPI payments</p>
-                </div>
-                <Switch defaultChecked disabled />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium">Card</p>
-                  <p className="text-xs text-muted-foreground">Accept card payments</p>
-                </div>
-                <Switch defaultChecked disabled />
-              </div>
-              <p className="text-[11px] text-muted-foreground">Payment method configuration is managed by the platform. Contact support for changes.</p>
+              <div><Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading}>{uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Camera className="mr-2 h-4 w-4" />}Change photo</Button><input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} /></div>
             </div>
-          </CardContent>
-        </Card>
+            <div className="space-y-2"><Label>{terms.business} name</Label><Input defaultValue={restaurant.name} onBlur={event => event.target.value !== restaurant.name && updateRestaurant.mutate({ name: event.target.value })} /></div>
+            <div className="space-y-2"><Label>Address</Label><Input defaultValue={restaurant.address} onBlur={event => event.target.value !== restaurant.address && updateRestaurant.mutate({ address: event.target.value })} /></div>
+            <div className="flex items-center justify-between border-t pt-4"><div><p className="text-sm font-semibold">Business active</p><p className="text-xs text-muted-foreground">{restaurant.is_active ? 'Visible to customers' : 'Hidden from customers'}</p></div><Switch checked={restaurant.is_active} onCheckedChange={checked => updateRestaurant.mutate({ is_active: checked })} /></div>
+          </CardContent></Card>
+        </section>
 
-        {/* Status */}
-        <Card className="rounded-2xl">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Status</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">Restaurant Active</p>
-                <p className="text-xs text-muted-foreground">
-                  {restaurant.is_active ? 'Visible to customers' : 'Hidden from customers'}
-                </p>
-              </div>
-              <Switch checked={restaurant.is_active} onCheckedChange={(checked) => updateRestaurant.mutate({ is_active: checked })} />
-            </div>
-          </CardContent>
-        </Card>
+        <section className="space-y-3">
+          <h2 className="text-base font-bold">Ordering & Pickup</h2>
+          <Card className="rounded-lg"><CardContent className="p-4"><div className="space-y-2"><Label>Preparation buffer (minutes)</Label><Input type="number" min={0} max={60} defaultValue={(restaurant as any).preparation_buffer_minutes ?? 5} onBlur={event => { const next = Math.min(60, Math.max(0, parseInt(event.target.value) || 0)); if (next !== ((restaurant as any).preparation_buffer_minutes ?? 5)) updateRestaurant.mutate({ preparation_buffer_minutes: next }); }} /><p className="text-xs text-muted-foreground">Extra time added when calculating pickup windows.</p></div></CardContent></Card>
+          <PickupCapacitySettings restaurant={restaurant} update={patch => updateRestaurant.mutate(patch as any)} />
+        </section>
 
-        {/* Notifications */}
-        <Card className="rounded-2xl">
-          <CardContent className="p-4">
-            <Link to="/restaurant/notifications">
-              <Button variant="outline" className="w-full justify-between rounded-xl">
-                <span className="flex items-center gap-2"><Bell className="w-4 h-4" /> Notifications</span>
-                <ArrowLeft className="w-4 h-4 rotate-180" />
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
+        <section id="payments" className="scroll-mt-24 space-y-3">
+          <h2 className="flex items-center gap-2 text-base font-bold"><CreditCard className="h-4 w-4 text-primary" />Payments & Payouts</h2>
+          <div className="overflow-hidden rounded-lg border bg-card">
+            <Link to="/restaurant/payouts" className="flex items-center gap-3 px-4 py-4 hover:bg-muted/50"><CreditCard className="h-5 w-5 text-primary" /><div className="flex-1"><p className="text-sm font-semibold">Earnings & payout history</p><p className="text-xs text-muted-foreground">View completed orders and settlements</p></div><ChevronRight className="h-4 w-4 text-muted-foreground" /></Link>
+            <div className="flex items-center justify-between border-t px-4 py-4"><div><p className="text-sm font-semibold">Online payments</p><p className="text-xs text-muted-foreground">UPI and cards are managed by Munchii</p></div><Switch checked disabled /></div>
+          </div>
+        </section>
 
-        {/* Appearance */}
-        <Card className="rounded-2xl">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {theme === 'dark' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-                <span className="text-sm font-medium">Dark Mode</span>
-              </div>
-              <Switch checked={theme === 'dark'} onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')} />
-            </div>
-          </CardContent>
-        </Card>
+        <section className="space-y-3">
+          <h2 className="flex items-center gap-2 text-base font-bold"><Bell className="h-4 w-4 text-primary" />Notifications</h2>
+          <div className="overflow-hidden rounded-lg border bg-card"><Link to="/restaurant/notification-settings" className="flex items-center gap-3 px-4 py-4 hover:bg-muted/50"><Bell className="h-5 w-5 text-primary" /><div className="flex-1"><p className="text-sm font-semibold">Notification preferences</p><p className="text-xs text-muted-foreground">Order alerts, sound and vibration</p></div><ChevronRight className="h-4 w-4 text-muted-foreground" /></Link></div>
+        </section>
 
-        {/* Log Out */}
-        <Card className="rounded-2xl">
-          <CardContent className="p-4">
-            <Button variant="outline" className="w-full text-destructive border-destructive/30 hover:bg-destructive/5 rounded-xl" onClick={logout}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Log Out
-            </Button>
-          </CardContent>
-        </Card>
+        <section id="account" className="scroll-mt-24 space-y-3">
+          <h2 className="flex items-center gap-2 text-base font-bold"><UserRound className="h-4 w-4 text-primary" />Account</h2>
+          <div className="overflow-hidden rounded-lg border bg-card">
+            <div className="flex items-center justify-between px-4 py-4"><div className="flex items-center gap-3">{theme === 'dark' ? <Moon className="h-5 w-5 text-primary" /> : <Sun className="h-5 w-5 text-primary" />}<span className="text-sm font-semibold">Dark mode</span></div><Switch checked={theme === 'dark'} onCheckedChange={checked => setTheme(checked ? 'dark' : 'light')} /></div>
+            <Button variant="ghost" className="h-14 w-full justify-start rounded-none border-t px-4 text-destructive hover:text-destructive" onClick={logout}><LogOut className="mr-3 h-5 w-5" />Log out</Button>
+          </div>
+        </section>
+
+        <section className="space-y-3">
+          <h2 className="flex items-center gap-2 text-base font-bold"><CircleHelp className="h-4 w-4 text-primary" />Help</h2>
+          <div className="overflow-hidden rounded-lg border bg-card"><Link to="/contact" className="flex items-center gap-3 px-4 py-4 hover:bg-muted/50"><CircleHelp className="h-5 w-5 text-primary" /><div className="flex-1"><p className="text-sm font-semibold">Contact support</p><p className="text-xs text-muted-foreground">Get help with orders, payments or your account</p></div><ChevronRight className="h-4 w-4 text-muted-foreground" /></Link></div>
+        </section>
       </div>
     </DashboardLayout>
   );

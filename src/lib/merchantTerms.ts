@@ -18,7 +18,7 @@ export function merchantTerms(t?: string | null) {
     catalog: g ? 'Products' : 'Menu',
     item: g ? 'Product' : 'Item',
     queue: g ? 'Packing queue' : 'Kitchen queue',
-    preparing: g ? 'Packing' : 'Preparing',
+    preparing: g ? 'Picking & Packing' : 'Preparing',
   };
 }
 

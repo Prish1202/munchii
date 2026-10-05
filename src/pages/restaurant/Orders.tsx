@@ -21,7 +21,7 @@ import { formatPickupWindow } from '@/lib/pickupWindows';
 import { merchantTerms } from '@/lib/merchantTerms';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; nextStatus?: OrderStatus; nextLabel?: string }> = {
-  placed: { label: 'New', color: 'bg-secondary', nextStatus: 'accepted', nextLabel: 'Accept' },
+  placed: { label: 'New', color: 'bg-primary', nextStatus: 'accepted', nextLabel: 'Accept order' },
   accepted: { label: 'Accepted', color: 'bg-accent', nextStatus: 'preparing', nextLabel: 'Start Preparing' },
   preparing: { label: 'Preparing', color: 'bg-primary', nextStatus: 'ready_for_pickup', nextLabel: 'Mark Ready' },
   ready_for_pickup: { label: 'Ready for Pickup', color: 'bg-primary' },
@@ -45,7 +45,8 @@ export default function RestaurantOrders() {
   const [, setTick] = useState(0);
   useEffect(() => { const id = setInterval(() => setTick(t => t + 1), 30_000); return () => clearInterval(id); }, []);
   const updateRestaurant = async (patch: Record<string, unknown>) => {
-    const { error } = await supabase.from('restaurants').update(patch as any).eq('id', restaurant!.id);
+    if (!restaurant?.id) return;
+    const { error } = await supabase.from('restaurants').update(patch as any).eq('id', restaurant.id);
     if (error) { toast.error('Could not update'); return; }
     queryClient.invalidateQueries({ queryKey: ['my-restaurant'] });
   };
@@ -59,7 +60,7 @@ export default function RestaurantOrders() {
   const readyOrders = (orders?.filter(o => o.status === 'ready_for_pickup') || []).sort(byPickup);
   const completedOrders = orders?.filter(o => ['picked_up', 'completed', 'cancelled'].includes(o.status)) || [];
   const terms = merchantTerms((restaurant as any)?.merchant_type);
-  const sections: [string, RestaurantOrder[]][] = [[`${terms.preparing} Now`, preparingOrders], ['Upcoming', upcomingOrders], ['Ready for Pickup', readyOrders]];
+  const sections: [string, RestaurantOrder[]][] = [[terms.preparing, preparingOrders], ['Upcoming', upcomingOrders], ['Ready', readyOrders]];
 
   if (!restaurant) {
     return (
@@ -74,13 +75,10 @@ export default function RestaurantOrders() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 pb-20 md:pb-0">
+      <div className="mx-auto max-w-3xl space-y-6 pb-24 md:pb-8">
         <div>
-          <Link to="/restaurant" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-2">
-            <ArrowLeft className="w-4 h-4 mr-2" />Back to Dashboard
-          </Link>
           <h1 className="text-2xl font-bold">Orders</h1>
-          <p className="text-muted-foreground">{terms.queue}, sorted by pickup window</p>
+          <p className="text-muted-foreground">Paid pickup orders, sorted by pickup time.</p>
         </div>
         <PauseOrdersControl restaurant={restaurant} update={updateRestaurant} />
 
@@ -92,7 +90,7 @@ export default function RestaurantOrders() {
           <>
             {pendingOrders.length > 0 && (
               <section>
-                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <h2 className="text-base font-bold mb-3 flex items-center gap-2">
                   <span className="relative flex h-3 w-3">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
@@ -109,7 +107,7 @@ export default function RestaurantOrders() {
 
             {sections.map(([title, list]) => list.length > 0 && (
               <section key={title}>
-                <h2 className="text-lg font-semibold mb-4">{title} ({list.length})</h2>
+                <h2 className="text-base font-bold mb-3">{title} <span className="text-muted-foreground">{list.length}</span></h2>
                 <div className="space-y-4">
                   {list.map((order) => (
                     <OrderCard key={order.id} order={order} onUpdateStatus={(status) => updateStatus.mutate({ orderId: order.id, status })} isUpdating={updateStatus.isPending} />
@@ -130,7 +128,7 @@ export default function RestaurantOrders() {
 
             {completedOrders.length > 0 && (
               <section>
-                <h2 className="text-lg font-semibold mb-4">Completed ({completedOrders.length})</h2>
+                <h2 className="text-base font-bold mb-3">Completed <span className="text-muted-foreground">{completedOrders.length}</span></h2>
                 <div className="space-y-4">
                   {completedOrders.map((order) => (<OrderCard key={order.id} order={order} compact />))}
                 </div>
@@ -146,7 +144,7 @@ export default function RestaurantOrders() {
 function OrderCard({ order, onUpdateStatus, isUpdating, compact = false }: { order: RestaurantOrder; onUpdateStatus?: (status: OrderStatus) => void; isUpdating?: boolean; compact?: boolean }) {
   const config = STATUS_CONFIG[order.status];
   const { data: _mr } = useMyRestaurant();
-  const rl = (t: string) => (isGrocery((_mr as any)?.merchant_type) ? t.replace('Preparing', 'Packing') : t);
+  const rl = (t: string) => (isGrocery((_mr as any)?.merchant_type) ? t.replace('Preparing', 'Picking & Packing').replace('Start Picking & Packing', 'Start picking') : t);
   const isNew = order.status === 'placed';
   const isCOD = (order as any).payment_method === 'cod';
   const isReadyForPickup = order.status === 'ready_for_pickup';
@@ -166,7 +164,7 @@ function OrderCard({ order, onUpdateStatus, isUpdating, compact = false }: { ord
 
   return (
     <Link to={`/restaurant/orders/${order.id}`}>
-    <Card className={`${isNew ? 'border-amber-500 shadow-lg' : ''} hover:shadow-md transition-shadow cursor-pointer`}>
+    <Card className={`rounded-lg ${isNew ? 'border-primary/50 shadow-soft' : ''} hover:border-primary/30 transition-colors cursor-pointer`}>
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-4 mb-3">
           <div>
@@ -216,7 +214,7 @@ function OrderCard({ order, onUpdateStatus, isUpdating, compact = false }: { ord
               </div>
             )}
 
-            <div className="bg-secondary/50 rounded-lg p-3 mb-4">
+            <div className="rounded-lg bg-muted p-3 mb-4">
               <p className="text-sm">{orderItems}</p>
             </div>
 
@@ -232,15 +230,15 @@ function OrderCard({ order, onUpdateStatus, isUpdating, compact = false }: { ord
               <div className="flex gap-2">
                 {isNew ? (
                   <>
-                    <Button variant="outline" className="flex-1 border-destructive text-destructive hover:bg-destructive/10" onClick={() => onUpdateStatus('cancelled')} disabled={isUpdating}>
+                    <Button variant="ghost" className="shrink-0 text-destructive hover:text-destructive" onClick={() => onUpdateStatus('cancelled')} disabled={isUpdating}>
                       <X className="w-4 h-4 mr-2" />Reject
                     </Button>
-                    <Button className="flex-1 bg-green-600 hover:bg-green-700" onClick={() => onUpdateStatus('accepted')} disabled={isUpdating}>
+                    <Button className="flex-1" onClick={() => onUpdateStatus('accepted')} disabled={isUpdating}>
                       <Check className="w-4 h-4 mr-2" />Accept
                     </Button>
                   </>
                 ) : isReadyForPickup ? null : config.nextStatus ? (
-                  <Button className="w-full bg-restaurant hover:bg-restaurant/90" onClick={() => onUpdateStatus(config.nextStatus!)} disabled={isUpdating}>
+                  <Button className="w-full" onClick={() => config.nextStatus && onUpdateStatus(config.nextStatus)} disabled={isUpdating}>
                     {order.status === 'accepted' && <ChefHat className="w-4 h-4 mr-2" />}
                     {order.status === 'preparing' && <ShoppingBag className="w-4 h-4 mr-2" />}
                     {!isCOD && order.status === 'ready_for_pickup' && <Package className="w-4 h-4 mr-2" />}
