@@ -122,7 +122,7 @@ export default function ProfileSettings() {
     if (!pendingFile || !user?.id) return;
     setUploading(true);
     try {
-      const result = await b2Upload(pendingFile, `avatars/${user.id}`);
+      const result = await b2Upload(pendingFile, `avatars/${user.id}`, { imagePurpose: 'avatar' });
       if (!result) throw new Error('Upload failed');
       await updateProfile.mutateAsync({ avatar_url: result.publicUrl });
       toast.success('Profile picture updated!');

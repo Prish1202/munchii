@@ -1,6 +1,12 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { uploadToB2, B2UploadResult } from '@/lib/b2Upload';
+import { ImagePurpose, optimizeImageForUpload } from '@/lib/mediaProcessing';
+
+interface UploadOptions {
+  customFileName?: string;
+  imagePurpose?: ImagePurpose;
+}
 
 export function useB2Upload() {
   const [isUploading, setIsUploading] = useState(false);
@@ -9,14 +15,17 @@ export function useB2Upload() {
   const upload = useCallback(async (
     file: File,
     folder: string,
-    customFileName?: string,
+    options: UploadOptions = {},
   ): Promise<B2UploadResult | null> => {
     setIsUploading(true);
     setProgress(0);
 
     try {
-      const result = await uploadToB2(file, folder, {
-        customFileName,
+      const uploadFile = file.type.startsWith('image/')
+        ? await optimizeImageForUpload(file, options.imagePurpose)
+        : file;
+      const result = await uploadToB2(uploadFile, folder, {
+        customFileName: options.customFileName,
         onProgress: setProgress,
       });
       return result;
