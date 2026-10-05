@@ -1043,6 +1043,10 @@ export type Database = {
         Returns: boolean
       }
       is_username_available: { Args: { _username: string }; Returns: boolean }
+      outlet_accepts_pickup: {
+        Args: { _pickup: string; _restaurant_id: string }
+        Returns: boolean
+      }
       recalc_order_total: { Args: { _order_id: string }; Returns: undefined }
       redeem_coins: {
         Args: { _coins: number; _order_id?: string }
