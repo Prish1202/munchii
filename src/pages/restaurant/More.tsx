@@ -18,22 +18,22 @@ const groups = [
   {
     label: 'Money',
     items: [
-      { title: 'Earnings & Payouts', description: 'Sales, settlements and payout history', href: '/restaurant/payouts', icon: Wallet },
-      { title: 'Payments & Payouts', description: 'Accepted payments and settlement information', href: '/restaurant/settings#payments', icon: CreditCard },
+      { title: 'Earnings & Payouts', description: 'Earnings, order breakdown and payout history', href: '/restaurant/payouts', icon: Wallet },
+      { title: 'Payment method', description: 'Bank account / UPI for your payouts', href: '/restaurant/settings?section=payments', icon: CreditCard },
     ],
   },
   {
     label: 'Manage',
     items: [
-      { title: 'Business', description: 'Outlet details, photo and visibility', href: '/restaurant/settings#business', icon: Building2 },
-      { title: 'Ordering & Pickup', description: 'Pickup slots, capacity and advanced controls', href: '/restaurant/settings#ordering', icon: SlidersHorizontal },
+      { title: 'Business', description: 'Outlet details, photo, visibility and hours', href: '/restaurant/settings?section=business', icon: Building2 },
+      { title: 'Ordering & Pickup', description: 'Pickup slots, capacity and order controls', href: '/restaurant/settings?section=ordering', icon: SlidersHorizontal },
       { title: 'Notifications', description: 'Order alerts, sound and vibration', href: '/restaurant/notification-settings', icon: Bell },
     ],
   },
   {
     label: 'Support',
     items: [
-      { title: 'Account', description: 'Appearance and sign out', href: '/restaurant/settings#account', icon: UserRound },
+      { title: 'Account', description: 'Owner details and sign out', href: '/restaurant/settings?section=account', icon: UserRound },
       { title: 'Help', description: 'Contact Munchii support', href: '/contact', icon: CircleHelp },
     ],
   },
