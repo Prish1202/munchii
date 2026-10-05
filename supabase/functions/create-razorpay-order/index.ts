@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
     // Fetch order and verify ownership
     const { data: order, error: orderErr } = await supabase
       .from("orders")
-      .select("id, total_amount, customer_id, status")
+      .select("id, total_amount, customer_id, status, restaurant_id, pickup_time")
       .eq("id", orderId)
       .single();
 
@@ -70,6 +70,19 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: "Order is not in a payable state" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    {
+      const { data: open } = await supabase.rpc("outlet_accepts_pickup", {
+        _restaurant_id: order.restaurant_id,
+        _pickup: order.pickup_time ?? new Date().toISOString(),
+      });
+      if (open === false) {
+        return new Response(
+          JSON.stringify({ error: "This outlet is offline or closed at the selected pickup time." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
     const RAZORPAY_KEY_ID = Deno.env.get("RAZORPAY_KEY_ID");
