@@ -334,7 +334,7 @@ export function useMyPayoutSummary() {
       (completedOrders || []).forEach(order => {
         const isCod = order.payment_method === 'cod';
         const itemTotal = Math.max(Number(order.total_amount) - platformFee, 0);
-        const commission = Math.round(itemTotal * 0.10 * 100) / 100;
+        const commission = Math.round(itemTotal * 0.05 * 100) / 100;
         const netEarning = itemTotal - commission;
         totalEarned += netEarning;
 
