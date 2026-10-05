@@ -155,7 +155,7 @@ export default function RestaurantSettings() {
     if (file.size > 5 * 1024 * 1024) { toast.error('Image must be under 5MB'); return; }
     setUploading(true);
     try {
-      const result = await b2Upload(file, `restaurant-photos/${restaurant.id}`);
+      const result = await b2Upload(file, `restaurant-photos/${restaurant.id}`, { imagePurpose: 'outlet' });
       if (!result) throw new Error('Upload failed');
       await updateRestaurant.mutateAsync({ photo_url: result.publicUrl });
     } catch (error) {

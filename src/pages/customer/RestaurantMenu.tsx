@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { useRestaurant, useMenuItems, useMenuCategories } from '@/hooks/useRestaurants';
 import { lineKeyOf, useCart } from '@/contexts/CartContext';
-import { usesPrepTime } from '@/lib/merchantTerms';
+import { isGrocery, usesPrepTime } from '@/lib/merchantTerms';
 import { useRestaurantRating } from '@/hooks/useReviews';
 import { OutletInfoDialog } from '@/components/customer/OutletInfoDialog';
 import { ArrowLeft, Info, MapPin, Plus, Minus, ShoppingCart, Star, Clock, Percent, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
@@ -68,6 +68,12 @@ export default function RestaurantMenu() {
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('default');
+  const grocery = isGrocery((restaurant as any)?.merchant_type);
+
+  useEffect(() => {
+    setActiveCategory('all');
+    setSearch('');
+  }, [id]);
 
   const getCartQuantity = (menuItemId: string, optionLabel?: string | null) => {
     const item = cartItems.find(i => lineKeyOf(i) === lineKeyOf({ menuItemId, optionLabel }));
@@ -105,7 +111,7 @@ export default function RestaurantMenu() {
 
   const filteredAndSortedItems = useMemo(() => {
     let items = menuItems?.filter(item =>
-      (activeCategory === 'all' || (item as any).category_id === activeCategory) &&
+      (activeCategory === 'all' || (activeCategory === 'uncategorized' ? !(item as any).category_id : (item as any).category_id === activeCategory)) &&
       (!search.trim() || item.name.toLowerCase().includes(search.toLowerCase()))
     ) || [];
 
@@ -125,6 +131,22 @@ export default function RestaurantMenu() {
     }
     return items;
   }, [menuItems, activeCategory, search, sortBy]);
+
+  const groceryCategories = useMemo(() => {
+    const grouped = (categories ?? []).map(category => ({
+      ...category,
+      products: (menuItems ?? []).filter(item => item.category_id === category.id),
+    })).filter(category => category.products.length > 0);
+    const uncategorized = (menuItems ?? []).filter(item => !item.category_id);
+    return uncategorized.length > 0
+      ? [...grouped, { id: 'uncategorized', restaurant_id: id || '', name: 'More products', sort_order: grouped.length, products: uncategorized }]
+      : grouped;
+  }, [categories, menuItems, id]);
+
+  const selectedCategoryName = activeCategory === 'uncategorized'
+    ? 'More products'
+    : categories?.find(category => category.id === activeCategory)?.name;
+  const showGroceryCategories = grocery && activeCategory === 'all' && !search.trim();
 
   if (loadingRestaurant) {
     return (
@@ -206,11 +228,11 @@ export default function RestaurantMenu() {
 
         {/* Menu header with search + filter */}
         <div className="flex items-center gap-2 mb-4">
-          <h2 className="font-display font-semibold text-lg flex-1">Menu</h2>
+          <h2 className="font-display font-semibold text-lg flex-1">{grocery ? (selectedCategoryName || 'Shop by category') : 'Menu'}</h2>
           <div className="relative flex-1 max-w-[200px]">
             <input
               type="text"
-              placeholder="Search items..."
+              placeholder={grocery ? 'Search products...' : 'Search items...'}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-3 pr-3 py-1.5 rounded-xl border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
@@ -240,7 +262,7 @@ export default function RestaurantMenu() {
         </div>
 
         {/* Category filter */}
-        {categories && categories.length > 0 && (
+        {!grocery && categories && categories.length > 0 && (
           <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-hide mb-2">
             <button
               onClick={() => setActiveCategory('all')}
@@ -260,18 +282,57 @@ export default function RestaurantMenu() {
           </div>
         )}
 
+        {grocery && activeCategory !== 'all' && (
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <Button variant="ghost" size="sm" className="-ml-2" onClick={() => setActiveCategory('all')}>
+              <ArrowLeft className="mr-1.5 h-4 w-4" />All categories
+            </Button>
+            <span className="text-xs text-muted-foreground">{filteredAndSortedItems.length} products</span>
+          </div>
+        )}
+
+        {showGroceryCategories && groceryCategories.length > 0 && (
+          <section className="mb-6">
+            <div className="grid grid-flow-col grid-rows-2 auto-cols-[calc(50%-0.375rem)] gap-3 overflow-x-auto pb-3 scrollbar-hide sm:auto-cols-[calc(33.333%-0.5rem)]">
+              {groceryCategories.map(category => (
+                <Button
+                  key={category.id}
+                  type="button"
+                  variant="outline"
+                  onClick={() => setActiveCategory(category.id)}
+                  className="h-auto min-h-36 min-w-0 flex-col items-stretch justify-start overflow-hidden rounded-xl bg-card p-3 text-left hover:border-primary hover:bg-card"
+                >
+                  <span className="mb-2 block truncate text-sm font-bold text-foreground">{category.name}</span>
+                  <span className="grid h-20 grid-cols-2 grid-rows-2 gap-1 overflow-hidden rounded-lg bg-muted">
+                    {category.products.slice(0, 4).map(product => (
+                      <img
+                        key={product.id}
+                        src={resolveStorageUrl(product.image_url) || FALLBACK_IMAGE}
+                        alt=""
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                    ))}
+                  </span>
+                  <span className="mt-2 block text-[11px] font-medium text-muted-foreground">{category.products.length} products</span>
+                </Button>
+              ))}
+            </div>
+          </section>
+        )}
+
         {loadingMenu ? (
           <div className="space-y-4">
             {Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} className="h-28 w-full rounded-xl" />
             ))}
           </div>
-        ) : filteredAndSortedItems.length === 0 ? (
+        ) : showGroceryCategories && groceryCategories.length > 0 ? null : filteredAndSortedItems.length === 0 ? (
           <div className="text-center py-12 bg-card rounded-2xl border border-border">
             <p className="text-muted-foreground">{search ? 'No items match your search.' : 'No menu items available right now.'}</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className={grocery ? 'grid grid-cols-2 gap-3 sm:grid-cols-3' : 'space-y-3'}>
             {filteredAndSortedItems.map((item: any) => {
               const quantity = getCartQuantity(item.id);
               const image = resolveStorageUrl(item.image_url) || FALLBACK_IMAGE;
@@ -280,8 +341,8 @@ export default function RestaurantMenu() {
               const options: { label: string; price: number }[] = item.quantity_type && item.quantity_type !== 'FIXED' && Array.isArray(item.quantity_options) ? item.quantity_options : [];
               const hasOptions = options.length > 0;
               return (
-                <div key={item.id} className="flex gap-3 bg-card rounded-xl border border-border p-3 hover:shadow-sm transition-shadow">
-                  <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden shrink-0">
+                <div key={item.id} className={cn('bg-card rounded-xl border border-border p-3 hover:shadow-sm transition-shadow', grocery ? 'flex min-w-0 flex-col gap-2' : 'flex gap-3')}>
+                  <div className={cn('relative rounded-xl overflow-hidden shrink-0 bg-muted', grocery ? 'aspect-square w-full' : 'w-24 h-24 sm:w-28 sm:h-28')}>
                     <img src={image} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
                     {discount > 0 && (
                       <div className="absolute top-1 left-1 bg-accent text-accent-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-lg flex items-center gap-0.5">
@@ -289,15 +350,15 @@ export default function RestaurantMenu() {
                       </div>
                     )}
                   </div>
-                  <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+                  <div className="flex min-w-0 flex-1 flex-col justify-between py-0.5">
                     <div>
                       <h3 className="font-display font-semibold text-sm sm:text-base truncate">{item.name}</h3>
-                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                      <p className={cn('text-xs text-muted-foreground mt-0.5 line-clamp-2', grocery && 'hidden')}>
                         {item.description || 'Freshly prepared with premium ingredients'}
                       </p>
                     </div>
-                    <div className="flex items-center justify-between mt-2">
-                      <div className="flex items-center gap-2 flex-wrap">
+                    <div className={cn('mt-2 flex gap-2', grocery ? 'items-end justify-between' : 'items-center justify-between')}>
+                      <div className="flex min-w-0 flex-col gap-0.5">
                         <span className="font-semibold text-primary">{hasOptions ? 'from ' : ''}₹{(hasOptions ? Math.min(...options.map(o => discount > 0 ? o.price * (1 - discount / 100) : o.price)) : discountedPrice).toFixed(0)}</span>
                         {discount > 0 && (
                           <span className="text-xs text-muted-foreground line-through">₹{item.price}</span>
@@ -305,6 +366,7 @@ export default function RestaurantMenu() {
                         {usesPrepTime(item.fulfillment_type) && <span className="text-xs text-muted-foreground flex items-center gap-1">
                           <Clock className="w-3 h-3" /> ~{item.preparation_time_minutes || 10} min
                         </span>}
+                        {grocery && hasOptions && <span className="truncate text-[11px] text-muted-foreground">{options[0]?.label}</span>}
                       </div>
                       {hasOptions ? null : quantity > 0 ? (
                         <div className="flex items-center gap-1.5 bg-primary/10 rounded-lg px-1">

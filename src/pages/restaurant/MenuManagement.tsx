@@ -67,7 +67,7 @@ export default function MenuManagement() {
   const { upload: b2Upload } = useB2Upload();
 
   const uploadImage = async (file: File): Promise<string> => {
-    const result = await b2Upload(file, 'menu-images');
+    const result = await b2Upload(file, 'menu-images', { imagePurpose: 'catalog' });
     if (!result) throw new Error('Upload failed');
     return result.publicUrl;
   };
