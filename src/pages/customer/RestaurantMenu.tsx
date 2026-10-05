@@ -106,7 +106,7 @@ export default function RestaurantMenu() {
 
   const filteredAndSortedItems = useMemo(() => {
     let items = menuItems?.filter(item =>
-      (activeCategory === 'all' || (item as any).category_id === activeCategory) &&
+      (activeCategory === 'all' || (activeCategory === 'uncategorized' ? !(item as any).category_id : (item as any).category_id === activeCategory)) &&
       (!search.trim() || item.name.toLowerCase().includes(search.toLowerCase()))
     ) || [];
 
