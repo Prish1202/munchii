@@ -70,6 +70,11 @@ export default function RestaurantMenu() {
   const [sortBy, setSortBy] = useState<SortOption>('default');
   const grocery = isGrocery((restaurant as any)?.merchant_type);
 
+  useEffect(() => {
+    setActiveCategory('all');
+    setSearch('');
+  }, [id]);
+
   const getCartQuantity = (menuItemId: string, optionLabel?: string | null) => {
     const item = cartItems.find(i => lineKeyOf(i) === lineKeyOf({ menuItemId, optionLabel }));
     return item?.quantity || 0;
@@ -290,11 +295,12 @@ export default function RestaurantMenu() {
           <section className="mb-6">
             <div className="grid grid-flow-col grid-rows-2 auto-cols-[calc(50%-0.375rem)] gap-3 overflow-x-auto pb-3 scrollbar-hide sm:auto-cols-[calc(33.333%-0.5rem)]">
               {groceryCategories.map(category => (
-                <button
+                <Button
                   key={category.id}
                   type="button"
+                  variant="outline"
                   onClick={() => setActiveCategory(category.id)}
-                  className="min-h-36 overflow-hidden rounded-xl border border-border bg-card p-3 text-left transition-colors hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="h-auto min-h-36 min-w-0 flex-col items-stretch justify-start overflow-hidden rounded-xl bg-card p-3 text-left hover:border-primary hover:bg-card"
                 >
                   <span className="mb-2 block truncate text-sm font-bold text-foreground">{category.name}</span>
                   <span className="grid h-20 grid-cols-2 grid-rows-2 gap-1 overflow-hidden rounded-lg bg-muted">
@@ -309,7 +315,7 @@ export default function RestaurantMenu() {
                     ))}
                   </span>
                   <span className="mt-2 block text-[11px] font-medium text-muted-foreground">{category.products.length} products</span>
-                </button>
+                </Button>
               ))}
             </div>
           </section>
