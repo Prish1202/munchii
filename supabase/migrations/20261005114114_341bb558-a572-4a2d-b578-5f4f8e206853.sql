@@ -1,0 +1,1 @@
+ALTER FUNCTION public.outlet_accepts_pickup(uuid, timestamptz) SECURITY INVOKER;
