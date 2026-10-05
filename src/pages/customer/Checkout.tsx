@@ -70,7 +70,7 @@ export default function Checkout() {
     return () => window.clearInterval(id);
   }, []);
 
-  const { windows, paused: ordersPaused, slotMinutes } = useAvailablePickupWindows({
+  const { windows, paused: ordersPaused, offline: outletOffline, closed: outletClosed, slotMinutes } = useAvailablePickupWindows({
     restaurantId,
     preparationMinutes: longestPreparationMinutes,
     bufferMinutes: restaurantBufferMinutes,
@@ -227,7 +227,7 @@ export default function Checkout() {
             <Clock3 className="w-4 h-4 text-primary" />
             Pickup Window <span className="text-destructive">*</span>
           </div>
-          {windows.length === 0 && (<p className="text-sm rounded-xl bg-muted p-3 text-muted-foreground">{ordersPaused ? 'This restaurant has paused new orders for a short while. Please check back soon.' : 'All pickup slots are full right now. Please check back in a few minutes.'}</p>)}
+          {windows.length === 0 && (<p className="text-sm rounded-xl bg-muted p-3 text-muted-foreground">{outletOffline ? 'This outlet is offline right now and not taking orders.' : outletClosed ? 'This outlet is closed during the upcoming pickup times. Please check its opening hours.' : ordersPaused ? 'This restaurant has paused new orders for a short while. Please check back soon.' : 'All pickup slots are full right now. Please check back in a few minutes.'}</p>)}
           <div className="grid grid-cols-2 gap-2">
             {windows.map((w) => (
               <button

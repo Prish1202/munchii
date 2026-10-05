@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { outletAcceptsAt } from '@/lib/outletHours';
 import { getPickupWindows, PICKUP_SLOT_INTERVAL_MINUTES, PickupWindow } from '@/lib/pickupWindows';
 
 export interface SlotWindow extends PickupWindow {
@@ -60,7 +61,7 @@ export function useAvailablePickupWindows(opts: {
   const paused = !!s && (s.orders_paused_indefinitely || (s.orders_paused_until && new Date(s.orders_paused_until) > now));
 
   const windows: SlotWindow[] = useMemo(() => {
-    if (paused) return [];
+    if (paused || !s || s.is_active === false) return [];
     const maxOrders = s?.max_orders_per_slot ?? 10;
     const maxLoad = s?.max_workload_per_slot ?? 150;
     const map = new Map<number, { c: number; w: number }>();
@@ -71,9 +72,11 @@ export function useAvailablePickupWindows(opts: {
         const fits = u.c + 1 <= maxOrders && u.w + preparationMinutes <= maxLoad;
         return { ...w, orderCount: u.c, remaining: fits ? maxOrders - u.c : 0 };
       })
-      .filter((w) => w.remaining > 0)
+      .filter((w) => w.remaining > 0 && outletAcceptsAt(s, w.start))
       .slice(0, count);
   }, [candidates, usage.data, s, paused, preparationMinutes, count]);
 
-  return { windows, paused, slotMinutes, isLoading: settings.isLoading || usage.isLoading, refetch: usage.refetch };
+  const offline = !!s && s.is_active === false;
+  const closedAllWindows = !!s && !paused && !offline && candidates.length > 0 && candidates.every((w) => !outletAcceptsAt(s, w.start));
+  return { windows, paused, offline, closed: closedAllWindows, slotMinutes, isLoading: settings.isLoading || usage.isLoading, refetch: usage.refetch };
 }

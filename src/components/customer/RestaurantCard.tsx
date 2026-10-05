@@ -3,6 +3,7 @@ import { MapPin, Star, Clock, Coins, Navigation } from 'lucide-react';
 import { formatDistance } from '@/lib/geo';
 import type { Restaurant } from '@/hooks/useRestaurants';
 import { resolveStorageUrl } from '@/lib/utils';
+import { outletClosedLabel } from '@/lib/outletHours';
 import { useRestaurantRating } from '@/hooks/useReviews';
 
 const FOOD_IMAGES = [
@@ -38,6 +39,7 @@ export function RestaurantCard({ restaurant, distanceKm }: RestaurantCardProps) 
   const { data: ratingData } = useRestaurantRating(restaurant.id);
   const avgRating = ratingData?.avgRating || 0;
   const reviewCount = ratingData?.reviewCount || 0;
+  const closedLabel = outletClosedLabel(restaurant as any);
 
   return (
     <Link to={`/customer/restaurant/${restaurant.id}`} className="block group">
@@ -46,7 +48,7 @@ export function RestaurantCard({ restaurant, distanceKm }: RestaurantCardProps) 
           <img
             src={image}
             alt={restaurant.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            className={`w-full h-full object-cover ${closedLabel ? "grayscale" : ""} group-hover:scale-105 transition-transform duration-500`}
             loading="lazy"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-foreground/10 to-transparent" />
@@ -56,6 +58,11 @@ export function RestaurantCard({ restaurant, distanceKm }: RestaurantCardProps) 
             <span className="gradient-primary text-primary-foreground text-[11px] font-bold px-3 py-1.5 rounded-full shadow-soft">
               PICKUP ONLY
             </span>
+            {closedLabel && (
+              <span className="bg-destructive text-destructive-foreground text-[11px] font-bold px-3 py-1.5 rounded-full shadow-soft">
+                {closedLabel}
+              </span>
+            )}
           </div>
 
           <div className="absolute top-3 right-3 flex items-center gap-1.5 glass px-2.5 py-1.5 rounded-full shadow-soft">
