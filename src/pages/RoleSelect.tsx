@@ -61,7 +61,7 @@ export default function RoleSelect() {
               </div>
               <div className="flex-1 min-w-0">
                 <h2 className="font-display font-semibold text-lg">Merchant</h2>
-                <p className="text-sm text-muted-foreground">Manage your restaurant, menu and orders</p>
+                <p className="text-sm text-muted-foreground">Manage your outlet, menu and orders</p>
               </div>
               <ArrowRight className="w-5 h-5 text-muted-foreground shrink-0" />
             </Card>
