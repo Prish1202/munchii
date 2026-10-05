@@ -758,6 +758,7 @@ export type Database = {
           university_name: string | null
           updated_at: string
           verification_status: string
+          weekly_hours: Json | null
         }
         Insert: {
           address: string
@@ -786,6 +787,7 @@ export type Database = {
           university_name?: string | null
           updated_at?: string
           verification_status?: string
+          weekly_hours?: Json | null
         }
         Update: {
           address?: string
@@ -814,6 +816,7 @@ export type Database = {
           university_name?: string | null
           updated_at?: string
           verification_status?: string
+          weekly_hours?: Json | null
         }
         Relationships: []
       }
