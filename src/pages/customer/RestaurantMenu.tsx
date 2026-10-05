@@ -127,12 +127,20 @@ export default function RestaurantMenu() {
     return items;
   }, [menuItems, activeCategory, search, sortBy]);
 
-  const groceryCategories = useMemo(() => (categories ?? []).map(category => ({
-    ...category,
-    products: (menuItems ?? []).filter(item => item.category_id === category.id),
-  })).filter(category => category.products.length > 0), [categories, menuItems]);
+  const groceryCategories = useMemo(() => {
+    const grouped = (categories ?? []).map(category => ({
+      ...category,
+      products: (menuItems ?? []).filter(item => item.category_id === category.id),
+    })).filter(category => category.products.length > 0);
+    const uncategorized = (menuItems ?? []).filter(item => !item.category_id);
+    return uncategorized.length > 0
+      ? [...grouped, { id: 'uncategorized', restaurant_id: id || '', name: 'More products', sort_order: grouped.length, products: uncategorized }]
+      : grouped;
+  }, [categories, menuItems, id]);
 
-  const selectedCategoryName = categories?.find(category => category.id === activeCategory)?.name;
+  const selectedCategoryName = activeCategory === 'uncategorized'
+    ? 'More products'
+    : categories?.find(category => category.id === activeCategory)?.name;
   const showGroceryCategories = grocery && activeCategory === 'all' && !search.trim();
 
   if (loadingRestaurant) {
