@@ -22,7 +22,8 @@ import {
   Wallet,
   Coins,
   Sparkles,
-  BellRing
+  BellRing,
+  MoreHorizontal
 } from 'lucide-react';
 import { UserRole } from '@/types/auth';
 import { NotificationBell } from '@/components/NotificationBell';
@@ -45,10 +46,10 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Profile', href: '/customer/profile', icon: <User className="w-5 h-5" /> },
   ],
   restaurant: [
-    { label: 'Dashboard', href: '/restaurant', icon: <BarChart3 className="w-5 h-5" /> },
-    { label: 'Menu', href: '/restaurant/menu', icon: <MenuIcon className="w-5 h-5" /> },
+    { label: 'Home', href: '/restaurant', icon: <Home className="w-5 h-5" /> },
     { label: 'Orders', href: '/restaurant/orders', icon: <ClipboardList className="w-5 h-5" /> },
-    { label: 'Settings', href: '/restaurant/settings', icon: <Settings className="w-5 h-5" /> },
+    { label: 'Menu', href: '/restaurant/menu', icon: <MenuIcon className="w-5 h-5" /> },
+    { label: 'More', href: '/restaurant/more', icon: <MoreHorizontal className="w-5 h-5" /> },
   ],
   admin: [
     { label: 'Overview', href: '/admin', icon: <BarChart3 className="w-5 h-5" /> },
@@ -141,16 +142,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <aside className="hidden md:flex w-60 flex-col border-r border-border/70 bg-sidebar/80 min-h-[calc(100vh-4rem)] p-4 justify-between">
           <nav className="space-y-1.5">
             {navItems.map((item) => {
-              const isActive = location.pathname === item.href;
+              const isActive = location.pathname === item.href || (item.href === '/restaurant/more' && ['/restaurant/settings', '/restaurant/payouts', '/restaurant/notifications', '/restaurant/notification-settings'].some(path => location.pathname.startsWith(path)));
               return (
                 <Link
                   key={item.href + item.label}
                   to={item.href}
                   className={cn(
-                    'flex items-center gap-3 px-3.5 py-3 rounded-2xl text-sm font-medium transition-all duration-200',
+                    'flex items-center gap-3 px-3.5 py-3 rounded-lg text-sm font-medium transition-all duration-200',
                     isActive
-                      ? 'gradient-royal text-secondary-foreground shadow-soft'
-                      : 'bg-card/70 text-muted-foreground hover:text-foreground hover:-translate-y-0.5 shadow-soft'
+                      ? 'bg-primary text-primary-foreground shadow-soft'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                   )}
                 >
                   {item.icon}
@@ -163,7 +164,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           {!isCustomer && (
             <button
               onClick={logout}
-              className="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-sm font-medium text-destructive hover:bg-destructive/10 transition-all duration-200 mt-4"
+              className="flex items-center gap-3 px-3.5 py-3 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 transition-all duration-200 mt-4"
             >
               <LogOut className="w-5 h-5" />
               Log Out
@@ -229,17 +230,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t border-border/80 glass-strong z-50 safe-area-bottom">
         <div className={cn('grid gap-1 px-2 py-2', user.role === 'admin' ? 'grid-cols-7' : user.role === 'customer' ? 'grid-cols-4' : 'grid-cols-4')}>
           {navItems.map((item) => {
-            const isActive = location.pathname === item.href;
+            const isActive = location.pathname === item.href || (item.href === '/restaurant/more' && ['/restaurant/settings', '/restaurant/payouts', '/restaurant/notifications', '/restaurant/notification-settings'].some(path => location.pathname.startsWith(path)));
             return (
               <Link
                 key={item.href + item.label}
                 to={item.href}
                 className={cn(
-                  'flex flex-col items-center gap-1 px-2 py-2 rounded-2xl text-[10px] font-semibold transition-all min-w-0',
-                  isActive ? 'text-secondary' : 'text-muted-foreground'
+                  'flex flex-col items-center gap-1 px-2 py-2 rounded-lg text-[10px] font-semibold transition-all min-w-0',
+                  isActive ? 'text-primary' : 'text-muted-foreground'
                 )}
               >
-                <div className={cn('p-2 rounded-2xl transition-all relative', isActive && 'bg-secondary/12 shadow-soft')}>
+                <div className={cn('p-2 rounded-lg transition-all relative', isActive && 'bg-primary/10')}>
                   {item.icon}
                 </div>
                 <span className="truncate">{item.label}</span>
