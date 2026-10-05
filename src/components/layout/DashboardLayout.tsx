@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { UserRole } from '@/types/auth';
 import { NotificationBell } from '@/components/NotificationBell';
+import { OutletActiveToggle } from '@/components/restaurant/OutletActiveToggle';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useMyRestaurant } from '@/hooks/useMenuManagement';
 import { merchantTerms } from '@/lib/merchantTerms';
@@ -133,6 +134,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 </Button>
               </Link>
             )}
+            {isRestaurant && <OutletActiveToggle className="mr-1" />}
             <NotificationBell />
           </div>
         </div>
