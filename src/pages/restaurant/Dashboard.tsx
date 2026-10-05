@@ -1,288 +1,130 @@
 import { Link } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { format } from 'date-fns';
+import { AlertCircle, ChevronRight, Clock3, PackageCheck, ShoppingBag, Store } from 'lucide-react';
+import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { PauseOrdersControl } from '@/components/restaurant/PickupCapacitySettings';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useAuth } from '@/contexts/AuthContext';
-import { useRestaurantOrders } from '@/hooks/useRestaurantOrders';
-import { useMyRestaurant, useMyPayoutSummary } from '@/hooks/useMenuManagement';
-import { 
-  TrendingUp, 
-  DollarSign, 
-  UtensilsCrossed, 
-  Clock,
-  ChevronRight,
-  Store,
-  AlertCircle,
-  IndianRupee,
-  Percent,
-  Wallet,
-  CalendarClock
-} from 'lucide-react';
+import { useRestaurantOrders, RestaurantOrder } from '@/hooks/useRestaurantOrders';
+import { useMyRestaurant } from '@/hooks/useMenuManagement';
+import { supabase } from '@/integrations/supabase/client';
+import { merchantTerms } from '@/lib/merchantTerms';
+import { formatPickupWindow } from '@/lib/pickupWindows';
+
+function pickupSort(a: RestaurantOrder, b: RestaurantOrder) {
+  return new Date(a.pickup_time || a.created_at).getTime() - new Date(b.pickup_time || b.created_at).getTime();
+}
+
+function QueueRow({ order, actionLabel }: { order: RestaurantOrder; actionLabel: string }) {
+  const items = order.order_items?.map(item => `${item.quantity}× ${item.menu_item?.name || 'Item'}`).join(', ') || 'Order details';
+  return (
+    <Link to={`/restaurant/orders/${order.id}`} className="flex items-center gap-3 border-t px-4 py-3 first:border-t-0 hover:bg-muted/50">
+      <div className="w-20 shrink-0">
+        <p className="text-xs font-bold text-foreground">
+          {order.pickup_time ? format(new Date(order.pickup_time), 'h:mm a') : 'ASAP'}
+        </p>
+        <p className="text-[10px] text-muted-foreground">Pickup</p>
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold">#{order.id.slice(-6).toUpperCase()}</p>
+        <p className="truncate text-xs text-muted-foreground">{items}</p>
+      </div>
+      <Badge variant="secondary" className="shrink-0">{actionLabel}</Badge>
+      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+    </Link>
+  );
+}
 
 export default function RestaurantDashboard() {
-  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { data: restaurant, isLoading: loadingRestaurant } = useMyRestaurant();
   const { data: orders, isLoading: loadingOrders } = useRestaurantOrders();
-  const { data: payoutSummary } = useMyPayoutSummary();
-
-  const pendingOrders = orders?.filter(o => o.status === 'placed') || [];
-  const activeOrders = orders?.filter(o => ['accepted', 'preparing', 'ready'].includes(o.status)) || [];
-  const completedOrders = orders?.filter(o => o.status === 'completed') || [];
-  const todayOrders = orders?.filter(o => {
-    const orderDate = new Date(o.created_at).toDateString();
-    return orderDate === new Date().toDateString();
-  }) || [];
-
-  const platformFee = 3;
-  const todayRevenue = todayOrders
-    .filter(o => o.status === 'completed')
-    .reduce((sum, o) => {
-      const itemTotal = Math.max(Number(o.total_amount) - platformFee, 0);
-      return sum + itemTotal * 0.9;
-    }, 0);
-
-  const totalEarnings = completedOrders.reduce((sum, o) => {
-    const itemTotal = Math.max(Number(o.total_amount) - platformFee, 0);
-    return sum + itemTotal * 0.9;
-  }, 0);
-  const totalCommission = completedOrders.reduce((sum, o) => {
-    const itemTotal = Math.max(Number(o.total_amount) - platformFee, 0);
-    return sum + itemTotal * 0.1;
-  }, 0);
-  const totalItemValue = completedOrders.reduce((sum, o) => sum + Math.max(Number(o.total_amount) - platformFee, 0), 0);
 
   if (loadingRestaurant) {
-    return (
-      <DashboardLayout>
-        <div className="space-y-6">
-          <Skeleton className="h-8 w-64" />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-32" />
-            ))}
-          </div>
-        </div>
-      </DashboardLayout>
-    );
+    return <DashboardLayout><div className="mx-auto max-w-3xl space-y-4"><Skeleton className="h-28 w-full" /><Skeleton className="h-72 w-full" /></div></DashboardLayout>;
   }
 
   if (!restaurant) {
     return (
       <DashboardLayout>
-        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-          <Store className="w-16 h-16 text-muted-foreground mb-4" />
-          <h2 className="text-2xl font-display font-bold mb-2">Set Up Your Restaurant</h2>
-          <p className="text-muted-foreground mb-6 max-w-md">
-            You haven't created your restaurant profile yet. Set it up to start receiving orders.
-          </p>
-          <Link to="/restaurant/settings">
-            <Button size="lg" className="gradient-primary text-primary-foreground rounded-xl">
-              Create Restaurant Profile
-            </Button>
-          </Link>
+        <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
+          <Store className="mb-4 h-14 w-14 text-muted-foreground" />
+          <h2 className="text-2xl font-bold">Set up your business</h2>
+          <p className="mb-6 mt-2 max-w-md text-muted-foreground">Complete your business profile to start receiving pickup orders.</p>
+          <Button asChild><Link to="/restaurant/settings">Create business profile</Link></Button>
         </div>
       </DashboardLayout>
     );
   }
 
+  const updateRestaurant = async (patch: Record<string, unknown>) => {
+    const { error } = await supabase.from('restaurants').update(patch as any).eq('id', restaurant.id);
+    if (error) { toast.error('Could not update order status'); return; }
+    queryClient.invalidateQueries({ queryKey: ['my-restaurant'] });
+  };
+  const terms = merchantTerms((restaurant as any).merchant_type);
+  const now = Date.now();
+  const startsNow = (order: RestaurantOrder) => !(order as any).prep_start_at || new Date((order as any).prep_start_at).getTime() <= now;
+  const newOrders = (orders?.filter(order => order.status === 'placed') || []).sort(pickupSort);
+  const preparing = (orders?.filter(order => order.status === 'preparing' || (order.status === 'accepted' && startsNow(order))) || []).sort(pickupSort);
+  const upcoming = (orders?.filter(order => order.status === 'accepted' && !startsNow(order)) || []).sort(pickupSort);
+  const ready = (orders?.filter(order => order.status === 'ready_for_pickup') || []).sort(pickupSort);
+  const todayOrders = orders?.filter(order => new Date(order.created_at).toDateString() === new Date().toDateString()) || [];
+  const todaySales = todayOrders.filter(order => order.status === 'completed').reduce((sum, order) => sum + Math.max(Number(order.total_amount) - 3, 0), 0);
+  const queues = [
+    { title: 'New Orders', orders: newOrders, label: 'Accept', urgent: true },
+    { title: 'Upcoming Pickups', orders: upcoming, label: 'View' },
+    { title: terms.preparing, orders: preparing, label: 'Next action' },
+    { title: 'Ready', orders: ready, label: 'Verify OTP' },
+  ];
+
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-display font-bold">{restaurant.name}</h1>
-            <p className="text-muted-foreground">Welcome back, {user?.name}</p>
+      <div className="mx-auto max-w-3xl space-y-6 pb-24 md:pb-8">
+        <header className="space-y-1">
+          <p className="text-sm font-semibold text-primary">Today’s workspace</p>
+          <h1 className="text-2xl font-bold">{restaurant.name}</h1>
+          <p className="text-sm text-muted-foreground">Stay on top of every pickup.</p>
+        </header>
+
+        <PauseOrdersControl restaurant={restaurant} update={updateRestaurant} />
+
+        <div className="flex items-center divide-x rounded-lg border bg-card py-3">
+          <div className="flex-1 px-4">
+            <p className="text-xs text-muted-foreground">Orders today</p>
+            <p className="text-lg font-bold">{todayOrders.length}</p>
           </div>
-          <Link to="/restaurant/menu">
-            <Button className="gradient-primary text-primary-foreground rounded-xl">
-              Manage Menu
-            </Button>
-          </Link>
+          <div className="flex-1 px-4">
+            <p className="text-xs text-muted-foreground">Sales today</p>
+            <p className="text-lg font-bold">₹{todaySales.toFixed(0)}</p>
+          </div>
+          <Button asChild variant="ghost" size="sm" className="mx-2"><Link to="/restaurant/orders">All orders<ChevronRight className="ml-1 h-4 w-4" /></Link></Button>
         </div>
 
-        {/* Pending Orders Alert */}
-        {pendingOrders.length > 0 && (
-          <Card className="border-accent bg-accent/5 rounded-2xl">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center animate-pulse">
-                    <AlertCircle className="w-5 h-5 text-accent-foreground" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-accent">
-                      {pendingOrders.length} New Order{pendingOrders.length > 1 ? 's' : ''} Waiting!
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Accept or reject incoming orders
-                    </p>
-                  </div>
+        {loadingOrders ? <Skeleton className="h-72 w-full" /> : (
+          <div className="space-y-5">
+            {queues.map(queue => (
+              <section key={queue.title}>
+                <div className="mb-2 flex items-center justify-between px-1">
+                  <h2 className="flex items-center gap-2 text-base font-bold">
+                    {queue.urgent && queue.orders.length > 0 ? <AlertCircle className="h-4 w-4 text-primary" /> : queue.title === 'Ready' ? <PackageCheck className="h-4 w-4 text-primary" /> : queue.title === 'Upcoming Pickups' ? <Clock3 className="h-4 w-4 text-primary" /> : <ShoppingBag className="h-4 w-4 text-primary" />}
+                    {queue.title}
+                    <span className="text-sm text-muted-foreground">{queue.orders.length}</span>
+                  </h2>
+                  {queue.orders.length > 2 && <Link to="/restaurant/orders" className="text-xs font-semibold text-primary">View all</Link>}
                 </div>
-                <Link to="/restaurant/orders">
-                  <Button variant="outline" className="border-accent text-accent hover:bg-accent/10 rounded-xl">
-                    View Orders
-                    <ChevronRight className="w-4 h-4 ml-1" />
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
+                <div className={`overflow-hidden rounded-lg border bg-card ${queue.urgent && queue.orders.length > 0 ? 'border-primary/40' : ''}`}>
+                  {queue.orders.length > 0 ? queue.orders.slice(0, 2).map(order => <QueueRow key={order.id} order={order} actionLabel={queue.label} />) : (
+                    <p className="px-4 py-5 text-sm text-muted-foreground">Nothing here right now.</p>
+                  )}
+                </div>
+              </section>
+            ))}
+          </div>
         )}
-
-        {/* Stats Grid */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Card className="rounded-2xl">
-            <CardContent className="p-4">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <UtensilsCrossed className="w-5 h-5 text-primary" />
-              </div>
-              <div className="mt-3">
-                <div className="text-2xl font-display font-bold">{todayOrders.length}</div>
-                <div className="text-sm text-muted-foreground">Today's Orders</div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-2xl">
-            <CardContent className="p-4">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <IndianRupee className="w-5 h-5 text-primary" />
-              </div>
-              <div className="mt-3">
-                <div className="text-2xl font-display font-bold">₹{todayRevenue.toFixed(0)}</div>
-                <div className="text-sm text-muted-foreground">Today's Earnings (after fees)</div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-2xl">
-            <CardContent className="p-4">
-              <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
-                <Clock className="w-5 h-5 text-accent" />
-              </div>
-              <div className="mt-3">
-                <div className="text-2xl font-display font-bold">{pendingOrders.length}</div>
-                <div className="text-sm text-muted-foreground">Pending Orders</div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-2xl">
-            <CardContent className="p-4">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-primary" />
-              </div>
-              <div className="mt-3">
-                <div className="text-2xl font-display font-bold">{activeOrders.length}</div>
-                <div className="text-sm text-muted-foreground">Active Orders</div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Earnings Breakdown */}
-        <Card className="rounded-2xl">
-          <CardHeader>
-            <CardTitle className="font-display flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-primary" />
-              Earnings Overview
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="p-4 rounded-xl bg-secondary">
-                <p className="text-sm text-muted-foreground">Total Item Value</p>
-                <p className="text-2xl font-display font-bold mt-1">₹{totalItemValue.toFixed(0)}</p>
-                <p className="text-xs text-muted-foreground mt-1">{completedOrders.length} completed orders</p>
-              </div>
-              <div className="p-4 rounded-xl bg-destructive/5 border border-destructive/10">
-                <div className="flex items-center gap-1">
-                  <Percent className="w-3.5 h-3.5 text-destructive" />
-                  <p className="text-sm text-destructive">Commission (10%)</p>
-                </div>
-                <p className="text-2xl font-display font-bold mt-1 text-destructive">-₹{totalCommission.toFixed(0)}</p>
-              </div>
-              <div className="p-4 rounded-xl gradient-primary text-primary-foreground">
-                <p className="text-sm opacity-90">Your Net Earnings</p>
-                <p className="text-2xl font-display font-bold mt-1">₹{totalEarnings.toFixed(0)}</p>
-                <p className="text-xs opacity-80 mt-1">After 10% commission</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Payout Section */}
-        <Card className="rounded-2xl">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="font-display flex items-center gap-2">
-                <Wallet className="w-5 h-5 text-primary" />
-                Payout Summary
-              </CardTitle>
-              <Link to="/restaurant/payouts">
-                <Button variant="outline" size="sm" className="rounded-xl text-xs">
-                  View All <ChevronRight className="w-3.5 h-3.5 ml-1" />
-                </Button>
-              </Link>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="p-4 rounded-xl bg-secondary">
-                <p className="text-sm text-muted-foreground">Total Earned</p>
-                <p className="text-2xl font-display font-bold mt-1">₹{(payoutSummary?.totalEarned || 0).toFixed(0)}</p>
-              </div>
-              <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
-                <p className="text-sm text-primary">Paid Out</p>
-                <p className="text-2xl font-display font-bold mt-1 text-primary">₹{(payoutSummary?.totalPaid || 0).toFixed(0)}</p>
-              </div>
-              <div className="p-4 rounded-xl bg-accent/5 border border-accent/10">
-                <div className="flex items-center gap-1">
-                  <CalendarClock className="w-3.5 h-3.5 text-accent" />
-                  <p className="text-sm text-accent">Pending Payout</p>
-                </div>
-                <p className="text-2xl font-display font-bold mt-1 text-accent">₹{(payoutSummary?.pendingAmount || 0).toFixed(0)}</p>
-                <p className="text-xs text-muted-foreground mt-1">Processed weekly</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Quick Actions */}
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Link to="/restaurant/orders">
-            <Card className="hover:shadow-lg transition-all hover:-translate-y-0.5 cursor-pointer h-full rounded-2xl">
-              <CardContent className="p-6 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <UtensilsCrossed className="w-6 h-6 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold">Manage Orders</h3>
-                  <p className="text-sm text-muted-foreground">View and process incoming orders</p>
-                </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground" />
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link to="/restaurant/menu">
-            <Card className="hover:shadow-lg transition-all hover:-translate-y-0.5 cursor-pointer h-full rounded-2xl">
-              <CardContent className="p-6 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Store className="w-6 h-6 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold">Menu Management</h3>
-                  <p className="text-sm text-muted-foreground">Add, edit, or disable menu items</p>
-                </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground" />
-              </CardContent>
-            </Card>
-          </Link>
-        </div>
       </div>
     </DashboardLayout>
   );

@@ -22,8 +22,8 @@ import {
   Wallet,
   Coins,
   Sparkles,
-  BellRing
-  ,MoreHorizontal
+  BellRing,
+  MoreHorizontal
 } from 'lucide-react';
 import { UserRole } from '@/types/auth';
 import { NotificationBell } from '@/components/NotificationBell';

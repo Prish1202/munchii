@@ -1,5 +1,5 @@
 import { ProductOptionsFields, ProductOptionsValue, cleanOptions } from '@/components/restaurant/ProductOptionsFields';
-import { isGrocery, merchantTerms, usesPrepTime } from '@/lib/merchantTerms';
+import { FULFILLMENT_LABELS, isGrocery, merchantTerms, QUANTITY_LABELS, usesPrepTime } from '@/lib/merchantTerms';
 import { useState, useRef } from 'react';
 import { useB2Upload } from '@/hooks/useB2Upload';
 import { Link } from 'react-router-dom';
@@ -192,8 +192,8 @@ export default function MenuManagement() {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Dashboard
             </Link>
-            <h1 className="text-2xl font-display font-bold">{terms.catalog} Management</h1>
-            <p className="text-muted-foreground">Add, edit, or disable menu items</p>
+            <h1 className="text-2xl font-display font-bold">{terms.catalog}</h1>
+            <p className="text-muted-foreground">Availability, pricing and {grocery ? 'product options' : 'preparation time'}.</p>
           </div>
 
           <div className="flex gap-2">
@@ -205,7 +205,7 @@ export default function MenuManagement() {
               <DialogTrigger asChild>
                 <Button className="gradient-primary text-primary-foreground rounded-xl">
                   <Plus className="w-4 h-4 mr-2" />
-                  Add Item
+                  Add {terms.item}
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
@@ -360,7 +360,17 @@ export default function MenuManagement() {
                           {item.description && (
                             <p className="text-xs text-muted-foreground truncate mt-0.5">{item.description}</p>
                           )}
-                          <p className="text-primary font-medium mt-0.5">₹{Number(item.price).toFixed(2)}</p>
+                           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                             <span className="font-semibold text-primary">₹{Number(item.price).toFixed(2)}</span>
+                             {grocery ? (
+                               <>
+                                 <span className="text-muted-foreground">{QUANTITY_LABELS[((item as any).quantity_type || 'FIXED') as keyof typeof QUANTITY_LABELS]}</span>
+                                 <span className="text-muted-foreground">{FULFILLMENT_LABELS[((item as any).fulfillment_type || 'READY_TO_PICK') as keyof typeof FULFILLMENT_LABELS]}</span>
+                               </>
+                             ) : (
+                               <span className="text-muted-foreground">Prep: {item.preparation_time_minutes || 10} min</span>
+                             )}
+                           </div>
                         </div>
 
                         <div className="flex items-center gap-2 shrink-0">
