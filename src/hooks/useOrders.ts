@@ -175,6 +175,7 @@ export function useCreateOrder() {
     onError: (error: any) => {
       console.error('Order creation failed:', error);
       const msg = String(error?.message || '');
+      if (msg.includes('OUTLET_CLOSED')) { toast.error('This outlet is offline or closed at that pickup time.'); return; }
       if (msg.includes('SLOT_FULL')) toast.error('That pickup slot just filled up. Please pick the next available slot.');
       else if (msg.includes('not accepting orders')) toast.error('This restaurant has paused orders for a few minutes.');
       else if (msg.includes('no longer available')) toast.error('An item in your cart is no longer available.');
