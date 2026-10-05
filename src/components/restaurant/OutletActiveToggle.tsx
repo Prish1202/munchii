@@ -1,4 +1,4 @@
-import { useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Switch } from '@/components/ui/switch';
 import { useMyRestaurant } from '@/hooks/useMenuManagement';
@@ -11,18 +11,29 @@ export function OutletActiveToggle({ className }: { className?: string }) {
   if (!restaurant) return null;
   const active = !!restaurant.is_active;
 
-  const toggle = async (checked: boolean) => {
-    const { error } = await supabase.from('restaurants').update({ is_active: checked }).eq('id', restaurant.id);
-    if (error) { toast.error('Could not update outlet status'); return; }
-    queryClient.invalidateQueries({ queryKey: ['my-restaurant'] });
-    toast.success(checked ? 'Outlet is now online' : 'Outlet is now offline');
-  };
+  const updateStatus = useMutation({
+    mutationFn: async (checked: boolean) => {
+      const { error } = await supabase.from('restaurants').update({ is_active: checked }).eq('id', restaurant.id);
+      if (error) throw error;
+      return checked;
+    },
+    onSuccess: async checked => {
+      await queryClient.invalidateQueries({ queryKey: ['my-restaurant'] });
+      toast.success(checked ? 'Outlet is now online' : 'Outlet is now offline');
+    },
+    onError: () => toast.error('Could not update outlet status'),
+  });
 
   return (
     <label className={cn('flex items-center gap-2 rounded-full border bg-card px-3 py-1.5', className)}>
       <span className={cn('h-2 w-2 rounded-full', active ? 'bg-primary' : 'bg-muted-foreground')} />
       <span className="text-xs font-semibold">{active ? 'Outlet online' : 'Outlet offline'}</span>
-      <Switch checked={active} onCheckedChange={toggle} aria-label="Outlet active" />
+      <Switch
+        checked={updateStatus.isPending ? updateStatus.variables : active}
+        disabled={updateStatus.isPending}
+        onCheckedChange={checked => updateStatus.mutate(checked)}
+        aria-label="Outlet active"
+      />
     </label>
   );
 }
