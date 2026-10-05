@@ -13,6 +13,7 @@ import { useMyRestaurant } from '@/hooks/useMenuManagement';
 import { supabase } from '@/integrations/supabase/client';
 import { merchantTerms } from '@/lib/merchantTerms';
 import { formatPickupWindow } from '@/lib/pickupWindows';
+import { OutletActiveToggle } from '@/components/restaurant/OutletActiveToggle';
 
 function pickupSort(a: RestaurantOrder, b: RestaurantOrder) {
   return new Date(a.pickup_time || a.created_at).getTime() - new Date(b.pickup_time || b.created_at).getTime();
@@ -84,7 +85,8 @@ export default function RestaurantDashboard() {
   return (
     <DashboardLayout>
       <div className="mx-auto max-w-3xl space-y-6 pb-24 md:pb-8">
-        <header className="space-y-1">
+        <header className="space-y-2">
+          <OutletActiveToggle className="w-fit" />
           <p className="text-sm font-semibold text-primary">Today’s workspace</p>
           <h1 className="text-2xl font-bold">{restaurant.name}</h1>
           <p className="text-sm text-muted-foreground">Stay on top of every pickup.</p>
