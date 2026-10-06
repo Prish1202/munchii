@@ -9,6 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Eye, EyeOff, Store } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import { Checkbox } from '@/components/ui/checkbox';
+import { AgreementDialog } from '@/components/restaurant/AgreementDialog';
+import { AGREEMENTS, AGREEMENTS_VERSION, AgreementId, SIGNUP_CONSENT_GROUPS } from '@/lib/merchantAgreements';
 import logoAsset from '@/assets/munchii-blue-logo.png.asset.json';
 
 export default function RestaurantSignup() {
@@ -21,6 +24,9 @@ export default function RestaurantSignup() {
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [consent, setConsent] = useState({ commercial: false, platform: false });
+  const [openDoc, setOpenDoc] = useState<AgreementId | null>(null);
+  const allAccepted = consent.commercial && consent.platform;
   const { signup, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
@@ -32,8 +38,15 @@ export default function RestaurantSignup() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!allAccepted) {
+      toast.error('Please accept both agreements to continue');
+      return;
+    }
     setIsLoading(true);
-    const { error } = await signup(email, password, name, 'restaurant', phone, city, state, area);
+    const { error } = await signup(email, password, name, 'restaurant', phone, city, state, area, {
+      agreements_version: AGREEMENTS_VERSION,
+      agreements_accepted_at: new Date().toISOString(),
+    });
     if (error) {
       if (error.includes('already registered')) {
         toast.error('This email is already registered. Please login instead.');
@@ -127,7 +140,31 @@ export default function RestaurantSignup() {
                 </div>
                 <p className="text-xs text-muted-foreground">Must be at least 6 characters</p>
               </div>
-              <Button type="submit" className="w-full rounded-xl gradient-primary text-primary-foreground hover:opacity-90 transition-opacity" disabled={isLoading}>
+              <div className="space-y-3 rounded-xl border bg-muted/30 p-3">
+                {SIGNUP_CONSENT_GROUPS.map((g) => (
+                  <div key={g.key} className="flex items-start gap-3">
+                    <Checkbox
+                      id={`consent-${g.key}`}
+                      checked={consent[g.key]}
+                      onCheckedChange={(v) => setConsent((c) => ({ ...c, [g.key]: v === true }))}
+                      className="mt-0.5"
+                    />
+                    <div className="space-y-1 text-sm">
+                      <label htmlFor={`consent-${g.key}`} className="cursor-pointer font-medium">
+                        I agree to the {g.label}
+                      </label>
+                      <div className="flex flex-wrap gap-x-3 gap-y-1">
+                        {g.docs.map((d) => (
+                          <button key={d} type="button" onClick={() => setOpenDoc(d)} className="text-xs text-primary underline-offset-2 hover:underline">
+                            {AGREEMENTS[d].title}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <Button type="submit" className="w-full rounded-xl gradient-primary text-primary-foreground hover:opacity-90 transition-opacity" disabled={isLoading || !allAccepted}>
                 {isLoading ? 'Creating account...' : 'Register as Partner'}
               </Button>
             </form>
@@ -141,6 +178,7 @@ export default function RestaurantSignup() {
 
         <p className="text-center text-xs text-muted-foreground">Built in India 🇮🇳 • Your data stays private</p>
       </motion.div>
+      <AgreementDialog id={openDoc} onClose={() => setOpenDoc(null)} />
     </div>
   );
 }

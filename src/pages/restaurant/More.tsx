@@ -1,6 +1,9 @@
 import { Link } from 'react-router-dom';
 import {
   Bell,
+  FileText,
+  Gauge,
+  Scale,
   Building2,
   ChevronRight,
   CircleHelp,
@@ -28,6 +31,14 @@ const groups = [
       { title: 'Business', description: 'Outlet details, photo, visibility and hours', href: '/restaurant/settings?section=business', icon: Building2 },
       { title: 'Ordering & Pickup', description: 'Pickup slots, capacity and order controls', href: '/restaurant/settings?section=ordering', icon: SlidersHorizontal },
       { title: 'Notifications', description: 'Order alerts, sound and vibration', href: '/restaurant/notification-settings', icon: Bell },
+    ],
+  },
+  {
+    label: 'Agreements',
+    items: [
+      { title: 'My contract & fees', description: 'Merchant agreement, commission and payouts', href: '/restaurant/agreements/contract', icon: FileText },
+      { title: 'Performance & rules', description: 'Service levels and food safety', href: '/restaurant/agreements/performance', icon: Gauge },
+      { title: 'Legal & policies', description: 'Terms, privacy, data sharing and IP', href: '/restaurant/agreements/legal', icon: Scale },
     ],
   },
   {

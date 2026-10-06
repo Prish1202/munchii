@@ -23,7 +23,7 @@ export function OutletActiveToggle({ className }: { className?: string }) {
     onError: () => toast.error('Could not update outlet status'),
   });
 
-  if (!restaurant) return null;
+  if (!restaurant || (restaurant as any).verification_status !== 'verified') return null;
   const active = !!restaurant.is_active;
   const displayedActive = updateStatus.isPending && typeof updateStatus.variables === 'boolean'
     ? updateStatus.variables
