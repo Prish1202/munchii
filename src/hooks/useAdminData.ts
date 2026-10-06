@@ -73,7 +73,7 @@ export function useAdminOrders() {
         .select(`
           *,
           restaurant:restaurants(name),
-          order_items(quantity, price_at_time, menu_item:menu_items(name))
+          order_items(quantity, price_at_time, option_label, menu_item:menu_items(name))
         `)
         .order('created_at', { ascending: false });
       if (error) throw error;

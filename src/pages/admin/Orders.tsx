@@ -14,7 +14,9 @@ import {
 } from '@/components/ui/dialog';
 import { useAdminOrders, useUpdateOrderStatus } from '@/hooks/useAdminData';
 import { useState } from 'react';
-import { Search, ClipboardList, Edit } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Search, ClipboardList, Edit, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 
@@ -42,6 +44,17 @@ export default function AdminOrders() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [editingOrder, setEditingOrder] = useState<{ id: string; status: OrderStatus } | null>(null);
+  const [viewingId, setViewingId] = useState<string | null>(null);
+  const viewingOrder = orders?.find(o => o.id === viewingId);
+
+  const { data: viewingCustomer } = useQuery({
+    queryKey: ['admin', 'order-customer', viewingOrder?.customer_id],
+    enabled: !!viewingOrder?.customer_id,
+    queryFn: async () => {
+      const { data } = await (supabase.rpc as any)('get_public_profile', { _id: viewingOrder!.customer_id });
+      return (Array.isArray(data) ? data[0] : data) as { name: string; username: string | null } | null;
+    },
+  });
 
   const filteredOrders = orders?.filter(order => {
     const matchesSearch = order.id.toLowerCase().includes(search.toLowerCase()) ||
@@ -120,9 +133,14 @@ export default function AdminOrders() {
                       </TableCell>
                       <TableCell className="text-muted-foreground">{format(new Date(order.created_at), 'MMM d, HH:mm')}</TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="sm" onClick={() => setEditingOrder({ id: order.id, status: order.status as OrderStatus })}>
-                          <Edit className="w-4 h-4" />
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="sm" onClick={() => setViewingId(order.id)}>
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => setEditingOrder({ id: order.id, status: order.status as OrderStatus })}>
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -134,6 +152,69 @@ export default function AdminOrders() {
             )}
           </CardContent>
         </Card>
+
+        {/* Order detail dialog with amount breakdown */}
+        <Dialog open={!!viewingId} onOpenChange={open => !open && setViewingId(null)}>
+          <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Order {viewingOrder?.id.slice(0, 8)}…</DialogTitle>
+              <DialogDescription>
+                {viewingOrder?.restaurant?.name || '-'} · {viewingOrder ? format(new Date(viewingOrder.created_at), 'dd MMM yyyy, HH:mm') : ''}
+              </DialogDescription>
+            </DialogHeader>
+            {viewingOrder && (() => {
+              const total = Number(viewingOrder.total_amount);
+              const platformFee = 3;
+              const itemTotal = Math.max(total - platformFee, 0);
+              const commission = Math.round(itemTotal * 0.05 * 100) / 100;
+              const restaurantShare = itemTotal - commission;
+              return (
+                <div className="space-y-5 pt-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge className={`${STATUS_COLORS[viewingOrder.status as OrderStatus] || 'bg-muted'} text-white`}>
+                      {viewingOrder.status.replace('_', ' ')}
+                    </Badge>
+                    <Badge variant="outline">{viewingOrder.payment_method === 'coins' ? 'Coins' : 'Razorpay'}</Badge>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div><span className="text-muted-foreground">Customer:</span> <span className="font-medium">{viewingCustomer?.name || viewingOrder.customer_id?.slice(0, 8) || '-'}</span></div>
+                    <div><span className="text-muted-foreground">Pickup:</span> <span className="font-medium">{viewingOrder.pickup_time ? format(new Date(viewingOrder.pickup_time), 'dd MMM, HH:mm') : '-'}</span></div>
+                    <div><span className="text-muted-foreground">Prep time:</span> <span className="font-medium">{viewingOrder.prep_minutes} min</span></div>
+                    <div><span className="text-muted-foreground">Pickup OTP:</span> <span className="font-mono font-medium">{viewingOrder.pickup_otp || '-'}</span></div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-semibold">Items</h3>
+                    <div className="rounded-lg border divide-y">
+                      {viewingOrder.order_items?.map((item: any, i: number) => (
+                        <div key={i} className="flex items-center justify-between px-3 py-2 text-sm">
+                          <div>
+                            <span className="font-medium">{item.menu_item?.name || 'Item'}</span>
+                            {item.option_label && <span className="text-muted-foreground"> · {item.option_label}</span>}
+                            <span className="text-muted-foreground"> × {item.quantity}</span>
+                          </div>
+                          <span className="font-medium">₹{(Number(item.price_at_time) * item.quantity).toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-semibold">Amount breakdown</h3>
+                    <div className="rounded-lg border p-3 space-y-1.5 text-sm">
+                      <div className="flex justify-between"><span className="text-muted-foreground">Item total</span><span>₹{itemTotal.toFixed(2)}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Platform fee</span><span>₹{platformFee.toFixed(2)}</span></div>
+                      <div className="flex justify-between font-semibold border-t pt-1.5"><span>Customer paid</span><span>₹{total.toFixed(2)}</span></div>
+                      <div className="flex justify-between text-muted-foreground border-t pt-1.5"><span>Commission (5%)</span><span>-₹{commission.toFixed(2)}</span></div>
+                      <div className="flex justify-between font-semibold text-green-600"><span>Restaurant payout</span><span>₹{restaurantShare.toFixed(2)}</span></div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+          </DialogContent>
+        </Dialog>
 
         <Dialog open={!!editingOrder} onOpenChange={() => setEditingOrder(null)}>
           <DialogContent>

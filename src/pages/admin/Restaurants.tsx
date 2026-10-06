@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -34,6 +36,20 @@ export default function AdminRestaurants() {
   });
 
   const selected = restaurants?.find(r => r.id === selectedId);
+
+  // Decrypted bank details for the currently viewed restaurant (payouts)
+  const { data: decryptedBank } = useQuery({
+    queryKey: ['admin', 'bank-details', selectedId],
+    enabled: !!selectedId,
+    queryFn: async () => {
+      const { data, error } = await (supabase.rpc as any)('get_bank_details_decrypted', { _restaurant_id: selectedId! });
+      if (error) return null;
+      return (Array.isArray(data) ? data[0] : data) as {
+        account_holder_name: string | null; account_number: string | null;
+        ifsc_code: string | null; bank_name: string | null; upi_id: string | null;
+      } | null;
+    },
+  });
 
   const statusCounts = restaurants?.reduce((acc, r) => {
     acc[r.verification_status] = (acc[r.verification_status] || 0) + 1;
@@ -252,20 +268,22 @@ export default function AdminRestaurants() {
                 </div>
               )}
 
-              {selected.bank_details && (
-                <div className="space-y-3">
-                  <h3 className="text-sm font-semibold flex items-center gap-2">
-                    <Landmark className="w-4 h-4" /> Bank Details
-                  </h3>
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold flex items-center gap-2">
+                  <Landmark className="w-4 h-4" /> Bank Details (for payouts)
+                </h3>
+                {selected.bank_details || decryptedBank ? (
                   <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div><span className="text-muted-foreground">Holder:</span> <span className="font-medium">{selected.bank_details.account_holder_name || '-'}</span></div>
-                    <div><span className="text-muted-foreground">Bank:</span> <span className="font-medium">{selected.bank_details.bank_name || '-'}</span></div>
-                    <div><span className="text-muted-foreground">Account:</span> <span className="font-medium">{selected.bank_details.account_number || '-'}</span></div>
-                    <div><span className="text-muted-foreground">IFSC:</span> <span className="font-medium">{selected.bank_details.ifsc_code || '-'}</span></div>
-                    <div><span className="text-muted-foreground">UPI:</span> <span className="font-medium">{selected.bank_details.upi_id || '-'}</span></div>
+                    <div><span className="text-muted-foreground">Holder:</span> <span className="font-medium">{decryptedBank?.account_holder_name || selected.bank_details?.account_holder_name || '-'}</span></div>
+                    <div><span className="text-muted-foreground">Bank:</span> <span className="font-medium">{decryptedBank?.bank_name || selected.bank_details?.bank_name || '-'}</span></div>
+                    <div><span className="text-muted-foreground">Account:</span> <span className="font-medium">{decryptedBank?.account_number || selected.bank_details?.account_number || '-'}</span></div>
+                    <div><span className="text-muted-foreground">IFSC:</span> <span className="font-medium">{decryptedBank?.ifsc_code || selected.bank_details?.ifsc_code || '-'}</span></div>
+                    <div className="col-span-2"><span className="text-muted-foreground">UPI:</span> <span className="font-medium">{decryptedBank?.upi_id || selected.bank_details?.upi_id || '-'}</span></div>
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p className="text-sm text-muted-foreground">No payout method added by this merchant yet.</p>
+                )}
+              </div>
 
               {selected.verification_status === 'pending' && (
                 <div className="flex gap-3 pt-2">
