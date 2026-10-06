@@ -9,7 +9,7 @@ import { clearNativePushToken, refreshNativePushToken } from '@/lib/nativePush';
 
 interface AuthContextType extends AuthState {
   login: (identifier: string, password: string) => Promise<{ error: string | null }>;
-  signup: (email: string, password: string, name: string, role: UserRole, phone?: string, city?: string, state?: string, area?: string) => Promise<{ error: string | null }>;
+  signup: (email: string, password: string, name: string, role: UserRole, phone?: string, city?: string, state?: string, area?: string, extra?: Record<string, unknown>) => Promise<{ error: string | null }>;
   logout: () => Promise<void>;
 }
 
@@ -150,14 +150,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     phone?: string,
     city?: string,
     state?: string,
-    area?: string
+    area?: string,
+    extra?: Record<string, unknown>
   ): Promise<{ error: string | null }> => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: `${PUBLIC_BASE_URL}/email-verified`,
-        data: { name, role, phone, city, state, area },
+        data: { name, role, phone, city, state, area, ...(extra ?? {}) },
       },
     });
     return { error: error?.message || null };

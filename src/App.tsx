@@ -54,6 +54,7 @@ import RestaurantNotificationSettings from "./pages/restaurant/NotificationSetti
 import RestaurantOnboarding from "./pages/restaurant/Onboarding";
 import RestaurantPayouts from "./pages/restaurant/Payouts";
 import RestaurantMore from "./pages/restaurant/More";
+import RestaurantAgreements from "./pages/restaurant/Agreements";
 import { OnboardingGuard } from "./components/restaurant/OnboardingGuard";
 
 // Legal Pages
@@ -178,6 +179,7 @@ const App = () => {
               <Route path="/restaurant/menu" element={<ProtectedRoute allowedRoles={['restaurant']}><OnboardingGuard><MenuManagement /></OnboardingGuard></ProtectedRoute>} />
               <Route path="/restaurant/settings" element={<ProtectedRoute allowedRoles={['restaurant']}><OnboardingGuard><RestaurantSettings /></OnboardingGuard></ProtectedRoute>} />
               <Route path="/restaurant/payouts" element={<ProtectedRoute allowedRoles={['restaurant']}><OnboardingGuard><RestaurantPayouts /></OnboardingGuard></ProtectedRoute>} />
+              <Route path="/restaurant/agreements/:group" element={<ProtectedRoute allowedRoles={['restaurant']}><OnboardingGuard><RestaurantAgreements /></OnboardingGuard></ProtectedRoute>} />
               <Route path="/restaurant/more" element={<ProtectedRoute allowedRoles={['restaurant']}><OnboardingGuard><RestaurantMore /></OnboardingGuard></ProtectedRoute>} />
               <Route path="/restaurant/notifications" element={<ProtectedRoute allowedRoles={['restaurant']}><RestaurantNotifications /></ProtectedRoute>} />
               <Route path="/restaurant/notification-settings" element={<ProtectedRoute allowedRoles={['restaurant']}><RestaurantNotificationSettings /></ProtectedRoute>} />
