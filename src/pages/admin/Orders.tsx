@@ -14,7 +14,9 @@ import {
 } from '@/components/ui/dialog';
 import { useAdminOrders, useUpdateOrderStatus } from '@/hooks/useAdminData';
 import { useState } from 'react';
-import { Search, ClipboardList, Edit } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Search, ClipboardList, Edit, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 
@@ -42,6 +44,17 @@ export default function AdminOrders() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [editingOrder, setEditingOrder] = useState<{ id: string; status: OrderStatus } | null>(null);
+  const [viewingId, setViewingId] = useState<string | null>(null);
+  const viewingOrder = orders?.find(o => o.id === viewingId);
+
+  const { data: viewingCustomer } = useQuery({
+    queryKey: ['admin', 'order-customer', viewingOrder?.customer_id],
+    enabled: !!viewingOrder?.customer_id,
+    queryFn: async () => {
+      const { data } = await (supabase.rpc as any)('get_public_profile', { _id: viewingOrder!.customer_id });
+      return (Array.isArray(data) ? data[0] : data) as { name: string; username: string | null } | null;
+    },
+  });
 
   const filteredOrders = orders?.filter(order => {
     const matchesSearch = order.id.toLowerCase().includes(search.toLowerCase()) ||
