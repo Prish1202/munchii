@@ -99,7 +99,7 @@ export default function RestaurantOrders() {
                 </h2>
                 <div className="space-y-4">
                   {pendingOrders.map((order) => (
-                    <OrderCard key={order.id} order={order} onUpdateStatus={(status) => updateStatus.mutate({ orderId: order.id, status })} isUpdating={updateStatus.isPending} />
+                    <OrderCard key={order.id} order={order} onUpdateStatus={(status) => updateStatus.mutate({ orderId: order.id, status })} isUpdating={updateStatus.isPending && updateStatus.variables?.orderId === order.id} />
                   ))}
                 </div>
               </section>
@@ -110,7 +110,7 @@ export default function RestaurantOrders() {
                 <h2 className="text-base font-bold mb-3">{title} <span className="text-muted-foreground">{list.length}</span></h2>
                 <div className="space-y-4">
                   {list.map((order) => (
-                    <OrderCard key={order.id} order={order} onUpdateStatus={(status) => updateStatus.mutate({ orderId: order.id, status })} isUpdating={updateStatus.isPending} />
+                    <OrderCard key={order.id} order={order} onUpdateStatus={(status) => updateStatus.mutate({ orderId: order.id, status })} isUpdating={updateStatus.isPending && updateStatus.variables?.orderId === order.id} />
                   ))}
                 </div>
               </section>

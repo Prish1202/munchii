@@ -182,18 +182,20 @@ export function useUpdateOrderStatus() {
         .from('orders')
         .update({ status, updated_at: new Date().toISOString() })
         .eq('id', orderId)
-        .select()
-        .single();
+        .select('id, status')
+        .maybeSingle();
       if (error) throw error;
+      if (!data) throw new Error('Order not found or you no longer have access to it');
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, { status }) => {
       queryClient.invalidateQueries({ queryKey: ['restaurant-orders'] });
-      toast.success('Order status updated');
+      queryClient.invalidateQueries({ queryKey: ['restaurant-order'] });
+      toast.success(status === 'accepted' ? 'Order accepted' : status === 'cancelled' ? 'Order rejected' : 'Order status updated');
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Failed to update order:', error);
-      toast.error('Failed to update order status');
+      toast.error('Failed to update order status', { description: error?.message });
     },
   });
 }

@@ -16,23 +16,41 @@ export function routeForPushData(data: Record<string, unknown> | undefined | nul
 let initialized = false;
 let currentToken: string | null = null;
 
-/** Saves the device token for the signed-in user (no-op when signed out). */
+/**
+ * Links the device token strictly to the signed-in user. The server moves the
+ * token away from any previous account on this phone (no-op when signed out).
+ */
 async function saveToken(token: string) {
   const { data } = await supabase.auth.getSession();
-  const userId = data.session?.user?.id;
-  if (!userId) return;
-  const { data: existing } = await supabase
-    .from('push_subscriptions')
-    .select('id')
-    .eq('player_id', token)
-    .eq('user_id', userId)
-    .maybeSingle();
-  if (existing) {
-    await supabase.from('push_subscriptions').update({ updated_at: new Date().toISOString() }).eq('id', existing.id);
-    return;
+  if (!data.session?.user?.id) return;
+  const { error } = await (supabase.rpc as any)('claim_push_token', {
+    _token: token,
+    _device_type: Capacitor.getPlatform(),
+  });
+  if (error) console.error('[Push] Failed to save token:', error);
+}
+
+/** Forces a fresh native registration; the 'registration' listener saves the token. */
+export async function refreshNativePushToken() {
+  if (!Capacitor.isNativePlatform()) return;
+  try {
+    const perm = await PushNotifications.checkPermissions();
+    if (perm.receive === 'granted') await PushNotifications.register();
+    else if (currentToken) await saveToken(currentToken);
+  } catch (e) {
+    console.error('[Push] Refresh failed:', e);
   }
-  const { error } = await supabase.from('push_subscriptions').insert({ user_id: userId, player_id: token });
-  if (error && error.code !== '23505') console.error('[Push] Failed to save token:', error);
+}
+
+/** Removes this device's token for the user who is signing out. Call BEFORE signOut. */
+export async function clearNativePushToken(userId: string | undefined) {
+  if (!Capacitor.isNativePlatform() || !userId || !currentToken) return;
+  const { error } = await supabase
+    .from('push_subscriptions')
+    .delete()
+    .eq('user_id', userId)
+    .eq('player_id', currentToken);
+  if (error) console.error('[Push] Failed to clear token:', error);
 }
 
 /**
@@ -44,8 +62,8 @@ export async function initNativePush(navigate: NavigateFn): Promise<() => void> 
   initialized = true;
 
   const { data: authSub } = supabase.auth.onAuthStateChange((event) => {
-    if (currentToken && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
-      saveToken(currentToken).catch((e) => console.error('[Push] Save error:', e));
+    if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+      setTimeout(() => { refreshNativePushToken(); }, 0);
     }
   });
 

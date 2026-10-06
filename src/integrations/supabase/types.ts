@@ -966,6 +966,10 @@ export type Database = {
       }
       _pii_key: { Args: never; Returns: string }
       _pii_mask: { Args: { v: string }; Returns: string }
+      claim_push_token: {
+        Args: { _device_type?: string; _token: string }
+        Returns: undefined
+      }
       get_bank_details_decrypted: {
         Args: { _restaurant_id: string }
         Returns: {
