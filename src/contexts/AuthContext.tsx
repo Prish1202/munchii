@@ -5,6 +5,7 @@ import { UserRole, UserWithRole, AuthState, ROLE_ROUTES } from '@/types/auth';
 import { useNavigate } from 'react-router-dom';
 import { PUBLIC_BASE_URL } from '@/lib/appLinks';
 import { recordLoginForRating } from '@/components/RatingPrompt';
+import { clearNativePushToken, refreshNativePushToken } from '@/lib/nativePush';
 
 interface AuthContextType extends AuthState {
   login: (identifier: string, password: string) => Promise<{ error: string | null }>;
@@ -97,7 +98,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (identifier: string, password: string): Promise<{ error: string | null }> => {
     const res = await doLogin(identifier, password);
-    if (!res.error) recordLoginForRating();
+    if (!res.error) {
+      recordLoginForRating();
+      refreshNativePushToken();
+    }
     return res;
   };
 
@@ -160,6 +164,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
+    // Detach this phone from the account first, while we still have its session.
+    try {
+      await clearNativePushToken(state.session?.user?.id ?? state.user?.id);
+    } catch (e) {
+      console.error('[Push] Clear on logout failed:', e);
+    }
     await supabase.auth.signOut();
     setState({ user: null, session: null, isAuthenticated: false, isLoading: false });
   };
