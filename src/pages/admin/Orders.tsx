@@ -153,6 +153,69 @@ export default function AdminOrders() {
           </CardContent>
         </Card>
 
+        {/* Order detail dialog with amount breakdown */}
+        <Dialog open={!!viewingId} onOpenChange={open => !open && setViewingId(null)}>
+          <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Order {viewingOrder?.id.slice(0, 8)}…</DialogTitle>
+              <DialogDescription>
+                {viewingOrder?.restaurant?.name || '-'} · {viewingOrder ? format(new Date(viewingOrder.created_at), 'dd MMM yyyy, HH:mm') : ''}
+              </DialogDescription>
+            </DialogHeader>
+            {viewingOrder && (() => {
+              const total = Number(viewingOrder.total_amount);
+              const platformFee = 3;
+              const itemTotal = Math.max(total - platformFee, 0);
+              const commission = Math.round(itemTotal * 0.05 * 100) / 100;
+              const restaurantShare = itemTotal - commission;
+              return (
+                <div className="space-y-5 pt-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge className={`${STATUS_COLORS[viewingOrder.status as OrderStatus] || 'bg-muted'} text-white`}>
+                      {viewingOrder.status.replace('_', ' ')}
+                    </Badge>
+                    <Badge variant="outline">{viewingOrder.payment_method === 'coins' ? 'Coins' : 'Razorpay'}</Badge>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div><span className="text-muted-foreground">Customer:</span> <span className="font-medium">{viewingCustomer?.name || viewingOrder.customer_id?.slice(0, 8) || '-'}</span></div>
+                    <div><span className="text-muted-foreground">Pickup:</span> <span className="font-medium">{viewingOrder.pickup_time ? format(new Date(viewingOrder.pickup_time), 'dd MMM, HH:mm') : '-'}</span></div>
+                    <div><span className="text-muted-foreground">Prep time:</span> <span className="font-medium">{viewingOrder.prep_minutes} min</span></div>
+                    <div><span className="text-muted-foreground">Pickup OTP:</span> <span className="font-mono font-medium">{viewingOrder.pickup_otp || '-'}</span></div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-semibold">Items</h3>
+                    <div className="rounded-lg border divide-y">
+                      {viewingOrder.order_items?.map((item: any, i: number) => (
+                        <div key={i} className="flex items-center justify-between px-3 py-2 text-sm">
+                          <div>
+                            <span className="font-medium">{item.menu_item?.name || 'Item'}</span>
+                            {item.option_label && <span className="text-muted-foreground"> · {item.option_label}</span>}
+                            <span className="text-muted-foreground"> × {item.quantity}</span>
+                          </div>
+                          <span className="font-medium">₹{(Number(item.price_at_time) * item.quantity).toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-semibold">Amount breakdown</h3>
+                    <div className="rounded-lg border p-3 space-y-1.5 text-sm">
+                      <div className="flex justify-between"><span className="text-muted-foreground">Item total</span><span>₹{itemTotal.toFixed(2)}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Platform fee</span><span>₹{platformFee.toFixed(2)}</span></div>
+                      <div className="flex justify-between font-semibold border-t pt-1.5"><span>Customer paid</span><span>₹{total.toFixed(2)}</span></div>
+                      <div className="flex justify-between text-muted-foreground border-t pt-1.5"><span>Commission (5%)</span><span>-₹{commission.toFixed(2)}</span></div>
+                      <div className="flex justify-between font-semibold text-green-600"><span>Restaurant payout</span><span>₹{restaurantShare.toFixed(2)}</span></div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+          </DialogContent>
+        </Dialog>
+
         <Dialog open={!!editingOrder} onOpenChange={() => setEditingOrder(null)}>
           <DialogContent>
             <DialogHeader>
