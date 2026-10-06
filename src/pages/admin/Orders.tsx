@@ -133,9 +133,14 @@ export default function AdminOrders() {
                       </TableCell>
                       <TableCell className="text-muted-foreground">{format(new Date(order.created_at), 'MMM d, HH:mm')}</TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="sm" onClick={() => setEditingOrder({ id: order.id, status: order.status as OrderStatus })}>
-                          <Edit className="w-4 h-4" />
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="sm" onClick={() => setViewingId(order.id)}>
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => setEditingOrder({ id: order.id, status: order.status as OrderStatus })}>
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
