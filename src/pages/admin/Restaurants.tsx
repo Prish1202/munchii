@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -34,6 +36,20 @@ export default function AdminRestaurants() {
   });
 
   const selected = restaurants?.find(r => r.id === selectedId);
+
+  // Decrypted bank details for the currently viewed restaurant (payouts)
+  const { data: decryptedBank } = useQuery({
+    queryKey: ['admin', 'bank-details', selectedId],
+    enabled: !!selectedId,
+    queryFn: async () => {
+      const { data, error } = await (supabase.rpc as any)('get_bank_details_decrypted', { _restaurant_id: selectedId! });
+      if (error) return null;
+      return (Array.isArray(data) ? data[0] : data) as {
+        account_holder_name: string | null; account_number: string | null;
+        ifsc_code: string | null; bank_name: string | null; upi_id: string | null;
+      } | null;
+    },
+  });
 
   const statusCounts = restaurants?.reduce((acc, r) => {
     acc[r.verification_status] = (acc[r.verification_status] || 0) + 1;
