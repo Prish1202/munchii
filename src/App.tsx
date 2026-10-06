@@ -15,6 +15,7 @@ import { NativePushInit } from "@/components/NativePushInit";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { RatingPrompt } from "@/components/RatingPrompt";
 import { LocationPrompt } from "@/components/LocationPrompt";
+import { CustomerTypography } from "@/components/CustomerTypography";
 
 // Pages
 import Index from "./pages/Index";
@@ -119,6 +120,7 @@ const App = () => {
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <CustomerTypography />
             <RouteSeo />
             <NativePushInit />
             <RatingPrompt />
