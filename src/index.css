@@ -276,6 +276,63 @@
   }
 }
 
+/* Customer-only typography also reaches dialogs portalled into the body.
+   Keep type sizes on text elements, never on emoji/image containers. */
+body.customer-typography {
+  --customer-font: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --customer-weight-body: 400;
+  --customer-weight-label: 500;
+  --customer-weight-heading: 600;
+  --customer-heading-lg: 1.375rem;
+  --customer-heading-xl: 1.75rem;
+  --customer-heading-2xl: 2rem;
+  font-family: var(--customer-font);
+  font-weight: var(--customer-weight-body);
+}
+
+.customer-typography :where(h1, h2, h3, h4, h5, h6, input, textarea, select, button, .font-display, .font-body, .font-sans, .font-serif) {
+  font-family: var(--customer-font);
+}
+
+.customer-typography,
+.customer-typography * {
+  letter-spacing: 0;
+}
+
+.customer-typography :is(.font-semibold, .font-medium) {
+  font-weight: var(--customer-weight-label);
+}
+
+.customer-typography :is(.font-bold, .font-extrabold, .font-black, strong, b) {
+  font-weight: var(--customer-weight-heading);
+}
+
+.customer-typography :is(h1, h2, h3, h4, h5, h6, [role='heading']) {
+  font-weight: var(--customer-weight-heading);
+}
+
+.customer-typography :is(h1, h2, h3, h4, h5, h6, [role='heading']).text-2xl {
+  font-size: var(--customer-heading-lg);
+  line-height: 1.4;
+}
+
+.customer-typography :is(h1, h2, h3, h4, h5, h6, [role='heading']).text-3xl {
+  font-size: var(--customer-heading-xl);
+  line-height: 1.3;
+}
+
+.customer-typography :is(h1, h2, h3, h4, h5, h6, [role='heading']).text-4xl {
+  font-size: var(--customer-heading-2xl);
+  line-height: 1.25;
+}
+
+@media (min-width: 768px) {
+  .customer-typography :is(h1, h2, h3, h4, h5, h6, [role='heading']).md\:text-3xl {
+    font-size: var(--customer-heading-xl);
+    line-height: 1.3;
+  }
+}
+
 /* Emoji reaction animations */
 @keyframes emoji-entrance {
   0% {
