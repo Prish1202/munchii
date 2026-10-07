@@ -7,7 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCreateOrder } from '@/hooks/useOrders';
-import { useRazorpay } from '@/hooks/useRazorpay';
+import { useRazorpay, checkOrderPaid } from '@/hooks/useRazorpay';
 import { XCircle, AlertTriangle, ArrowLeft, Phone, CreditCard, Banknote, Loader2, Coins, Clock3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useWallet, useRedeemCoins } from '@/hooks/useWallet';
@@ -53,7 +53,20 @@ export default function Checkout() {
   }, [items, restaurantId]);
   const [pendingOrderId, setPendingOrderIdState] = useState<string | null>(null);
   useEffect(() => {
-    setPendingOrderIdState(sessionStorage.getItem(draftKey));
+    const id = sessionStorage.getItem(draftKey);
+    setPendingOrderIdState(id);
+    // If the app was reloaded while paying in a UPI app, confirm the payment now.
+    if (id) {
+      checkOrderPaid(id).then((paid) => {
+        if (paid && !completedRef.current) {
+          completedRef.current = true;
+          sessionStorage.removeItem(draftKey);
+          clearCart();
+          navigate(`/customer/order-success/${id}`, { replace: true });
+        }
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draftKey]);
   const setPendingOrderId = (id: string | null) => {
     if (id) sessionStorage.setItem(draftKey, id); else sessionStorage.removeItem(draftKey);
