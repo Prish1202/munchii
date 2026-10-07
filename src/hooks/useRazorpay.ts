@@ -30,6 +30,26 @@ function loadRazorpayScript(): Promise<boolean> {
   });
 }
 
+export async function checkOrderPaid(orderId: string, token?: string): Promise<boolean> {
+  try {
+    const t = token ?? (await supabase.auth.getSession()).data.session?.access_token;
+    if (!t) return false;
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/verify-razorpay-payment`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${t}`,
+        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+      },
+      body: JSON.stringify({ orderId }),
+    });
+    const d = await res.json();
+    return res.ok && d.success === true;
+  } catch {
+    return false;
+  }
+}
+
 export function useRazorpay() {
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -119,12 +139,39 @@ export function useRazorpay() {
         },
         theme: { color: '#f97316' },
         modal: {
-          ondismiss: () => {
+          ondismiss: async () => {
+            // In the mobile app, returning from a UPI app can close checkout without the
+            // success callback. Ask the server whether the payment actually went through.
+            const ok = await recheck();
             setIsProcessing(false);
-            onFailure('cancelled');
+            if (ok) onSuccess(orderId);
+            else onFailure('cancelled');
           },
         },
       };
+
+      let settled = false;
+      const recheck = async (): Promise<boolean> => {
+        for (let i = 0; i < 4; i++) {
+          if (await checkOrderPaid(orderId, token)) { settled = true; return true; }
+          await new Promise((r) => setTimeout(r, 2500));
+        }
+        return false;
+      };
+
+      // When the app returns to the foreground after a UPI app, re-check payment.
+      const onVisible = async () => {
+        if (document.visibilityState !== 'visible' || settled) return;
+        if (await checkOrderPaid(orderId, token)) {
+          settled = true;
+          document.removeEventListener('visibilitychange', onVisible);
+          setIsProcessing(false);
+          try { rzp.close?.(); } catch { /* ignore */ }
+          onSuccess(orderId);
+        }
+      };
+      document.addEventListener('visibilitychange', onVisible);
+      setTimeout(() => document.removeEventListener('visibilitychange', onVisible), 15 * 60_000);
 
       const rzp = new window.Razorpay(options);
       rzp.on('payment.failed', (response: any) => {

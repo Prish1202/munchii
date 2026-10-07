@@ -57,27 +57,61 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = await req.json();
-
-    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-      return new Response(JSON.stringify({ error: "Missing payment details" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const body = await req.json();
+    let { razorpay_order_id, razorpay_payment_id, razorpay_signature } = body;
+    const checkOrderId: string | undefined = body.orderId;
 
     const RAZORPAY_KEY_SECRET = Deno.env.get("RAZORPAY_KEY_SECRET");
+    const RAZORPAY_KEY_ID = Deno.env.get("RAZORPAY_KEY_ID");
     if (!RAZORPAY_KEY_SECRET) {
       throw new Error("RAZORPAY_KEY_SECRET not configured");
     }
 
-    // Verify signature
-    const isValid = await verifySignature(
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature,
-      RAZORPAY_KEY_SECRET
-    );
+    let isValid = false;
+
+    // Recovery mode: the app lost the checkout callback (e.g. returning from a UPI app).
+    // Ask Razorpay directly whether this order has a captured/authorized payment.
+    if (checkOrderId && !razorpay_payment_id) {
+      const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      const { data: own } = await admin.from("orders").select("customer_id, status").eq("id", checkOrderId).maybeSingle();
+      if (!own || own.customer_id !== claimsData.claims.sub) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      if (own.status !== "pending_payment" && own.status !== "cancelled") {
+        return new Response(JSON.stringify({ success: true, orderId: checkOrderId }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const { data: rows } = await admin.from("payments").select("razorpay_order_id").eq("order_id", checkOrderId).order("created_at", { ascending: false });
+      const auth = "Basic " + btoa(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`);
+      for (const r of rows ?? []) {
+        const res = await fetch(`https://api.razorpay.com/v1/orders/${r.razorpay_order_id}/payments`, { headers: { Authorization: auth } });
+        if (!res.ok) continue;
+        const list = await res.json();
+        const p = (list.items ?? []).find((x: any) => x.status === "captured" || x.status === "authorized");
+        if (p) {
+          razorpay_order_id = r.razorpay_order_id;
+          razorpay_payment_id = p.id;
+          razorpay_signature = "server-verified";
+          isValid = true;
+          break;
+        }
+      }
+      if (!isValid) {
+        return new Response(JSON.stringify({ success: false, pending: true }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+    } else {
+      if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+        return new Response(JSON.stringify({ error: "Missing payment details" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      isValid = await verifySignature(
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature,
+        RAZORPAY_KEY_SECRET
+      );
+    }
 
     if (!isValid) {
       return new Response(JSON.stringify({ error: "Invalid payment signature" }), {
