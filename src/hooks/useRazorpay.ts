@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Capacitor } from '@capacitor/core';
+import { Checkout as RazorpayNative } from 'capacitor-razorpay';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
@@ -93,6 +95,56 @@ export function useRazorpay() {
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to create payment');
+
+      // Inside the Android/iOS app, use Razorpay's native checkout so UPI apps
+      // (GPay, PhonePe, Paytm) are shown and open correctly.
+      if (Capacitor.isNativePlatform()) {
+        let ok = false;
+        try {
+          const result: any = await RazorpayNative.open({
+            key: data.keyId,
+            amount: String(data.amount),
+            currency: data.currency,
+            name: 'Munchii',
+            description: 'Food Order Payment',
+            order_id: data.razorpayOrderId,
+            prefill: { name: userName || '', email: userEmail || '', contact: userPhone || '' },
+            theme: { color: '#1E3A8A' },
+          } as any);
+          let r: any = result?.response ?? result;
+          if (typeof r === 'string') { try { r = JSON.parse(r); } catch { /* ignore */ } }
+          if (r?.razorpay_payment_id && r?.razorpay_signature) {
+            const vr = await fetch(`${SUPABASE_URL}/functions/v1/verify-razorpay-payment`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+                apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+              },
+              body: JSON.stringify({
+                razorpay_order_id: r.razorpay_order_id || data.razorpayOrderId,
+                razorpay_payment_id: r.razorpay_payment_id,
+                razorpay_signature: r.razorpay_signature,
+              }),
+            });
+            ok = vr.ok;
+          }
+        } catch (e) {
+          console.warn('Native checkout closed:', e);
+        }
+        // Fallback: ask the server/Razorpay directly whether money was received.
+        if (!ok) {
+          for (let i = 0; i < 4 && !ok; i++) {
+            ok = await checkOrderPaid(orderId, token);
+            if (!ok) await new Promise((r) => setTimeout(r, 2500));
+          }
+        }
+        setIsProcessing(false);
+        if (ok) onSuccess(orderId);
+        else onFailure('cancelled');
+        return;
+      }
+
 
       const options = {
         key: data.keyId,
