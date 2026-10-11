@@ -33,7 +33,7 @@ export function useAvailablePickupWindows(opts: {
   const s = settings.data;
   const minAdvance = s?.min_advance_minutes ?? 0;
   const maxAdvance = s?.max_advance_minutes ?? 480;
-  const buffer = s?.preparation_buffer_minutes ?? bufferMinutes;
+  const buffer = preparationMinutes <= 0 ? 0 : (s?.preparation_buffer_minutes ?? bufferMinutes);
   const slotMinutes = Math.max(5, Number(s?.pickup_slot_minutes) || PICKUP_SLOT_INTERVAL_MINUTES);
 
   const candidates = useMemo(() => {

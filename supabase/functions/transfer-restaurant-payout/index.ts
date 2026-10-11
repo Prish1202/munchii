@@ -86,7 +86,8 @@ Deno.serve(async (req) => {
 
     const platformFee = 3;
     const itemTotal = Math.max(order.total_amount - platformFee, 0);
-    const commission = Math.round(itemTotal * 0.05 * 100) / 100;
+    const { data: rest } = await supabaseAdmin.from("restaurants").select("commission_enabled").eq("id", order.restaurant_id).maybeSingle();
+    const commission = rest?.commission_enabled === false ? 0 : Math.round(itemTotal * 0.05 * 100) / 100;
     const restaurantAmount = itemTotal - commission;
 
     let razorpayTransferId: string | null = null;

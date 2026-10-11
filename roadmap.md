@@ -2,3 +2,8 @@
 - [x] Redesign merchant UI only around existing orders, pickup, catalog, payouts, and settings; exclude teams and shifts.
 - [x] Add compact grocery category browsing and optimize all new image uploads before storage.
 - [x] Refresh customer typography only with Plus Jakarta Sans, lighter weights and restrained headings; preserve branding and behavior (public-page preview verified; signed-in preview unavailable).
+- [x] Single type-aware order tracker; reorder respects availability, pause, discounts and instant items.
+- [x] Merchant "New Order" alert fires once payment is confirmed (device test pending).
+- [x] Add/edit product buttons hardened; "Ready instantly" option for food outlets.
+- [x] Remove cash-on-pickup wording; instant items skip prep and buffer time.
+- [x] Admin per-merchant 5% commission toggle applied to earnings, payouts and alerts.

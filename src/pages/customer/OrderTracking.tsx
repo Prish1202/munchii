@@ -41,7 +41,6 @@ import {
 import { directionsUrl } from '@/lib/geo';
 import { formatDistanceToNow, format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { OrderProgressBar } from '@/components/customer/OrderProgressBar';
 import { ReviewDialog } from '@/components/customer/ReviewDialog';
 import { useOrderReview } from '@/hooks/useReviews';
 import { formatPickupWindow } from '@/lib/pickupWindows';
@@ -84,7 +83,7 @@ export default function OrderTracking() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('orders')
-        .select(`*, restaurant:restaurants(name, address, latitude, longitude)`)
+        .select(`*, restaurant:restaurants(name, address, latitude, longitude, merchant_type)`)
         .eq('id', id)
         .maybeSingle();
       if (error) throw error;
@@ -151,6 +150,16 @@ export default function OrderTracking() {
   }
 
   const currentStatusIndex = STATUS_ORDER.indexOf(order.status as OrderStatus);
+  const mType = (order as any).restaurant?.merchant_type as string | undefined;
+  const steps = ORDER_STEPS.map((st) => {
+    if (st.status === 'preparing') {
+      if (mType === 'grocery') return { ...st, label: 'Picking & Packing', icon: <Package className="w-4 h-4" /> };
+      if (mType === 'canteen') return { ...st, label: 'Preparing at canteen' };
+      return { ...st, label: 'Preparing your food' };
+    }
+    if (st.status === 'ready_for_pickup' && mType === 'grocery') return { ...st, label: 'Ready to collect' };
+    return st;
+  });
   const isCancelled = order.status === 'cancelled';
   const isPendingPayment = order.status === 'pending_payment';
   const isCompleted = order.status === 'completed';
@@ -292,28 +301,21 @@ export default function OrderTracking() {
               {(order as any).pickup_otp}
             </p>
             <p className="text-xs text-muted-foreground">
-              Share this code with the restaurant when you pick up your order
+              Share this code at the counter when you pick up your order
             </p>
           </div>
         )}
 
-        {/* Progress Bar */}
-        {!isCancelled && (
-          <div className="bg-card rounded-2xl border border-border p-5">
-            <h3 className="font-display font-semibold text-sm mb-4">Order Progress</h3>
-            <OrderProgressBar status={order.status} />
-          </div>
-        )}
 
         {/* Status Steps */}
         {!isCancelled && (
           <div className="bg-card rounded-2xl border border-border p-5">
             <h3 className="font-display font-semibold text-sm mb-5">Order Status</h3>
             <div className="relative">
-              {ORDER_STEPS.map((step, index) => {
+              {steps.map((step, index) => {
                 const isCompleted = index <= currentStatusIndex;
                 const isCurrent = index === currentStatusIndex;
-                const isLast = index === ORDER_STEPS.length - 1;
+                const isLast = index === steps.length - 1;
                 return (
                   <div key={step.status} className="flex gap-4 relative">
                     <div className="flex flex-col items-center">

@@ -1,3 +1,4 @@
+import { commissionFor } from '@/lib/fees';
 import { useState, useMemo } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,6 +31,13 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
   const [newPayoutStatus, setNewPayoutStatus] = useState('');
   const [payoutNotes, setPayoutNotes] = useState('');
   const platformFee = 3;
+  const { data: commissionOn } = useQuery({
+    queryKey: ['admin', 'restaurant-commission', restaurantId],
+    queryFn: async () => {
+      const { data } = await supabase.from('restaurants').select('commission_enabled').eq('id', restaurantId).maybeSingle();
+      return (data as any)?.commission_enabled !== false;
+    },
+  });
 
   // Fetch completed orders with order_items for detailed breakdown
   const { data: orders, isLoading: loadingOrders } = useQuery({
@@ -76,14 +84,14 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
     return orders.map(order => {
       const isCod = order.payment_method === 'cod';
       const itemTotal = Math.max(Number(order.total_amount) - platformFee, 0);
-      const commission = Math.round(itemTotal * 0.05 * 100) / 100;
+      const commission = commissionFor(itemTotal, commissionOn);
       const netEarning = itemTotal - commission;
       const deduction = isCod ? platformFee + commission : 0;
       const isPaid = paidOrderIds.has(order.id);
       const items = (order as any).order_items || [];
       return { ...order, isCod, itemTotal, commission, netEarning, deduction, isPaid, items };
     });
-  }, [orders, paidOrderIds]);
+  }, [orders, paidOrderIds, commissionOn]);
 
   // Summary
   const summary = useMemo(() => {
@@ -136,7 +144,7 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
       const payoutRows = unpaidOrders.map(order => {
         const isCod = order.payment_method === 'cod';
         const itemTotal = Math.max(Number(order.total_amount) - platformFee, 0);
-        const comm = Math.round(itemTotal * 0.05 * 100) / 100;
+        const comm = commissionFor(itemTotal, commissionOn);
         const net = itemTotal - comm;
         if (isCod) {
           const deduction = platformFee + comm;
@@ -145,7 +153,7 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
             restaurant_amount: -deduction,
             platform_fee: deduction,
             payout_status: 'pending',
-            payout_notes: `COD — Collected ₹${Number(order.total_amount).toFixed(0)}. Deduct ₹${platformFee} fee + ₹${comm.toFixed(0)} commission = ₹${deduction.toFixed(0)}.`,
+            payout_notes: `Adjustment — Collected ₹${Number(order.total_amount).toFixed(0)}. Deduct ₹${platformFee} fee + ₹${comm.toFixed(0)} commission = ₹${deduction.toFixed(0)}.`,
           };
         }
         return {
@@ -204,24 +212,6 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
             <p className="text-lg font-bold">₹{summary.totalOnline.toFixed(0)}</p>
           </CardContent>
         </Card>
-        <Card className="rounded-2xl">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2 mb-1">
-              <Banknote className="w-4 h-4 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">COD Rev.</span>
-            </div>
-            <p className="text-lg font-bold">₹{summary.totalCod.toFixed(0)}</p>
-          </CardContent>
-        </Card>
-        <Card className="rounded-2xl">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2 mb-1">
-              <AlertCircle className="w-4 h-4 text-destructive" />
-              <span className="text-xs text-muted-foreground">COD Deductions</span>
-            </div>
-            <p className="text-lg font-bold text-destructive">-₹{summary.codDeductions.toFixed(0)}</p>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Per-Order Breakdown */}
@@ -259,7 +249,7 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
                       <TableCell className="whitespace-nowrap text-xs">{format(parseISO(order.created_at), 'MMM d')}</TableCell>
                       <TableCell>
                         {order.isCod ? (
-                          <Badge variant="outline" className="text-[10px] gap-1"><Banknote className="w-3 h-3" />COD</Badge>
+                          <Badge variant="outline" className="text-[10px] gap-1">Online</Badge>
                         ) : (
                           <Badge variant="secondary" className="text-[10px] gap-1"><CreditCard className="w-3 h-3" />Online</Badge>
                         )}
@@ -366,7 +356,7 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
             <DialogTitle>Manage Payout</DialogTitle>
             <DialogDescription>
               {Number(editingPayout?.restaurant_amount || 0) < 0
-                ? `COD Deduction: -₹${Math.abs(Number(editingPayout?.restaurant_amount || 0)).toFixed(0)}`
+                ? `Deduction: -₹${Math.abs(Number(editingPayout?.restaurant_amount || 0)).toFixed(0)}`
                 : `Credit: ₹${Number(editingPayout?.restaurant_amount || 0).toFixed(0)} to restaurant`}
             </DialogDescription>
           </DialogHeader>
@@ -437,7 +427,7 @@ export default function AdminPayouts() {
       <div className="space-y-4">
         <div>
           <h1 className="text-xl font-bold">Payouts Overview</h1>
-          <p className="text-sm text-muted-foreground">Track platform earnings, COD deductions & partner payouts</p>
+          <p className="text-sm text-muted-foreground">Track platform earnings & partner payouts</p>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -457,15 +447,6 @@ export default function AdminPayouts() {
                 <span className="text-xs text-muted-foreground">Paid to Restros</span>
               </div>
               <p className="text-lg font-bold">₹{totals.restaurant.toFixed(0)}</p>
-            </CardContent>
-          </Card>
-          <Card className="rounded-2xl">
-            <CardContent className="p-3">
-              <div className="flex items-center gap-2 mb-1">
-                <Banknote className="w-4 h-4 text-destructive" />
-                <span className="text-xs text-muted-foreground">COD Deductions</span>
-              </div>
-              <p className="text-lg font-bold text-destructive">₹{totals.codDeductions.toFixed(0)}</p>
             </CardContent>
           </Card>
           <Card className="rounded-2xl">

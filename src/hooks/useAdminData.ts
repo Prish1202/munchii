@@ -1,3 +1,4 @@
+import { commissionFor } from '@/lib/fees';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
@@ -72,7 +73,7 @@ export function useAdminOrders() {
         .from('orders')
         .select(`
           *,
-          restaurant:restaurants(name),
+          restaurant:restaurants(name, commission_enabled),
           order_items(quantity, price_at_time, option_label, menu_item:menu_items(name))
         `)
         .order('created_at', { ascending: false });
@@ -106,7 +107,7 @@ export function useAdminRestaurantPayoutSummary() {
       // Get all completed orders with their restaurant info
       const { data: completedOrders, error: ordersError } = await supabase
         .from('orders')
-        .select('id, total_amount, restaurant_id, restaurant:restaurants(name, city)')
+        .select('id, total_amount, restaurant_id, restaurant:restaurants(name, city, commission_enabled)')
         .eq('status', 'completed');
       if (ordersError) throw ordersError;
 
@@ -145,7 +146,7 @@ export function useAdminRestaurantPayoutSummary() {
         const r = restaurantMap[rId];
         r.completedOrders++;
         const itemTotal = Math.max(Number(order.total_amount) - 3, 0);
-        const commission = Math.round(itemTotal * 0.05 * 100) / 100;
+        const commission = commissionFor(itemTotal, (order.restaurant as any)?.commission_enabled);
         const restaurantShare = itemTotal - commission;
         r.totalRevenue += Number(order.total_amount);
 

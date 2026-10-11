@@ -1,3 +1,4 @@
+import { usesPrepTime } from '@/lib/merchantTerms';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -103,12 +104,17 @@ function OrderCard({ order, showReorder }: { order: any; showReorder?: boolean }
     if (order.restaurant_id) {
       const { data: restaurant } = await supabase
         .from('restaurants')
-        .select('is_active, name, preparation_buffer_minutes')
+        .select('is_active, name, preparation_buffer_minutes, orders_paused_indefinitely, orders_paused_until')
         .eq('id', order.restaurant_id)
         .maybeSingle();
 
       if (!restaurant || !restaurant.is_active) {
         toast.error(`${restaurant?.name || 'This restaurant'} is currently offline. You can't reorder right now.`);
+        return;
+      }
+      const r: any = restaurant;
+      if (r.orders_paused_indefinitely || (r.orders_paused_until && new Date(r.orders_paused_until) > new Date())) {
+        toast.error(`${restaurant.name} has paused new orders for a while. Please try again soon.`);
         return;
       }
       restaurantBufferMinutes = restaurant.preparation_buffer_minutes || 5;
@@ -118,7 +124,7 @@ function OrderCard({ order, showReorder }: { order: any; showReorder?: boolean }
     const menuItemIds = orderItems.map(i => i.menu_item_id).filter(Boolean);
     const { data: currentMenuItems } = await supabase
       .from('menu_items')
-      .select('id, name, price, available, preparation_time_minutes, quantity_options')
+      .select('id, name, price, available, preparation_time_minutes, quantity_options, fulfillment_type, discount_percent, restaurant_id')
       .in('id', menuItemIds);
 
     const currentPriceMap = new Map(
@@ -130,7 +136,7 @@ function OrderCard({ order, showReorder }: { order: any; showReorder?: boolean }
 
     orderItems.forEach((item) => {
       const current = currentPriceMap.get(item.menu_item_id);
-      if (!current || !current.available) {
+      if (!current || !current.available || (current as any).restaurant_id !== order.restaurant_id) {
         unavailableItems.push(item.menu_item?.name || 'Item');
         return;
       }
@@ -141,11 +147,11 @@ function OrderCard({ order, showReorder }: { order: any; showReorder?: boolean }
         addItem({
           menuItemId: item.menu_item_id,
           name: current.name || item.menu_item?.name || 'Item',
-          price: opt ? Number(opt.price) : Number(current.price),
+          price: (() => { const base = opt ? Number(opt.price) : Number(current.price); const d = Number((current as any).discount_percent) || 0; return d > 0 ? base * (1 - d / 100) : base; })(),
           optionLabel: optLabel,
           restaurantId: order.restaurant_id,
           restaurantName: order.restaurant?.name || 'Restaurant',
-          preparationTimeMinutes: current.preparation_time_minutes || 10,
+          preparationTimeMinutes: usesPrepTime((current as any).fulfillment_type) ? (current.preparation_time_minutes || 10) : 0,
           restaurantBufferMinutes,
         });
       }

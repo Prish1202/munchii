@@ -33,7 +33,7 @@ export const AGREEMENTS: Record<AgreementId, AgreementDoc> = {
         'Fees may change with at least 15 days of prior notice inside the merchant app.',
       ]},
       { heading: 'Payments & payouts', points: [
-        'All payments are collected online through Razorpay. Cash on pickup is not offered.',
+        'All payments are collected online through Razorpay.',
         'Merchant earnings = item total minus commission, settled to the saved bank account or UPI ID.',
         'Refunds for cancelled or rejected paid orders are deducted from the related earnings.',
       ]},

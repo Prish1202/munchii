@@ -258,8 +258,9 @@ export default function Checkout() {
             ))}
           </div>
           <p className="text-xs text-muted-foreground">
-            Earliest window uses the longest prep time in your cart ({longestPreparationMinutes} min) plus a{' '}
-            {restaurantBufferMinutes} min kitchen buffer.
+            {longestPreparationMinutes === 0
+              ? 'Everything in your cart is ready to pick, so the earliest slot is offered.'
+              : `Earliest window uses the longest prep time in your cart (${longestPreparationMinutes} min) plus a ${restaurantBufferMinutes} min buffer.`}
           </p>
         </section>
 

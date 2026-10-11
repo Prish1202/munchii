@@ -48,8 +48,9 @@ export function getPickupWindows({
   now?: Date;
   count?: number;
 }): PickupWindow[] {
-  const safePreparation = Math.max(1, preparationMinutes || DEFAULT_PREPARATION_MINUTES);
-  const safeBuffer = Math.max(0, bufferMinutes || 0);
+  // 0 = instant / ready-to-pick items: no prep and no kitchen buffer.
+  const safePreparation = Number.isFinite(preparationMinutes) ? Math.max(0, preparationMinutes) : DEFAULT_PREPARATION_MINUTES;
+  const safeBuffer = safePreparation === 0 ? 0 : Math.max(0, bufferMinutes || 0);
   // When slotMinutes is given, it controls both window length and interval.
   const interval = slotMinutes && slotMinutes > 0 ? Math.round(slotMinutes) : PICKUP_SLOT_INTERVAL_MINUTES;
   const length = slotMinutes && slotMinutes > 0 ? Math.round(slotMinutes) : PICKUP_WINDOW_MINUTES;

@@ -1,3 +1,4 @@
+import { commissionFor } from '@/lib/fees';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -166,7 +167,7 @@ export default function AdminOrders() {
               const total = Number(viewingOrder.total_amount);
               const platformFee = 3;
               const itemTotal = Math.max(total - platformFee, 0);
-              const commission = Math.round(itemTotal * 0.05 * 100) / 100;
+              const commission = commissionFor(itemTotal, (viewingOrder as any).restaurant?.commission_enabled);
               const restaurantShare = itemTotal - commission;
               return (
                 <div className="space-y-5 pt-1">
@@ -206,7 +207,7 @@ export default function AdminOrders() {
                       <div className="flex justify-between"><span className="text-muted-foreground">Item total</span><span>₹{itemTotal.toFixed(2)}</span></div>
                       <div className="flex justify-between"><span className="text-muted-foreground">Platform fee</span><span>₹{platformFee.toFixed(2)}</span></div>
                       <div className="flex justify-between font-semibold border-t pt-1.5"><span>Customer paid</span><span>₹{total.toFixed(2)}</span></div>
-                      <div className="flex justify-between text-muted-foreground border-t pt-1.5"><span>Commission (5%)</span><span>-₹{commission.toFixed(2)}</span></div>
+                      <div className="flex justify-between text-muted-foreground border-t pt-1.5"><span>Commission {commission > 0 ? '(5%)' : '(off)'}</span><span>-₹{commission.toFixed(2)}</span></div>
                       <div className="flex justify-between font-semibold text-green-600"><span>Restaurant payout</span><span>₹{restaurantShare.toFixed(2)}</span></div>
                     </div>
                   </div>
