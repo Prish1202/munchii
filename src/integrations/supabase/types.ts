@@ -736,6 +736,7 @@ export type Database = {
           area: string | null
           city: string | null
           closing_hours: string | null
+          commission_enabled: boolean
           contact_phone: string | null
           created_at: string
           id: string
@@ -765,6 +766,7 @@ export type Database = {
           area?: string | null
           city?: string | null
           closing_hours?: string | null
+          commission_enabled?: boolean
           contact_phone?: string | null
           created_at?: string
           id?: string
@@ -794,6 +796,7 @@ export type Database = {
           area?: string | null
           city?: string | null
           closing_hours?: string | null
+          commission_enabled?: boolean
           contact_phone?: string | null
           created_at?: string
           id?: string
