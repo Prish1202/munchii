@@ -207,7 +207,7 @@ export default function AdminOrders() {
                       <div className="flex justify-between"><span className="text-muted-foreground">Item total</span><span>₹{itemTotal.toFixed(2)}</span></div>
                       <div className="flex justify-between"><span className="text-muted-foreground">Platform fee</span><span>₹{platformFee.toFixed(2)}</span></div>
                       <div className="flex justify-between font-semibold border-t pt-1.5"><span>Customer paid</span><span>₹{total.toFixed(2)}</span></div>
-                      <div className="flex justify-between text-muted-foreground border-t pt-1.5"><span>Commission (5%)</span><span>-₹{commission.toFixed(2)}</span></div>
+                      <div className="flex justify-between text-muted-foreground border-t pt-1.5"><span>Commission {commission > 0 ? '(5%)' : '(off)'}</span><span>-₹{commission.toFixed(2)}</span></div>
                       <div className="flex justify-between font-semibold text-green-600"><span>Restaurant payout</span><span>₹{restaurantShare.toFixed(2)}</span></div>
                     </div>
                   </div>

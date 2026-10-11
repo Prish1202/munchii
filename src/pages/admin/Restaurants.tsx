@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,6 +21,33 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: typeof
   verified: { label: 'Verified', color: 'bg-primary text-primary-foreground', icon: CheckCircle },
   rejected: { label: 'Rejected', color: 'bg-destructive text-destructive-foreground', icon: XCircle },
 };
+
+function CommissionToggle({ restaurantId, enabled }: { restaurantId: string; enabled: boolean }) {
+  const qc = useQueryClient();
+  const m = useMutation({
+    mutationFn: async (next: boolean) => {
+      const { data, error } = await supabase.from('restaurants').update({ commission_enabled: next } as any).eq('id', restaurantId).select('id').maybeSingle();
+      if (error) throw error;
+      if (!data) throw new Error('Could not update this outlet');
+    },
+    onSuccess: (_d, next) => {
+      qc.invalidateQueries({ queryKey: ['admin'] });
+      toast.success(next ? '5% commission turned on' : '5% commission turned off');
+    },
+    onError: (e: any) => toast.error('Failed to change commission', { description: e?.message }),
+  });
+  return (
+    <div className="flex items-center justify-between rounded-xl border border-border p-3">
+      <div>
+        <p className="text-sm font-semibold">5% commission</p>
+        <p className="text-xs text-muted-foreground">
+          {enabled ? 'Deducted from this merchant\'s earnings and payouts.' : 'Off — merchant receives the full item price.'}
+        </p>
+      </div>
+      <Switch checked={enabled} disabled={m.isPending} onCheckedChange={(v) => m.mutate(v)} aria-label="Toggle 5% commission" />
+    </div>
+  );
+}
 
 export default function AdminRestaurants() {
   const { data: restaurants, isLoading } = useAdminRestaurants();
@@ -233,6 +261,8 @@ export default function AdminRestaurants() {
                   {selected.is_active ? 'Online' : 'Offline'}
                 </Badge>
               </div>
+
+              <CommissionToggle restaurantId={selected.id} enabled={(selected as any).commission_enabled !== false} />
 
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold flex items-center gap-2">

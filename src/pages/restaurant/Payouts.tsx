@@ -118,7 +118,7 @@ export default function RestaurantPayouts() {
             <div>
               <p className="text-sm font-medium">How Payouts Work</p>
               <p className="text-xs text-muted-foreground">
-                95% of item price (after ₹3 platform fee &amp; 5% commission) is credited to your payout after order completion. Settlements are processed weekly.
+                {(payoutSummary as any)?.commissionEnabled === false ? 'The full item price (no commission) is credited' : '95% of item price (after 5% commission) is credited'} to your payout after order completion. Settlements are processed weekly.
               </p>
             </div>
           </div>
