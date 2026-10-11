@@ -124,7 +124,7 @@ export function useAddMenuItem() {
       queryClient.invalidateQueries({ queryKey: ['my-menu-items'] });
       toast.success('Item added');
     },
-    onError: () => toast.error('Failed to add item'),
+    onError: (e: any) => toast.error('Failed to add item', { description: e?.message }),
   });
 }
 
@@ -143,7 +143,7 @@ export function useUpdateMenuItem() {
       queryClient.invalidateQueries({ queryKey: ['my-menu-items'] });
       toast.success('Item updated');
     },
-    onError: () => toast.error('Failed to update item'),
+    onError: (e: any) => toast.error('Failed to update item', { description: e?.message }),
   });
 }
 

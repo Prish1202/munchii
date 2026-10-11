@@ -99,7 +99,8 @@ export default function MenuManagement() {
       return;
     }
     
-    await createItem.mutateAsync({
+    if (!(parseFloat(newItem.price) > 0)) { toast.error('Please enter a valid price'); return; }
+    try { await createItem.mutateAsync({
       name: newItem.name.trim(),
       price: parseFloat(newItem.price),
       image_url: newItem.image_url,
@@ -108,7 +109,7 @@ export default function MenuManagement() {
       category_id: newItem.category_id || undefined,
       preparation_time_minutes: usesPrepTime(newOpts.fulfillment_type) ? Math.min(180, Math.max(1, parseInt(newItem.preparation_time_minutes) || 10)) : 1,
       ...cleanOptions(newOpts),
-    });
+    }); } catch { return; }
     setNewOpts(defaultOpts());
     
     setNewItem({ name: '', price: '', description: '', discount_percent: '', image_url: '', category_id: '', preparation_time_minutes: '10' });
@@ -119,7 +120,7 @@ export default function MenuManagement() {
     e.preventDefault();
     if (!editingItem) return;
     
-    await updateItem.mutateAsync({
+    try { await updateItem.mutateAsync({
       id: editingItem.id,
       name: editingItem.name.trim(),
       price: editingItem.price,
@@ -129,31 +130,31 @@ export default function MenuManagement() {
       category_id: editingItem.category_id,
       preparation_time_minutes: usesPrepTime(editingItem.opts.fulfillment_type) ? Math.min(180, Math.max(1, editingItem.preparation_time_minutes || 10)) : 1,
       ...cleanOptions(editingItem.opts),
-    } as any);
+    } as any); } catch { return; }
     
     setEditingItem(null);
   };
 
   const handleToggleAvailable = async (id: string, available: boolean) => {
-    await updateItem.mutateAsync({ id, available: !available });
+    updateItem.mutate({ id, available: !available });
   };
 
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this item?')) {
-      await deleteItem.mutateAsync(id);
+      deleteItem.mutate(id);
     }
   };
 
   const handleAddCategory = async () => {
     if (!newCategoryName.trim()) return;
-    await createCategory.mutateAsync(newCategoryName.trim());
+    try { await createCategory.mutateAsync(newCategoryName.trim()); } catch { return; }
     setNewCategoryName('');
     setShowCategoryDialog(false);
   };
 
   const handleDeleteCategory = async (id: string) => {
     if (confirm('Delete this category? Items in it will become uncategorized.')) {
-      await deleteCategory.mutateAsync(id);
+      deleteCategory.mutate(id);
     }
   };
 
@@ -211,7 +212,7 @@ export default function MenuManagement() {
                   {/* Image Upload */}
                   <div className="space-y-2">
                     <Label>{grocery ? 'Product' : 'Food'} image <span className="text-destructive">*</span></Label>
-                    <input ref={addFileRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'add')} />
+                    <input ref={addFileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) handleImageUpload(f, 'add'); }} />
                     {newItem.image_url ? (
                       <div className="relative rounded-xl overflow-hidden">
                         <img src={newItem.image_url} alt="Preview" className="w-full h-40 object-cover" />
@@ -256,6 +257,16 @@ export default function MenuManagement() {
                     <Input id="discount" type="number" placeholder="e.g., 10" min="0" max="100" value={newItem.discount_percent} onChange={(e) => setNewItem(prev => ({ ...prev, discount_percent: e.target.value }))} className="rounded-xl" />
                   </div>
                   {grocery && <ProductOptionsFields value={newOpts} onChange={setNewOpts} />}
+                  {!grocery && (
+                    <div className="flex items-center justify-between rounded-xl border border-border p-3">
+                      <div>
+                        <p className="text-sm font-medium">Ready instantly</p>
+                        <p className="text-xs text-muted-foreground">No preparation needed (e.g. packaged drinks)</p>
+                      </div>
+                      <Switch checked={newOpts.fulfillment_type === 'READY_TO_PICK'} onCheckedChange={(v) => setNewOpts(o => ({ ...o, fulfillment_type: v ? 'READY_TO_PICK' : 'PREPARE' }))} />
+                    </div>
+                  )}
+                  
                   {usesPrepTime(newOpts.fulfillment_type) && <div className="space-y-2">
                     <Label htmlFor="prep">Preparation Time (minutes)</Label>
                     <Input id="prep" type="number" placeholder="e.g., 12" min="1" max="180" value={newItem.preparation_time_minutes} onChange={(e) => setNewItem(prev => ({ ...prev, preparation_time_minutes: e.target.value }))} className="rounded-xl" />
@@ -387,7 +398,7 @@ export default function MenuManagement() {
                               <form onSubmit={handleUpdateItem} className="space-y-4">
                                 <div className="space-y-2">
                                   <Label>Food Image</Label>
-                                  <input ref={editFileRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'edit')} />
+                                  <input ref={editFileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) handleImageUpload(f, 'edit'); }} />
                                   {editingItem?.image_url ? (
                                     <div className="relative rounded-xl overflow-hidden">
                                       <img src={editingItem.image_url} alt="Preview" className="w-full h-40 object-cover" />
@@ -433,6 +444,15 @@ export default function MenuManagement() {
                                   <Input id="edit-discount" type="number" min="0" max="100" value={editingItem?.discount_percent || ''} onChange={(e) => setEditingItem(prev => prev ? { ...prev, discount_percent: parseFloat(e.target.value) || 0 } : null)} className="rounded-xl" />
                                 </div>
                                 {grocery && editingItem && <ProductOptionsFields value={editingItem.opts} onChange={opts => setEditingItem(prev => prev ? { ...prev, opts } : null)} />}
+                                {!grocery && editingItem && (
+                                  <div className="flex items-center justify-between rounded-xl border border-border p-3">
+                                    <div>
+                                      <p className="text-sm font-medium">Ready instantly</p>
+                                      <p className="text-xs text-muted-foreground">No preparation needed</p>
+                                    </div>
+                                    <Switch checked={editingItem.opts.fulfillment_type === 'READY_TO_PICK'} onCheckedChange={(v) => setEditingItem(prev => prev ? { ...prev, opts: { ...prev.opts, fulfillment_type: v ? 'READY_TO_PICK' : 'PREPARE' } } : null)} />
+                                  </div>
+                                )}
                                 {usesPrepTime(editingItem?.opts.fulfillment_type) && <div className="space-y-2">
                                   <Label htmlFor="edit-prep">Preparation Time (minutes)</Label>
                                   <Input id="edit-prep" type="number" min="1" max="180" value={editingItem?.preparation_time_minutes ?? 10} onChange={(e) => setEditingItem(prev => prev ? { ...prev, preparation_time_minutes: parseInt(e.target.value) || 10 } : null)} className="rounded-xl" />
