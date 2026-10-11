@@ -1,3 +1,4 @@
+import { commissionFor } from '@/lib/fees';
 import { useState, useMemo } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,6 +31,13 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
   const [newPayoutStatus, setNewPayoutStatus] = useState('');
   const [payoutNotes, setPayoutNotes] = useState('');
   const platformFee = 3;
+  const { data: commissionOn } = useQuery({
+    queryKey: ['admin', 'restaurant-commission', restaurantId],
+    queryFn: async () => {
+      const { data } = await supabase.from('restaurants').select('commission_enabled').eq('id', restaurantId).maybeSingle();
+      return (data as any)?.commission_enabled !== false;
+    },
+  });
 
   // Fetch completed orders with order_items for detailed breakdown
   const { data: orders, isLoading: loadingOrders } = useQuery({
@@ -76,14 +84,14 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
     return orders.map(order => {
       const isCod = order.payment_method === 'cod';
       const itemTotal = Math.max(Number(order.total_amount) - platformFee, 0);
-      const commission = Math.round(itemTotal * 0.05 * 100) / 100;
+      const commission = commissionFor(itemTotal, commissionOn);
       const netEarning = itemTotal - commission;
       const deduction = isCod ? platformFee + commission : 0;
       const isPaid = paidOrderIds.has(order.id);
       const items = (order as any).order_items || [];
       return { ...order, isCod, itemTotal, commission, netEarning, deduction, isPaid, items };
     });
-  }, [orders, paidOrderIds]);
+  }, [orders, paidOrderIds, commissionOn]);
 
   // Summary
   const summary = useMemo(() => {
@@ -136,7 +144,7 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
       const payoutRows = unpaidOrders.map(order => {
         const isCod = order.payment_method === 'cod';
         const itemTotal = Math.max(Number(order.total_amount) - platformFee, 0);
-        const comm = Math.round(itemTotal * 0.05 * 100) / 100;
+        const comm = commissionFor(itemTotal, commissionOn);
         const net = itemTotal - comm;
         if (isCod) {
           const deduction = platformFee + comm;

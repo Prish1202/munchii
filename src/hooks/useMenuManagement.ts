@@ -1,3 +1,4 @@
+import { commissionFor } from '@/lib/fees';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -334,7 +335,7 @@ export function useMyPayoutSummary() {
       (completedOrders || []).forEach(order => {
         const isCod = order.payment_method === 'cod';
         const itemTotal = Math.max(Number(order.total_amount) - platformFee, 0);
-        const commission = Math.round(itemTotal * 0.05 * 100) / 100;
+        const commission = commissionFor(itemTotal, (restaurant as any)?.commission_enabled);
         const netEarning = itemTotal - commission;
         totalEarned += netEarning;
 
@@ -364,7 +365,7 @@ export function useMyPayoutSummary() {
           weeklyData[weekKey] = { week: weekKey, earned: 0, orders: 0 };
         }
         const itemTotal = Math.max(Number(order.total_amount) - platformFee, 0);
-        weeklyData[weekKey].earned += itemTotal * 0.9;
+        weeklyData[weekKey].earned += itemTotal - commissionFor(itemTotal, (restaurant as any)?.commission_enabled);
         weeklyData[weekKey].orders++;
       });
 
@@ -379,6 +380,7 @@ export function useMyPayoutSummary() {
         codDeductions,
         onlineCredits,
         weeklyGrowth,
+        commissionEnabled: (restaurant as any)?.commission_enabled !== false,
         completedOrders: completedOrders || [],
       };
     },

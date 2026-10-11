@@ -1,3 +1,4 @@
+import { commissionFor } from '@/lib/fees';
 import { useMemo } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,7 +28,7 @@ export default function RestaurantPayouts() {
     const platformFee = 3;
     return payoutSummary.completedOrders.map((order: any) => {
       const itemTotal = Math.max(Number(order.total_amount) - platformFee, 0);
-      const commission = Math.round(itemTotal * 0.05 * 100) / 100;
+      const commission = commissionFor(itemTotal, (payoutSummary as any).commissionEnabled);
       const netEarning = itemTotal - commission;
       return {
         ...order,

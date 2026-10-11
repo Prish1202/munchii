@@ -1,3 +1,4 @@
+import { commissionFor } from '@/lib/fees';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -166,7 +167,7 @@ export default function AdminOrders() {
               const total = Number(viewingOrder.total_amount);
               const platformFee = 3;
               const itemTotal = Math.max(total - platformFee, 0);
-              const commission = Math.round(itemTotal * 0.05 * 100) / 100;
+              const commission = commissionFor(itemTotal, (viewingOrder as any).restaurant?.commission_enabled);
               const restaurantShare = itemTotal - commission;
               return (
                 <div className="space-y-5 pt-1">

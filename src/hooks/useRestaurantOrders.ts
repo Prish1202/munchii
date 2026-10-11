@@ -1,3 +1,4 @@
+import { commissionFor } from '@/lib/fees';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -41,7 +42,7 @@ export function useRestaurantOrders() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('restaurants')
-        .select('id, name')
+        .select('id, name, commission_enabled')
         .eq('owner_id', user!.id)
         .maybeSingle();
       if (error) throw error;
@@ -151,15 +152,15 @@ export function useRestaurantOrders() {
       const amount = Number(payload.new.total_amount || 0);
       const platformFee = 3;
       const itemTotal = Math.max(amount - platformFee, 0);
-      const commission = Math.round(itemTotal * 0.05 * 100) / 100;
+      const commission = commissionFor(itemTotal, (restaurant as any)?.commission_enabled);
       const credited = Math.round((itemTotal - commission) * 100) / 100;
       toast.success(`💰 Order completed! ₹${credited} credited`, {
-        description: `After 5% commission (₹${commission})`,
+        description: commission > 0 ? `After 5% commission (₹${commission})` : 'No commission applied',
       });
     } else if (newStatus === 'cancelled') {
       toast.error('❌ Order was cancelled');
     }
-  }, [queryClient, restaurant?.id]);
+  }, [queryClient, restaurant]);
 
   const { isConnected } = useRealtimeSync({
     channelName: `restaurant-orders-${restaurant?.id}`,
