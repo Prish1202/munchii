@@ -10,6 +10,8 @@ export function routeForPushData(data: Record<string, unknown> | undefined | nul
   const type = String(data.type ?? '').toLowerCase();
   if (type === 'order' && data.id) return `/customer/orders/${encodeURIComponent(String(data.id))}`;
   if (type === 'offer') return '/customer?tab=offers';
+  const url = typeof data.url === 'string' ? data.url : null;
+  if (url && url.startsWith('/restaurant/')) return url;
   return null;
 }
 
