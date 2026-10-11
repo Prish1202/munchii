@@ -104,12 +104,17 @@ function OrderCard({ order, showReorder }: { order: any; showReorder?: boolean }
     if (order.restaurant_id) {
       const { data: restaurant } = await supabase
         .from('restaurants')
-        .select('is_active, name, preparation_buffer_minutes')
+        .select('is_active, name, preparation_buffer_minutes, orders_paused_indefinitely, orders_paused_until')
         .eq('id', order.restaurant_id)
         .maybeSingle();
 
       if (!restaurant || !restaurant.is_active) {
         toast.error(`${restaurant?.name || 'This restaurant'} is currently offline. You can't reorder right now.`);
+        return;
+      }
+      const r: any = restaurant;
+      if (r.orders_paused_indefinitely || (r.orders_paused_until && new Date(r.orders_paused_until) > new Date())) {
+        toast.error(`${restaurant.name} has paused new orders for a while. Please try again soon.`);
         return;
       }
       restaurantBufferMinutes = restaurant.preparation_buffer_minutes || 5;

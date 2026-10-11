@@ -41,7 +41,6 @@ import {
 import { directionsUrl } from '@/lib/geo';
 import { formatDistanceToNow, format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { OrderProgressBar } from '@/components/customer/OrderProgressBar';
 import { ReviewDialog } from '@/components/customer/ReviewDialog';
 import { useOrderReview } from '@/hooks/useReviews';
 import { formatPickupWindow } from '@/lib/pickupWindows';
@@ -84,7 +83,7 @@ export default function OrderTracking() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('orders')
-        .select(`*, restaurant:restaurants(name, address, latitude, longitude)`)
+        .select(`*, restaurant:restaurants(name, address, latitude, longitude, merchant_type)`)
         .eq('id', id)
         .maybeSingle();
       if (error) throw error;
@@ -292,18 +291,11 @@ export default function OrderTracking() {
               {(order as any).pickup_otp}
             </p>
             <p className="text-xs text-muted-foreground">
-              Share this code with the restaurant when you pick up your order
+              Share this code at the counter when you pick up your order
             </p>
           </div>
         )}
 
-        {/* Progress Bar */}
-        {!isCancelled && (
-          <div className="bg-card rounded-2xl border border-border p-5">
-            <h3 className="font-display font-semibold text-sm mb-4">Order Progress</h3>
-            <OrderProgressBar status={order.status} />
-          </div>
-        )}
 
         {/* Status Steps */}
         {!isCancelled && (
