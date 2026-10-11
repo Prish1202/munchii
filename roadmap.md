@@ -7,3 +7,5 @@
 - [x] Add/edit product buttons hardened; "Ready instantly" option for food outlets.
 - [x] Remove cash-on-pickup wording; instant items skip prep and buffer time.
 - [x] Admin per-merchant 5% commission toggle applied to earnings, payouts and alerts.
+- [x] Verify Order Placed screen buttons (Track Order, Back to Home) — routes and links confirmed working.
+- [x] Full app audit: customer, merchant and admin buttons/flows traced end to end — no broken handlers found; console clean on the live site.
