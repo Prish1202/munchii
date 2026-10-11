@@ -27,7 +27,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; nextStatus?:
 };
 
 const PAYMENT_LABELS: Record<string, { label: string; icon: typeof Banknote }> = {
-  cod: { label: 'Cash on Pickup (COD)', icon: Banknote },
+  cod: { label: 'Paid Online', icon: CreditCard },
   razorpay: { label: 'Paid Online', icon: CreditCard },
   upi: { label: 'UPI', icon: Wallet },
   card: { label: 'Card', icon: CreditCard },
@@ -217,20 +217,6 @@ export default function RestaurantOrderDetail() {
           </Card>
         )}
 
-        {/* COD Cash Collection - only before OTP verify */}
-        {isCOD && isReadyForPickup && (
-          <Card className="border-amber-500">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Banknote className="w-5 h-5 text-primary" />
-                <span className="font-semibold text-foreground">Collect Cash: ₹{Number(order.total_amount).toFixed(0)}</span>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Collect ₹{Number(order.total_amount).toFixed(0)} from customer (includes ₹{platformFee} platform fee). Your earning: ₹{itemTotal.toFixed(0)}
-              </p>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Action Buttons */}
         {!['ready_for_pickup', 'picked_up', 'completed', 'cancelled'].includes(order.status) && (

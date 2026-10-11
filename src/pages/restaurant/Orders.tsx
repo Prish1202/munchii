@@ -31,7 +31,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; nextStatus?:
 };
 
 const PAYMENT_LABELS: Record<string, { label: string; icon: typeof Banknote }> = {
-  cod: { label: 'Cash on Pickup', icon: Banknote },
+  cod: { label: 'Paid Online', icon: CreditCard },
   upi: { label: 'UPI', icon: Wallet },
   card: { label: 'Card', icon: CreditCard },
 };

@@ -40,7 +40,7 @@ export default function TermsOfService() {
             <ul className="list-disc pl-5 space-y-1">
               <li>All orders are for self-pickup only. Munchii does not provide delivery services.</li>
               <li>A platform fee of ₹3 is charged per order.</li>
-              <li>Payments can be made via Cash on Pickup (COD) or online payment methods.</li>
+              <li>All payments are made online (UPI, cards, net banking or wallets) through Razorpay.</li>
               <li>Once an order is accepted by the restaurant, cancellation is at the restaurant's discretion.</li>
               <li>Munchii is not responsible for food quality — that responsibility lies with the restaurant partner.</li>
             </ul>

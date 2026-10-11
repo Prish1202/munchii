@@ -153,7 +153,7 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
             restaurant_amount: -deduction,
             platform_fee: deduction,
             payout_status: 'pending',
-            payout_notes: `COD — Collected ₹${Number(order.total_amount).toFixed(0)}. Deduct ₹${platformFee} fee + ₹${comm.toFixed(0)} commission = ₹${deduction.toFixed(0)}.`,
+            payout_notes: `Adjustment — Collected ₹${Number(order.total_amount).toFixed(0)}. Deduct ₹${platformFee} fee + ₹${comm.toFixed(0)} commission = ₹${deduction.toFixed(0)}.`,
           };
         }
         return {
@@ -212,24 +212,6 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
             <p className="text-lg font-bold">₹{summary.totalOnline.toFixed(0)}</p>
           </CardContent>
         </Card>
-        <Card className="rounded-2xl">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2 mb-1">
-              <Banknote className="w-4 h-4 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">COD Rev.</span>
-            </div>
-            <p className="text-lg font-bold">₹{summary.totalCod.toFixed(0)}</p>
-          </CardContent>
-        </Card>
-        <Card className="rounded-2xl">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2 mb-1">
-              <AlertCircle className="w-4 h-4 text-destructive" />
-              <span className="text-xs text-muted-foreground">COD Deductions</span>
-            </div>
-            <p className="text-lg font-bold text-destructive">-₹{summary.codDeductions.toFixed(0)}</p>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Per-Order Breakdown */}
@@ -267,7 +249,7 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
                       <TableCell className="whitespace-nowrap text-xs">{format(parseISO(order.created_at), 'MMM d')}</TableCell>
                       <TableCell>
                         {order.isCod ? (
-                          <Badge variant="outline" className="text-[10px] gap-1"><Banknote className="w-3 h-3" />COD</Badge>
+                          <Badge variant="outline" className="text-[10px] gap-1">Online</Badge>
                         ) : (
                           <Badge variant="secondary" className="text-[10px] gap-1"><CreditCard className="w-3 h-3" />Online</Badge>
                         )}
@@ -374,7 +356,7 @@ function RestaurantPayoutDetail({ restaurantId, restaurantName, onBack }: { rest
             <DialogTitle>Manage Payout</DialogTitle>
             <DialogDescription>
               {Number(editingPayout?.restaurant_amount || 0) < 0
-                ? `COD Deduction: -₹${Math.abs(Number(editingPayout?.restaurant_amount || 0)).toFixed(0)}`
+                ? `Deduction: -₹${Math.abs(Number(editingPayout?.restaurant_amount || 0)).toFixed(0)}`
                 : `Credit: ₹${Number(editingPayout?.restaurant_amount || 0).toFixed(0)} to restaurant`}
             </DialogDescription>
           </DialogHeader>
@@ -445,7 +427,7 @@ export default function AdminPayouts() {
       <div className="space-y-4">
         <div>
           <h1 className="text-xl font-bold">Payouts Overview</h1>
-          <p className="text-sm text-muted-foreground">Track platform earnings, COD deductions & partner payouts</p>
+          <p className="text-sm text-muted-foreground">Track platform earnings & partner payouts</p>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -465,15 +447,6 @@ export default function AdminPayouts() {
                 <span className="text-xs text-muted-foreground">Paid to Restros</span>
               </div>
               <p className="text-lg font-bold">₹{totals.restaurant.toFixed(0)}</p>
-            </CardContent>
-          </Card>
-          <Card className="rounded-2xl">
-            <CardContent className="p-3">
-              <div className="flex items-center gap-2 mb-1">
-                <Banknote className="w-4 h-4 text-destructive" />
-                <span className="text-xs text-muted-foreground">COD Deductions</span>
-              </div>
-              <p className="text-lg font-bold text-destructive">₹{totals.codDeductions.toFixed(0)}</p>
             </CardContent>
           </Card>
           <Card className="rounded-2xl">
