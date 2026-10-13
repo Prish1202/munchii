@@ -179,7 +179,7 @@ export default function CustomerDashboard() {
                 placeholder="Search city" className="h-10 w-full rounded-xl border border-border bg-background pl-9 pr-3 text-sm outline-none focus:border-primary" />
             </div>
             <div className="mt-2 max-h-56 overflow-auto">
-              {(cityInput.trim() ? filteredCities : registeredCities || []).map(city => (
+              {(cityInput.trim().length >= 2 ? filteredCities : []).map(city => (
                 <button key={city} type="button" onClick={() => selectCity(city)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-medium hover:bg-muted">
                   <MapPin className="h-4 w-4 text-primary" /> {city}
                 </button>

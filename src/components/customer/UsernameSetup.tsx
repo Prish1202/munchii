@@ -88,7 +88,7 @@ export function UsernameSetup({ children }: UsernameSetupProps) {
           </div>
           <h1 className="text-2xl font-display font-bold">Choose your username</h1>
           <p className="text-sm text-muted-foreground">
-            Your unique identity on FoodyZone. Friends will use this to find you, send points, and chat!
+            Your unique identity on Munchii. Friends use it to find you and send you Coins.
           </p>
         </div>
 
