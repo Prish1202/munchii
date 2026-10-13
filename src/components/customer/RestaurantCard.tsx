@@ -43,7 +43,7 @@ export function RestaurantCard({ restaurant, distanceKm }: RestaurantCardProps) 
 
   return (
     <Link to={`/customer/restaurant/${restaurant.id}`} className="block group">
-      <div className="gradient-surface rounded-[1.75rem] border border-border/80 overflow-hidden shadow-soft transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-xl">
+      <div className={`gradient-surface rounded-[1.75rem] border border-border/80 overflow-hidden shadow-soft transition-all duration-300 ${closedLabel ? "grayscale opacity-60" : "group-hover:-translate-y-1.5 group-hover:shadow-xl"}`}>
         <div className="relative aspect-[16/10] overflow-hidden">
           <img
             src={image}

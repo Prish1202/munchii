@@ -17,6 +17,8 @@ interface LocationContextType extends LocationState {
   requestLiveLocation: () => void;
   /** Use a chosen (e.g. saved) address as the current location. */
   setManualLocation: (coords: Coords, label: string | null, city?: string | null) => void;
+  /** Forget any stored location (used when a different account signs in). */
+  resetLocation: () => void;
 }
 
 // Keep one context instance across hot reloads so providers and consumers always match.
@@ -84,13 +86,20 @@ export function LocationProvider({ children }: { children: ReactNode }) {
     setState(prev => ({ ...prev, coords, addressLabel: label, city: city || prev.city, error: null }));
   }, []);
 
+  const resetLocation = useCallback(() => {
+    localStorage.removeItem(COORDS_KEY);
+    localStorage.removeItem(CITY_STORAGE_KEY);
+    sessionStorage.removeItem(CITY_STORAGE_KEY);
+    setState({ city: null, coords: null, addressLabel: null, isDetecting: false, error: null });
+  }, []);
+
   useEffect(() => {
     const saved = sessionStorage.getItem(CITY_STORAGE_KEY) || localStorage.getItem(CITY_STORAGE_KEY);
     if (saved) setState(prev => ({ ...prev, city: saved }));
   }, []);
 
   return (
-    <LocationContext.Provider value={{ ...state, setCity, detectCity, requestLiveLocation, setManualLocation }}>
+    <LocationContext.Provider value={{ ...state, setCity, detectCity, requestLiveLocation, setManualLocation, resetLocation }}>
       {children}
     </LocationContext.Provider>
   );

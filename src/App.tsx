@@ -15,6 +15,7 @@ import { NativePushInit } from "@/components/NativePushInit";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { RatingPrompt } from "@/components/RatingPrompt";
 import { LocationPrompt } from "@/components/LocationPrompt";
+import { UsernameSetup } from "@/components/customer/UsernameSetup";
 import { CustomerTypography } from "@/components/CustomerTypography";
 
 // Pages
@@ -149,7 +150,7 @@ const App = () => {
               <Route path="/contact" element={<ContactUs />} />
 
               {/* Customer Routes */}
-              <Route path="/customer" element={<ProtectedRoute allowedRoles={['customer']}><CustomerDashboard /></ProtectedRoute>} />
+              <Route path="/customer" element={<ProtectedRoute allowedRoles={['customer']}><UsernameSetup><CustomerDashboard /></UsernameSetup></ProtectedRoute>} />
               <Route path="/customer/browse" element={<ProtectedRoute allowedRoles={['customer']}><RestaurantList /></ProtectedRoute>} />
               <Route path="/customer/restaurant/:id" element={<ProtectedRoute allowedRoles={['customer']}><RestaurantMenu /></ProtectedRoute>} />
               <Route path="/customer/cart" element={<ProtectedRoute allowedRoles={['customer']}><Cart /></ProtectedRoute>} />
