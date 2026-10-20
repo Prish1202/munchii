@@ -97,7 +97,7 @@ export async function initNativePush(navigate: NavigateFn): Promise<() => void> 
         // Loud channel for new-order alerts (sound + vibration, shows on top).
         await PushNotifications.createChannel({
           id: 'orders', name: 'New orders', description: 'Incoming order alerts',
-          importance: 5, visibility: 1, sound: 'default', vibration: true,
+          importance: 5, visibility: 1, vibration: true,
         }).catch(() => {});
       }
       await PushNotifications.register();
