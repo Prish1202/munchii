@@ -11,7 +11,7 @@ export function routeForPushData(data: Record<string, unknown> | undefined | nul
   if (type === 'order' && data.id) return `/customer/orders/${encodeURIComponent(String(data.id))}`;
   if (type === 'offer') return '/customer?tab=offers';
   const url = typeof data.url === 'string' ? data.url : null;
-  if (url && url.startsWith('/restaurant/')) return url;
+  if (url && (url.startsWith('/restaurant/') || url === '/staff' || url.startsWith('/staff/'))) return url;
   return null;
 }
 
@@ -93,6 +93,13 @@ export async function initNativePush(navigate: NavigateFn): Promise<() => void> 
       perm = await PushNotifications.requestPermissions();
     }
     if (perm.receive === 'granted') {
+      if (Capacitor.getPlatform() === 'android') {
+        // Loud channel for new-order alerts (sound + vibration, shows on top).
+        await PushNotifications.createChannel({
+          id: 'orders', name: 'New orders', description: 'Incoming order alerts',
+          importance: 5, visibility: 1, vibration: true,
+        }).catch(() => {});
+      }
       await PushNotifications.register();
     } else {
       console.warn('[Push] Permission not granted:', perm.receive);

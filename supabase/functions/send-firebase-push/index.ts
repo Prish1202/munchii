@@ -111,6 +111,7 @@ async function sendFirebasePush(payload: PushPayload) {
   const data: Record<string, string> = { ...(payload.data ?? {}) };
   if (payload.url) data.url = payload.url;
 
+  const isNewOrder = payload.title === "New Order!";
   let sent = 0;
   const staleIds: string[] = [];
 
@@ -126,6 +127,17 @@ async function sendFirebasePush(payload: PushPayload) {
           token: sub.player_id,
           notification: { title: payload.title, body: payload.message },
           data,
+          android: {
+            priority: "HIGH",
+            notification: {
+              sound: "default",
+              default_sound: true,
+              default_vibrate_timings: true,
+              notification_priority: "PRIORITY_MAX",
+              ...(isNewOrder ? { channel_id: "orders" } : {}),
+            },
+          },
+          apns: { payload: { aps: { sound: "default" } } },
         },
       }),
     });
