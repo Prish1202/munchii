@@ -52,6 +52,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Menu', href: '/restaurant/menu', icon: <MenuIcon className="w-5 h-5" /> },
     { label: 'More', href: '/restaurant/more', icon: <MoreHorizontal className="w-5 h-5" /> },
   ],
+  staff: [],
   admin: [
     { label: 'Overview', href: '/admin', icon: <BarChart3 className="w-5 h-5" /> },
     { label: 'Users', href: '/admin/users', icon: <Users className="w-5 h-5" /> },
