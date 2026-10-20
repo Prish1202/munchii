@@ -730,6 +730,47 @@ export type Database = {
         }
         Relationships: []
       }
+      restaurant_staff: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          restaurant_id: string
+          updated_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          restaurant_id: string
+          updated_at?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          restaurant_id?: string
+          updated_at?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_staff_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurants: {
         Row: {
           address: string
@@ -752,6 +793,7 @@ export type Database = {
           opening_hours: string | null
           orders_paused_indefinitely: boolean
           orders_paused_until: string | null
+          outlet_code: string | null
           owner_id: string
           photo_url: string | null
           pickup_slot_minutes: number
@@ -782,6 +824,7 @@ export type Database = {
           opening_hours?: string | null
           orders_paused_indefinitely?: boolean
           orders_paused_until?: string | null
+          outlet_code?: string | null
           owner_id: string
           photo_url?: string | null
           pickup_slot_minutes?: number
@@ -812,6 +855,7 @@ export type Database = {
           opening_hours?: string | null
           orders_paused_indefinitely?: boolean
           orders_paused_until?: string | null
+          outlet_code?: string | null
           owner_id?: string
           photo_url?: string | null
           pickup_slot_minutes?: number
@@ -973,6 +1017,7 @@ export type Database = {
         Args: { _device_type?: string; _token: string }
         Returns: undefined
       }
+      generate_outlet_code: { Args: { _name: string }; Returns: string }
       get_bank_details_decrypted: {
         Args: { _restaurant_id: string }
         Returns: {
@@ -1038,6 +1083,15 @@ export type Database = {
           workload: number
         }[]
       }
+      get_staff_outlet: {
+        Args: never
+        Returns: {
+          id: string
+          merchant_type: string
+          name: string
+          staff_name: string
+        }[]
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -1047,6 +1101,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_restaurant_staff: {
+        Args: { _restaurant_id: string }
         Returns: boolean
       }
       is_username_available: { Args: { _username: string }; Returns: boolean }
