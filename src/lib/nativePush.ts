@@ -93,6 +93,13 @@ export async function initNativePush(navigate: NavigateFn): Promise<() => void> 
       perm = await PushNotifications.requestPermissions();
     }
     if (perm.receive === 'granted') {
+      if (Capacitor.getPlatform() === 'android') {
+        // Loud channel for new-order alerts (sound + vibration, shows on top).
+        await PushNotifications.createChannel({
+          id: 'orders', name: 'New orders', description: 'Incoming order alerts',
+          importance: 5, visibility: 1, sound: 'default', vibration: true,
+        }).catch(() => {});
+      }
       await PushNotifications.register();
     } else {
       console.warn('[Push] Permission not granted:', perm.receive);
