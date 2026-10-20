@@ -4,3 +4,5 @@
 - Merchant navigation uses four shared destinations (Home, Orders, Menu/Products, More), with type-specific wording from merchantTerms — keeps one operational workspace.
 - Route all user-selected images through the shared pre-upload optimizer with a purpose preset — keeps storage and mobile image payloads bounded without changing existing URLs.
 - Scope customer typography with a route/account-aware body class and bundled fonts — includes portal dialogs and native offline loading without changing merchant/admin styling.
+- Staff accounts are auth users with role 'staff' and a restaurant_staff row, created only by the manage-staff edge function using a synthetic email (src/lib/staff.ts) — no email/OTP needed and owners control access.
+- Staff order access goes through private.is_restaurant_staff in RLS plus guard_staff_order_update (accept/reject/prepare/ready only) — keeps payouts, menu and settings owner-only.

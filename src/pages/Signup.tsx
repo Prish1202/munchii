@@ -15,12 +15,14 @@ const ROLE_ICONS: Record<UserRole, React.ReactNode> = {
   customer: <ShoppingBag className="w-5 h-5" />,
   restaurant: <Store className="w-5 h-5" />,
   admin: null,
+  staff: null,
 };
 
 const ROLE_COLORS: Record<UserRole, string> = {
   customer: 'border-primary bg-primary/10 text-primary',
   restaurant: 'border-accent bg-accent/10 text-accent',
   admin: 'border-muted bg-muted/10 text-muted-foreground',
+  staff: 'border-muted bg-muted/10 text-muted-foreground',
 };
 
 export default function SignupPage() {

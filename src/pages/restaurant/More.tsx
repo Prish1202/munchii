@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   UserRound,
+  Users,
   Wallet,
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -30,6 +31,7 @@ const groups = [
     items: [
       { title: 'Business', description: 'Outlet details, photo, visibility and hours', href: '/restaurant/settings?section=business', icon: Building2 },
       { title: 'Ordering & Pickup', description: 'Pickup slots, capacity and order controls', href: '/restaurant/settings?section=ordering', icon: SlidersHorizontal },
+      { title: 'Manage Staff', description: 'Staff accounts, outlet code and passwords', href: '/restaurant/staff', icon: Users },
       { title: 'Notifications', description: 'Order alerts, sound and vibration', href: '/restaurant/notification-settings', icon: Bell },
     ],
   },

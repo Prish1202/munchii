@@ -11,6 +11,8 @@ import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import logoAsset from '@/assets/munchii-blue-logo.png.asset.json';
 import { FullScreenLoader } from '@/components/FullScreenLoader';
+import { supabase } from '@/integrations/supabase/client';
+import { staffEmail } from '@/lib/staff';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -21,6 +23,10 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const from = searchParams.get('from');
+  const [mode, setMode] = useState<'owner' | 'staff'>(searchParams.get('tab') === 'staff' ? 'staff' : 'owner');
+  const [outletCode, setOutletCode] = useState('');
+  const [staffUsername, setStaffUsername] = useState('');
+  const isStaff = from === 'restaurant' && mode === 'staff';
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -31,6 +37,12 @@ export default function LoginPage() {
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    if (isStaff) {
+      const { error } = await supabase.auth.signInWithPassword({ email: staffEmail(outletCode, staffUsername), password });
+      if (error) toast.error('Wrong outlet code, username or password');
+      setIsLoading(false);
+      return;
+    }
     const { error } = await login(email, password);
     if (error) toast.error(error);
     setIsLoading(false);
@@ -96,7 +108,31 @@ export default function LoginPage() {
           </CardHeader>
 
           <CardContent className="space-y-4">
+            {from === 'restaurant' && (
+              <div className="grid grid-cols-2 gap-1 rounded-xl bg-muted p-1" role="tablist">
+                {(['owner', 'staff'] as const).map((m) => (
+                  <button key={m} type="button" role="tab" aria-selected={mode === m} onClick={() => setMode(m)}
+                    className={`rounded-lg py-2 text-sm font-medium transition-colors ${mode === m ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground'}`}>
+                    {m === 'owner' ? 'Owner Login' : 'Staff Login'}
+                  </button>
+                ))}
+              </div>
+            )}
             <form onSubmit={handleEmailLogin} className="space-y-4">
+              {isStaff ? (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="staff-code">Outlet Code</Label>
+                    <Input id="staff-code" autoCapitalize="characters" autoCorrect="off" placeholder="e.g. SPIC4821"
+                      value={outletCode} onChange={(e) => setOutletCode(e.target.value.toUpperCase())} required className="bg-background rounded-xl" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="staff-username">Username</Label>
+                    <Input id="staff-username" autoCapitalize="none" autoCorrect="off" placeholder="username"
+                      value={staffUsername} onChange={(e) => setStaffUsername(e.target.value)} required className="bg-background rounded-xl" />
+                  </div>
+                </>
+              ) : (
               <div className="space-y-2">
                 <Label htmlFor="login-email">{from === 'restaurant' ? 'Email' : 'Email or username'}</Label>
                 <Input
@@ -111,13 +147,14 @@ export default function LoginPage() {
                   className="bg-background rounded-xl"
                 />
               </div>
+              )}
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="login-password">Password</Label>
-                  <Link to="/forgot-password" className="text-xs text-primary hover:underline">
+                  {isStaff ? <span className="text-xs text-muted-foreground">Ask your owner to reset</span> : <Link to="/forgot-password" className="text-xs text-primary hover:underline">
                     Forgot password?
-                  </Link>
+                  </Link>}
                 </div>
                 <div className="relative">
                   <Input

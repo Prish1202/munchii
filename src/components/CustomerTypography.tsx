@@ -7,7 +7,7 @@ export function CustomerTypography() {
   const { pathname, search } = useLocation();
   const { user } = useAuth();
   const requestedRole = new URLSearchParams(search).get('role');
-  const isMerchantOrAdminRoute = /^\/(restaurant|admin)(\/|$)/.test(pathname)
+  const isMerchantOrAdminRoute = /^\/(restaurant|admin|staff)(\/|$)/.test(pathname)
     || pathname === '/signup/restaurant'
     || requestedRole === 'restaurant'
     || requestedRole === 'admin';

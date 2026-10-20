@@ -1103,10 +1103,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_restaurant_staff: {
-        Args: { _restaurant_id: string }
-        Returns: boolean
-      }
       is_username_available: { Args: { _username: string }; Returns: boolean }
       outlet_accepts_pickup: {
         Args: { _pickup: string; _restaurant_id: string }
