@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { MenuImportRow, parseMenuText, validateMenuImportRows } from '@/lib/menuImport';
 import { merchantTerms } from '@/lib/merchantTerms';
+import './menuPhotoImport.css';
 
 interface Props {
   restaurantId: string;
