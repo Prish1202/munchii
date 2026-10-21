@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { describe, test } from 'node:test';
 import { deepStrictEqual, strictEqual, notStrictEqual } from 'node:assert';
 import { parseMenuText, validateMenuImportRows } from './menuImport';

@@ -10,4 +10,5 @@
 - [x] Verify Order Placed screen buttons (Track Order, Back to Home) — routes and links confirmed working.
 - [x] Full app audit: customer, merchant and admin buttons/flows traced end to end — no broken handlers found; console clean on the live site.
 - Merchant staff accounts: owners create/remove/reset staff from More → Manage Staff; staff use Staff Login (Outlet Code + username + password).
-- [ ] Add local menu-photo OCR with scanning, editable review, safe saving and parser/browser verification.
+- [x] Add local menu-photo OCR with scanning and editable review; parser and browser checks pass.
+- [ ] Verify imported items save/read back as an authenticated merchant — blocked by external unmanaged sign-in access.

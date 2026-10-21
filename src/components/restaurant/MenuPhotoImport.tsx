@@ -159,7 +159,7 @@ export function MenuPhotoImport({ restaurantId, merchantType, categories }: Prop
   return <>
     <Button variant="outline" onClick={() => changeOpen(true)}><ScanLine className="mr-2 h-4 w-4" />Scan menu</Button>
     <Dialog open={open} onOpenChange={changeOpen}>
-      <DialogContent className="restaurant-theme max-w-3xl max-h-[90dvh] overflow-y-auto w-[calc(100%-1rem)] rounded-lg"
+      <DialogContent className="restaurant-theme max-w-3xl max-h-[90dvh] overflow-y-auto w-[calc(100%_-_1rem)] rounded-lg"
         onEscapeKeyDown={event => { if (saveLock.current) event.preventDefault(); }}
         onInteractOutside={event => { if (scanning || review || saveLock.current) event.preventDefault(); }}>
         <DialogHeader>
