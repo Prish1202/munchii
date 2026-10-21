@@ -1,4 +1,5 @@
 import { ProductOptionsFields, ProductOptionsValue, cleanOptions } from '@/components/restaurant/ProductOptionsFields';
+import { MenuPhotoImport } from '@/components/restaurant/MenuPhotoImport';
 import { FULFILLMENT_LABELS, isGrocery, merchantTerms, QUANTITY_LABELS, usesPrepTime } from '@/lib/merchantTerms';
 import { useState, useRef } from 'react';
 import { useB2Upload } from '@/hooks/useB2Upload';
@@ -186,13 +187,14 @@ export default function MenuManagement() {
     <DashboardLayout>
       <div className="mx-auto max-w-3xl space-y-6 pb-24 md:pb-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-display font-bold">{terms.catalog}</h1>
             <p className="text-muted-foreground">Availability, pricing and {grocery ? 'product options' : 'preparation time'}.</p>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <MenuPhotoImport restaurantId={restaurant.id} merchantType={restaurant.merchant_type} categories={categories || []} />
             <Button variant="outline" className="rounded-xl" onClick={() => setShowCategoryDialog(true)}>
               <FolderPlus className="w-4 h-4 mr-2" />
               Category
